@@ -2,8 +2,11 @@ import logging
 import inspect
 from .const import PITABLE, EMCTABLE
 
+
+# Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(funcName)s - %(message)s')
 logger = logging.getLogger(__name__)
+
 
 # Custom Exceptions
 class PreservationError(Exception):
@@ -24,21 +27,15 @@ MoldRisk = float
 MoistureContent = float
 
 
-class PreservationRating(Enum):
+class EnvironmentalRating(Enum):
     GOOD = "GOOD"
     OK = "OK"
     RISK = "RISK"
 
 
-@dataclass
-class PreservationMetrics:
-    """Container for preservation calculation results."""
-    value: float
-    rating: PreservationRating
-
-
-def to_celsius(x: Temperature, scale: str='f') -> Temperature:
+def to_celsius(x: emperature, scale: str='f') -> Temperature:
     """Convert temperature to specified scale.
+
     
     Args:
         x (float / int): Temperature value
@@ -152,18 +149,16 @@ def dp(t: Temperature, rh: RelativeHumidity) -> Temperature:
 
 
 def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
-    """Calculate Preservation Index (PI) value.
+    """
+    Calculate Preservation Index (PI) value. PI represents the overall rate of chemical decay in organic materials based on a constant T and RH. A higher number indicates a slower the rate of chemical decay.
     
     Args:
-        t: Temperature in Celsius (-23 to 65°C)
-        rh: Relative Humidity percentage (6% to 95%)
+        t: Temperature in Celsius
+        rh: Relative Humidity percentage
     
     Returns:
-        PI value from lookup table. Higher values indicate better preservation conditions.
-        Range typically 0-9999, where:
-        - ≥75: Good preservation conditions
-        - 45-75: OK conditions
-        - <45: Risk conditions
+        PI value [years].
+        Use rate_natural_aging() to convert PI to Environmental Rating.
     """
     validate_rh(rh)
     clamped_rh = clamp(rh, 6, 95) # Make sure that 6 <= rh <= 95 
@@ -220,77 +215,56 @@ def emc(t: Temperature, rh: RelativeHumidity) -> MoistureContent:
     return float(EMCTABLE[idx])
 
 
-def evaluate_preservation(t: float, rh :float):
-    """Evaluate preservation conditions based on temperature and relative humidity.
-    
-    Evaluates four preservation metrics:
-    1. Natural aging (TWPI)
-    2. Mechanical damage risk
-    3. Mold risk
-    4. Metal corrosion risk
-    
-    Args:
-        t (float): Temperature (°C)
-        rh (float): Relative humidity (%)
-    
-    Returns:
-        dict: Dictionary containing preservation evaluation results
-        
-    Ratings interpretation:
-    TWPI (Time-Weighted Preservation Index):
+def rate_natural_aging(pi: PreservationIndex) -> EnvironmentalRating:
+    """
+    Evaluates Natural Aging risk as a function of PI:
         ≥75: Good
         45-75: OK
         <45: Risk
-        
-    Mechanical Damage (% EMC):
+    """
+    if pi >= 75:
+        return EnvironmentalRating.GOOD
+    elif pi < 45:
+        return EnvironmentalRating.RISK
+    else:
+        return EnvironmentalRating.OK
+
+
+def rate_mechanical_damage(emc: MoistureContent) -> EnvironmentalRating:
+    """
+    Evaluates risk of Mechanical Damage as a function of %EMC:
         5-12.5: OK
         <5 or >12.5: Risk
-        
-    Mold Risk:
+    """
+    if 5 <= emc <= 12.5:
+        return EnvironmentalRating.OK     
+    else:
+        return EnvironmentalRating.RISK
+
+
+def rate_mold_growth(mrf: MoldRisk) -> EnvironmentalRating:
+    """
+    Evaluates risk  of Mold Growth as a fucntion of Mold Risk Factor:
         0: No Risk
         >0: Risk (value represents days to mold)
-        
-    Metal Corrosion (% EMC):
+    """
+    if mrf == 0:
+        return EnvironmentalRating.GOOD
+    else:
+        return EnvironmentalRating.RISK
+
+
+def rate_metal_corrosion(emc: MoistureContent) -> EnvironmentalRating:
+    """
+    Evaluates risk of Metal Corrosion as a function of %EMC:
         <7.0: Good
         7.1-10.5: OK
         ≥10.5: Risk
     """
-    # Bound input values
-    t = max(-20, min(65, round(t)))
-    rh = max(0, min(100, round(rh)))
-    
-    # Calculate EMC (Equilibrium Moisture Content)
-    emc_idx = (t + 20) * 101 + round(rh)
-    emc = EMCTABLE[emc_idx] if emc_idx < len(EMCTABLE) else 0
-    
-    # Calculate PI (Preservation Index)
-    pi_idx = ((max(-23, min(65, round(t))) + 23) * 90 + 
-             (max(6, min(95, round(rh)))) - 6)
-    pi = PITABLE[pi_idx] if pi_idx < len(PITABLE) else 0
-    
-    # Calculate Mold Risk
-    mold_risk = 0
-    if 2 <= t <= 45 and rh >= 65:
-        mold_idx = 8010 + (round(t) - 2) * 36 + round(rh) - 65
-        mold_risk = PITABLE[mold_idx] if mold_idx < len(PITABLE) else 0
-    
-    return {
-        'twpi': {
-            'value': pi,
-            'rating': 'GOOD' if pi >= 75 else 'OK' if pi >= 45 else 'RISK'
-        },
-        'mechanical_damage': {
-            'value': emc,
-            'rating': 'OK' if 5 <= emc <= 12.5 else 'RISK'
-        },
-        'mold_risk': {
-            'value': mold_risk,
-            'rating': 'GOOD' if mold_risk == 0 else 'RISK'
-        },
-        'metal_corrosion': {
-            'value': emc,
-            'rating': 'GOOD' if emc < 7.0 else 'OK' if emc < 10.5 else 'RISK'
-        }
-    }
-
+    if emc < 7.0:
+        return EnvironmentalRating.GOOD
+    elif emc < 10.5:
+        return EnvironmentalRating.OK
+    else:
+        return EnvironmentalRating.RISK
     
