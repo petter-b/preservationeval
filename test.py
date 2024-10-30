@@ -9,7 +9,6 @@ logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('debug.log'),
         logging.StreamHandler(sys.stdout)
     ]
 )
@@ -19,14 +18,11 @@ logger = logging.getLogger(__name__)
 def example_usage():
     """Example of how to use the table fetching and validation code."""
     
-    # Test that logging is working
     logger.debug("Starting example_usage function. Debug level == DEBUG")
-
-    # 1. Basic fetching and examining table information
+    
     try:
-        # Log before fetch attempt
         logger.debug("Attempting to fetch tables from website")
-
+        
         # Fetch tables from the website
         table_info, tables = fetch_and_validate_tables("http://www.dpcalc.org/dp.js")
         
@@ -34,17 +30,25 @@ def example_usage():
         print("\nTable Information:")
         print("=================")
         for table_type, info in table_info.items():
-            print(f"\n{info}")
+            print(f"\nTable: {table_type.value}")
+            print(f"Temperature range: {info.temp_min}°C to {info.temp_max}°C")
+            print(f"RH range: {info.rh_min}% to {info.rh_max}%")
+            print(f"Dimensions: {info.temp_size} × {info.rh_size} = {info.total_size}")
             
             # Get the actual table data
-            table_data = tables[table_type]
-            
-            # Print some statistics about the table
-            print(f"  Data statistics:")
-            print(f"    Shape: {table_data.shape}")
-            print(f"    Min value: {table_data.min():.1f}")
-            print(f"    Max value: {table_data.max():.1f}")
-            print(f"    Mean value: {table_data.mean():.1f}")
+            if table_type in tables:
+                table_data = tables[table_type]
+                print(f"Actual data shape: {table_data.shape}")
+                print(f"Data statistics:")
+                print(f"  Min value: {table_data.min():.1f}")
+                print(f"  Max value: {table_data.max():.1f}")
+                print(f"  Mean value: {table_data.mean():.1f}")
+                
+                # Print a small sample of the table
+                print("\nSample data (top-left corner):")
+                print(table_data[:5, :5])
+            else:
+                print("No data available for this table type")
     
     except requests.RequestException as e:
         print(f"Failed to download tables: {e}")
@@ -52,33 +56,32 @@ def example_usage():
     except ValueError as e:
         print(f"Failed to parse tables: {e}")
         return
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        logger.exception("Unexpected error occurred")
+        return
 
-    # 2. Examining specific regions of the tables
-    print("\nExample Values:")
-    print("==============")
+    print("\nValues at specific points:")
+    print("=========================")
     
-    # Look at center values of each table
-    for table_type, table in tables.items():
-        mid_temp_idx = table.shape[0] // 2
-        mid_rh_idx = table.shape[1] // 2
-        
-        info = table_info[table_type]
-        mid_temp = (info.temp_min + info.temp_max) / 2
-        mid_rh = (info.rh_min + info.rh_max) / 2
-        
-        print(f"\n{table_type.value}:")
-        print(f"  Value at {mid_temp}°C, {mid_rh}%RH: "
-              f"{table[mid_temp_idx, mid_rh_idx]:.1f}")
-
-    # 3. Demonstrate table ranges and validation
-    print("\nTable Ranges and Validation:")
-    print("==========================")
-    for table_type, info in table_info.items():
-        print(f"\n{table_type.value}:")
-        print(f"  Temperature range: {info.temp_min}°C to {info.temp_max}°C")
-        print(f"  Humidity range: {info.rh_min}% to {info.rh_max}%")
-        print(f"  Array shape: {tables[table_type].shape}")
-        print(f"  Expected size: {info.total_size}")
+    # Test some specific temperature and RH combinations
+    test_points = [
+        (20, 50),  # 20°C, 50% RH
+        (25, 60),  # 25°C, 60% RH
+        (15, 40)   # 15°C, 40% RH
+    ]
+    
+    for temp, rh in test_points:
+        print(f"\nAt {temp}°C, {rh}% RH:")
+        for table_type, table in tables.items():
+            # Find the nearest indices
+            info = table_info[table_type]
+            temp_idx = int((temp - info.temp_min) * (info.temp_size - 1) / (info.temp_max - info.temp_min))
+            rh_idx = int((rh - info.rh_min) * (info.rh_size - 1) / (info.rh_max - info.rh_min))
+            
+            # Get the value
+            value = table[temp_idx, rh_idx]
+            print(f"  {table_type.value}: {value:.1f}")
 
 if __name__ == "__main__":
     example_usage()
