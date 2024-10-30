@@ -1,6 +1,8 @@
 import logging
 import inspect
-from .const import PITABLE, EMCTABLE
+from typing import Union
+from enum import Enum
+from const import PITABLE, EMCTABLE
 
 
 # Setup logging
@@ -33,7 +35,7 @@ class EnvironmentalRating(Enum):
     RISK = "RISK"
 
 
-def to_celsius(x: emperature, scale: str='f') -> Temperature:
+def to_celsius(x: Temperature, scale: str='f') -> Temperature:
     """Convert temperature to specified scale.
 
     
