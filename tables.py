@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from enum import Enum
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 class TableType(Enum):
@@ -164,17 +164,31 @@ def validate_table_data(data: np.ndarray, info: TableInfo) -> None:
 def fetch_and_validate_tables(url: str) -> Tuple[Dict[TableType, TableInfo], Dict[TableType, np.ndarray]]:
     """Fetch, parse, and validate tables from JavaScript source."""
     try:
+        logger.debug("Log level = DEBUG")
+
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         js_content = response.text
         
+        # Debug logging
+        logger.debug("Fetched JavaScript content (first 200 chars):")
+        logger.debug(js_content[:200])
+
         # Get table information
         table_info = parse_table_info(js_content)
-        
+        logger.debug("Parsed table information:")
+        for table_type, info in table_info.items():
+            logger.debug(f"{info}")
+
         # Extract table data
         pi_match = re.search(r'var\s+pitable\s*=\s*\[(.*?)\];', js_content, re.DOTALL)
         emc_match = re.search(r'var\s+emctable\s*=\s*\[(.*?)\];', js_content, re.DOTALL)
         
+        # Debug logging for pattern matching
+        logger.debug("Table pattern matches found:")
+        logger.debug(f"PI table found: {pi_match is not None}")
+        logger.debug(f"EMC table found: {emc_match is not None}")
+
         if not pi_match or not emc_match:
             raise ValueError("Could not find table data in JavaScript")
         

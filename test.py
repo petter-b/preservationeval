@@ -1,17 +1,32 @@
 import logging
 import requests
+import sys
 from pprint import pprint
-import preservationeval
 from tables import fetch_and_validate_tables
 
-# Set up logging to see the validation messages
-logging.basicConfig(level=logging.INFO)
+# Set up logging to both file and console
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('debug.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 def example_usage():
     """Example of how to use the table fetching and validation code."""
     
+    # Test that logging is working
+    logger.debug("Starting example_usage function. Debug level == DEBUG")
+
     # 1. Basic fetching and examining table information
     try:
+        # Log before fetch attempt
+        logger.debug("Attempting to fetch tables from website")
+
         # Fetch tables from the website
         table_info, tables = fetch_and_validate_tables("http://www.dpcalc.org/dp.js")
         
