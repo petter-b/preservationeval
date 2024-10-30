@@ -1,7 +1,8 @@
 import logging
-from http import requests
+import requests
 from pprint import pprint
 import preservationeval
+from tables import fetch_and_validate_tables
 
 # Set up logging to see the validation messages
 logging.basicConfig(level=logging.INFO)
