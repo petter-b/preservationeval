@@ -1,5 +1,5 @@
 # preservationeval
-A Python module to mimic the calculations done by the Dew Point Calculator.
+A Python module to mimic the calculations done by the Dew Point Calculator from Image Permanence Institute (IPI).
 
 ## Details
 The preservation evaluation code was taken from the [Dew point calulator](http://www.dpcalc.org) created by the Image Permanence Institute. For details of the calculations see:

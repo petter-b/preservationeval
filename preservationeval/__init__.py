@@ -6,7 +6,10 @@ from preservationeval.const import PITABLE, EMCTABLE
 
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(funcName)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(funcName)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 
@@ -14,6 +17,7 @@ logger = logging.getLogger(__name__)
 class PreservationError(Exception):
     """Base exception for preservation calculation errors."""
     pass
+
 
 class HumidityError(PreservationError):
     """Exception for humidity range violations."""
@@ -42,14 +46,16 @@ def round_half_up(n: float) -> int:
         return int(n - 0.5)
 
 
-def to_celsius(x: Temperature, scale: str='f') -> Temperature:
+def to_celsius(x: Temperature, scale: str = 'f') -> Temperature:
     """Convert temperature to specified scale.
 
-    
     Args:
         x (float / int): Temperature value
-        scale (str): Target scale ('f' for Fahrenheit, 'c' for Celsius, 'k' for Kelvin)
-    
+        scale (str):    Target scale
+                        - 'f' for Fahrenheit
+                        - 'c' for Celsius
+                        - 'k' for Kelvin)
+
     Returns:
         Temperature: Converted temperature value
 
@@ -84,23 +90,24 @@ def validate_rh(rh: RelativeHumidity) -> None:
 
 def clamp(x: Number, min: Number, max: Number) -> Number:
     """Clamp a value between min and max values.
-    
+
     Args:
         x: Value to clamp
         min: Minimum allowed value
         max: Maximum allowed value
-    
+
     Returns:
         Clamped value between min and max
     """
     # Get the name of the variable from the caller's frame
-    frame = inspect.currentframe().f_back
-    callargs = frame.f_locals
+    frame = inspect.currentframe().f_back  # type: ignore
+    callargs = frame.f_locals  # type: ignore
+
     # Find the argument name that matches our value
     name = next(k for k, v in callargs.items() if v is x)
-        
-    caller = frame.f_code.co_name
-    
+
+    caller = frame.f_code.co_name  # type: ignore
+
     if x < min:
         logger.info(
             f"{caller}: Clamping {name} from {x} to minimum {min}"
@@ -116,11 +123,11 @@ def clamp(x: Number, min: Number, max: Number) -> Number:
 
 def temp(rh: RelativeHumidity, td: Temperature) -> Temperature:
     """Calculate temperature given relative humidity and dew point.
-    
+
     Args:
         rh (float / int): Relative humidity (%)
         td (float / int): Dew point temperature
-    
+
     Returns:
         float: Calculated temperature
     """
@@ -131,11 +138,11 @@ def temp(rh: RelativeHumidity, td: Temperature) -> Temperature:
 
 def rh(t: Temperature, td: Temperature) -> RelativeHumidity:
     """Calculate relative humidity given temperature and dew point.
-    
+
     Args:
         t (float / int): Temperature
         td (float / int): Dew point temperature
-    
+
     Returns:
         RelativeHumidity: Calculated relative humidity (%)
     """
@@ -144,11 +151,11 @@ def rh(t: Temperature, td: Temperature) -> RelativeHumidity:
 
 def dp(t: Temperature, rh: RelativeHumidity) -> Temperature:
     """Calculate dew point given temperature and relative humidity.
-    
+
     Args:
         t (float / int): Temperature
         rh (float / int): Relative humidity (%)
-    
+
     Returns:
         Temperature: Calculated dew point temperature
     """
@@ -159,20 +166,23 @@ def dp(t: Temperature, rh: RelativeHumidity) -> Temperature:
 
 def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
     """
-    Calculate Preservation Index (PI) value. PI represents the overall rate of chemical decay in organic materials based on a constant T and RH. A higher number indicates a slower the rate of chemical decay.
-    
+    Calculate Preservation Index (PI) value. PI represents the overall rate of
+    chemical decay in organic materials based on a constant T and RH. A higher
+    number indicates a slower the rate of chemical decay.
+
     Args:
         t: Temperature in Celsius
         rh: Relative Humidity percentage
-    
+
     Returns:
         PI value [years].
         Use rate_natural_aging() to convert PI to Environmental Rating.
     """
     validate_rh(rh)
-    clamped_rh = clamp(rh, 6, 95) # Make sure that 6 <= rh <= 95 
-    clamped_t = clamp(t, -23, 65) # Make sure that -23 <= rh <= 65
-    idx: int = ((round_half_up(clamped_t) + 23) * 90) + round_half_up(clamped_rh) - 6
+    clamped_rh = clamp(rh, 6, 95)  # Make sure that 6 <= rh <= 95
+    clamped_t = clamp(t, -23, 65)  # Make sure that -23 <= rh <= 65
+    idx: int = ((round_half_up(clamped_t) + 23) * 90) + \
+        round_half_up(clamped_rh) - 6
     if idx >= len(PITABLE):
         logger.info(f"pi(): PITABLE[{idx}] does not exist, returning 0")
         return 0.0
@@ -181,11 +191,11 @@ def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
 
 def mold(t: Temperature, rh: RelativeHumidity) -> MoldRisk:
     """Calculate Mold Risk Factor.
-    
+
     Args:
         t: Temperature in Celsius (2 to 45°C for risk calculation)
         rh: Relative Humidity percentage (≥65% for risk calculation)
-    
+
     Returns:
         0 if no risk (t < 2°C or t > 45°C or rh < 65%),
         otherwise returns risk value from lookup table where
@@ -203,11 +213,11 @@ def mold(t: Temperature, rh: RelativeHumidity) -> MoldRisk:
 
 def emc(t: Temperature, rh: RelativeHumidity) -> MoistureContent:
     """Calculate Equilibrium Moisture Content (EMC).
-    
+
     Args:
         t: Temperature in Celsius (-20 to 65°C)
         rh: Relative Humidity percentage (0 to 100%)
-    
+
     Returns:
         EMC value from lookup table as percentage, where:
         - 5% ≤ EMC ≤ 12.5%: OK for mechanical damage
@@ -246,7 +256,7 @@ def rate_mechanical_damage(emc: MoistureContent) -> EnvironmentalRating:
         <5 or >12.5: Risk
     """
     if 5 <= emc <= 12.5:
-        return EnvironmentalRating.OK     
+        return EnvironmentalRating.OK
     else:
         return EnvironmentalRating.RISK
 
@@ -276,4 +286,3 @@ def rate_metal_corrosion(emc: MoistureContent) -> EnvironmentalRating:
         return EnvironmentalRating.OK
     else:
         return EnvironmentalRating.RISK
-    

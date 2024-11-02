@@ -38,13 +38,13 @@ const puppeteer = require('puppeteer');
 async function runTests() {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
-    
+
     await page.goto('file://' + process.argv[2]);
-    
+
     let data = '';
     process.stdin.resume();
     process.stdin.setEncoding('utf8');
-    
+
     process.stdin.on('data', (chunk) => {
         data += chunk;
     });

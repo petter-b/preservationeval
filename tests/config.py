@@ -1,11 +1,11 @@
 """
 Configuration settings for preservation calculation validation.
 
-This module contains all configuration parameters used in the validation process,
-including test ranges, JavaScript environment settings, and comparison tolerances.
+This module contains all configuration parameters used in the validation
+process, including test ranges, JavaScript environment settings, and comparison
+tolerances.
 """
 
-import decimal
 
 # Test parameters for temperature and relative humidity ranges
 TEST_CONFIG = {
