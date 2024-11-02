@@ -8,3 +8,11 @@ The preservation evaluation code was taken from the [Dew point calulator](http:/
 
 ## Usage
 TBD
+
+## Development Notes
+
+This project was developed with assistance from Claude AI (Anthropic). All code has been validated and tested for accuracy.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

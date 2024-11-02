@@ -1,3 +1,6 @@
+# In case dp.js is downloaded from the internet we don't want to track it
+dp.js
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

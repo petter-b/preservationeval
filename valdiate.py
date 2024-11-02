@@ -3,23 +3,22 @@ Test script to compare JavaScript and Python implementations of preservation cal
 
 This script:
 1. Downloads the original JavaScript implementation (dp.js)
-2. Creates a testing environment to run JavaScript code
-3. Generates test cases covering the full range of inputs
-4. Runs identical tests through both JavaScript and Python implementations
-5. Compares the results and reports any differences
+2. Creates a browser-based testing environment using Puppeteer
+3. Runs the original dp.js code in its intended environment
+4. Compares results with Python implementation
+5. Reports any differences found
 
 Requirements:
-- Node.js installed (for running JavaScript)
+- Node.js installed
+- Puppeteer installed (npm install -g puppeteer)
 - Python 3.6+ with numpy and requests
 - Your Python implementation of the pi, emc, and mold functions
 
+The script uses Puppeteer to run the original dp.js in a proper browser environment,
+ensuring we're testing against the actual implementation rather than a recreation.
+
 Example usage:
     python test_implementations.py
-
-The script will output:
-- Test progress information
-- Summary of any differences found
-- Detailed comparison of differing results
 """
 
 import subprocess
@@ -28,104 +27,191 @@ import numpy as np
 from pathlib import Path
 import tempfile
 import requests
-from typing import Tuple, Dict, List
+from typing import List, Dict
 import logging
 import shutil
+
+# Import your Python implementation here
+from preservationeval import pi, emc, mold
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-def create_test_wrapper() -> Path:
+
+def check_nodejs_installation() -> bool:
     """
-    Create a JavaScript test environment that uses the original dp.js file.
+    Check if Node.js and npm are available on the system.
+    
+    Returns:
+        bool: True if both Node.js and npm are available
+        
+    Raises:
+        RuntimeError: If Node.js or npm is not installed
+    """
+    try:
+        # Check Node.js
+        node_version = subprocess.run(
+            ['node', '--version'], 
+            capture_output=True, 
+            text=True, 
+            check=True
+        )
+        logger.debug(f"Found Node.js: {node_version.stdout.strip()}")
+        
+        # Check npm
+        npm_version = subprocess.run(
+            ['npm', '--version'], 
+            capture_output=True, 
+            text=True, 
+            check=True
+        )
+        logger.debug(f"Found npm: {npm_version.stdout.strip()}")
+        
+        return True
+        
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(
+            "Node.js and npm are required but not found. "
+            "Please install them from https://nodejs.org/"
+        ) from e
+    except FileNotFoundError as e:
+        raise RuntimeError(
+            "Node.js and npm are required but not found in PATH. "
+            "Please install them from https://nodejs.org/"
+        ) from e
+
+
+def create_test_environment() -> Path:
+    """
+    Create a browser-based test environment for running dp.js.
     
     This function:
     1. Creates a temporary directory
-    2. Downloads the original dp.js file into it
-    3. Creates a wrapper script that:
-       - Loads the original dp.js
-       - Provides a test harness to run multiple calculations
-       - Handles JSON input/output for communication with Python
-    
-    Returns:
-        Path: Path to the created wrapper script
-        
-    Raises:
-        RuntimeError: If unable to create test environment
+    2. Sets up a Node.js project with Puppeteer
+    3. Creates the test files
     """
-    js_code = """
-// Load and execute the original dp.js content
-const fs = require('fs');
-const path = require('path');
+    # HTML file remains the same
+    html_code = """
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="dp.js"></script>
+    <script>
+        function runTests(inputs) {
+            return inputs.map(input => {
+                const t = input[0];
+                const rh = input[1];
+                return {
+                    temp: t,
+                    rh: rh,
+                    pi: pi(t, rh),
+                    emc: emc(t, rh),
+                    mold: mold(t, rh)
+                };
+            });
+        }
+    </script>
+</head>
+<body>
+</body>
+</html>
+    """
+    
+    # package.json for Node.js project
+    package_json = """{
+        "name": "dp-test",
+        "version": "1.0.0",
+        "dependencies": {
+            "puppeteer": "^19.0.0"
+        }
+    }"""
+    
+    # Node.js script remains the same
+    node_code = """
+const puppeteer = require('puppeteer');
 
-// eval() executes dp.js, which defines the pi(), emc(), and mold() functions
-eval(fs.readFileSync(path.join(__dirname, 'dp.js'), 'utf8'));
-
-// Function to run multiple test cases
-function runTests(inputs) {
-    // Process each input pair [temperature, relative_humidity]
-    return inputs.map(input => {
-        const t = input[0];
-        const rh = input[1];
-        return {
-            temp: t,
-            rh: rh,
-            pi: pi(t, rh),    // Call original pi() function
-            emc: emc(t, rh),   // Call original emc() function
-            mold: mold(t, rh)  // Call original mold() function
-        };
+async function runTests() {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    
+    await page.goto('file://' + process.argv[2]);
+    
+    let data = '';
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+    
+    process.stdin.on('data', (chunk) => {
+        data += chunk;
+    });
+    
+    process.stdin.on('end', async () => {
+        const inputs = JSON.parse(data);
+        const results = await page.evaluate((testInputs) => {
+            return runTests(testInputs);
+        }, inputs);
+        console.log(JSON.stringify(results));
+        await browser.close();
     });
 }
 
-// Set up stdin handling for receiving test cases
-const stdin = process.stdin;
-let data = '';
-
-stdin.resume();
-stdin.setEncoding('utf8');
-
-stdin.on('data', function(chunk) {
-    data += chunk;
-});
-
-// When all input is received, run tests and output results
-stdin.on('end', function() {
-    const inputs = JSON.parse(data);
-    const results = runTests(inputs);
-    console.log(JSON.stringify(results));
-});
-"""
+runTests().catch(console.error);
+    """
     
     try:
         # Create temporary directory
         temp_dir = Path(tempfile.mkdtemp())
         logger.debug(f"Created temporary directory: {temp_dir}")
         
+        # Create package.json and install dependencies
+        (temp_dir / 'package.json').write_text(package_json)
+        
+        # Run npm install
+        subprocess.run(
+            ['npm', 'install'],
+            cwd=temp_dir,
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        logger.debug("Installed Node.js dependencies")
+        
         # Download original dp.js
         response = requests.get('http://www.dpcalc.org/dp.js')
         response.raise_for_status()
+        js_content = response.text
         logger.debug("Successfully downloaded dp.js")
         
-        # Save original dp.js
-        dp_js_path = temp_dir / 'dp.js'
-        dp_js_path.write_text(response.text)
+        # Save all required files
+        (temp_dir / 'dp.js').write_text(js_content)
+        (temp_dir / 'test.html').write_text(html_code)
+        (temp_dir / 'run_tests.js').write_text(node_code)
         
-        # Save wrapper script
-        wrapper_path = temp_dir / 'wrapper.js'
-        wrapper_path.write_text(js_code)
-        logger.debug("Created wrapper script")
+        return temp_dir
         
-        return wrapper_path
-        
-    except Exception as e:
-        # Clean up on error
+    except subprocess.CalledProcessError as e:
         if 'temp_dir' in locals():
             shutil.rmtree(temp_dir)
-        raise RuntimeError(f"Failed to create test environment: {str(e)}")
+        raise RuntimeError(f"Failed to install Node.js dependencies: {e.stdout}\n{e.stderr}")
+    except requests.RequestException as e:
+        if 'temp_dir' in locals():
+            shutil.rmtree(temp_dir)
+        raise RuntimeError(f"Failed to download dp.js: {e}")
+    except Exception as e:
+        if 'temp_dir' in locals():
+            shutil.rmtree(temp_dir)
+        raise RuntimeError(f"Failed to create test environment: {e}")
+
 
 def run_javascript_tests(test_cases: List[List[float]]) -> List[Dict]:
     """
     Run test cases through the original JavaScript implementation.
+    
+    This function:
+    1. Creates a test environment with all necessary files
+    2. Launches a headless browser using Puppeteer
+    3. Runs the test cases using the original dp.js implementation
+    4. Returns the results
     
     Args:
         test_cases: List of [temperature, humidity] pairs to test
@@ -134,22 +220,22 @@ def run_javascript_tests(test_cases: List[List[float]]) -> List[Dict]:
         List of dictionaries containing test results. Each dictionary contains:
             - temp: Input temperature
             - rh: Input relative humidity
-            - pi: Preservation Index value
-            - emc: Equilibrium Moisture Content value
-            - mold: Mold risk value
+            - pi: Preservation Index value from original implementation
+            - emc: Equilibrium Moisture Content value from original implementation
+            - mold: Mold risk value from original implementation
             
     Raises:
         RuntimeError: If JavaScript execution fails
     """
-    wrapper_file = create_test_wrapper()
+    test_dir = create_test_environment()
     
     try:
         # Convert test cases to JSON for Node.js
         input_json = json.dumps(test_cases)
         
-        # Run Node.js process with our wrapper
+        # Run tests using Puppeteer
         process = subprocess.Popen(
-            ['node', str(wrapper_file)],
+            ['node', str(test_dir / 'run_tests.js'), str(test_dir / 'test.html')],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -162,12 +248,13 @@ def run_javascript_tests(test_cases: List[List[float]]) -> List[Dict]:
         if process.returncode != 0:
             raise RuntimeError(f"JavaScript execution failed: {stderr}")
         
-        # Parse JSON results
+        # Parse and return results
         return json.loads(stdout)
         
     finally:
         # Clean up temporary directory
-        shutil.rmtree(wrapper_file.parent)
+        shutil.rmtree(test_dir)
+
 
 def generate_test_cases() -> List[List[float]]:
     """
@@ -205,6 +292,7 @@ def generate_test_cases() -> List[List[float]]:
     
     return test_cases
 
+
 def run_python_implementation(test_cases: List[List[float]]) -> List[Dict]:
     """
     Run test cases through Python implementation.
@@ -218,8 +306,6 @@ def run_python_implementation(test_cases: List[List[float]]) -> List[Dict]:
     Note:
         Requires your Python implementation to be available for import
     """
-    # Import your Python implementation here
-    from your_implementation import pi, emc, mold
     
     results = []
     for t, rh in test_cases:
@@ -231,6 +317,7 @@ def run_python_implementation(test_cases: List[List[float]]) -> List[Dict]:
             'mold': mold(t, rh)
         })
     return results
+
 
 def compare_implementations(js_results: List[Dict], py_results: List[Dict]) -> Dict[str, List]:
     """
@@ -290,6 +377,7 @@ def compare_implementations(js_results: List[Dict], py_results: List[Dict]) -> D
     
     return differences
 
+
 def main():
     """
     Main function to run the comparison tests.
@@ -301,6 +389,9 @@ def main():
     4. Reports findings
     """
     try:
+        # First check for Node.js/npm
+        check_nodejs_installation()
+        
         # Generate test cases
         test_cases = generate_test_cases()
         logger.info(f"Generated {len(test_cases)} test cases")
@@ -339,6 +430,7 @@ def main():
     except Exception as e:
         logger.error(f"Test execution failed: {str(e)}")
         raise
+
 
 if __name__ == "__main__":
     main()

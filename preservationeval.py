@@ -35,6 +35,13 @@ class EnvironmentalRating(Enum):
     RISK = "RISK"
 
 
+def round_half_up(n: float) -> int:
+    if n >= 0:
+        return int(n + 0.5)
+    else:
+        return int(n - 0.5)
+
+
 def to_celsius(x: Temperature, scale: str='f') -> Temperature:
     """Convert temperature to specified scale.
 
@@ -99,7 +106,7 @@ def clamp(x: Number, min: Number, max: Number) -> Number:
             f"{caller}: Clamping {name} from {x} to minimum {min}"
         )
         return min
-    elif value > max:
+    elif x > max:
         logger.info(
             f"{caller}: Clamping {name} from {x} to maximum {max}"
         )
@@ -165,7 +172,7 @@ def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
     validate_rh(rh)
     clamped_rh = clamp(rh, 6, 95) # Make sure that 6 <= rh <= 95 
     clamped_t = clamp(t, -23, 65) # Make sure that -23 <= rh <= 65
-    idx: int = ((round(clamped_t) + 23) * 90) + round(clamped_rh) - 6
+    idx: int = ((round_half_up(clamped_t) + 23) * 90) + round_half_up(clamped_rh) - 6
     if idx >= len(PITABLE):
         logger.info(f"pi(): PITABLE[{idx}] does not exist, returning 0")
         return 0.0
@@ -187,7 +194,7 @@ def mold(t: Temperature, rh: RelativeHumidity) -> MoldRisk:
     validate_rh(rh)
     if t > 45 or t < 2 or rh < 65:
         return 0.0
-    idx: int = 8010 + (round(t) - 2) * 36 + round(rh) - 65
+    idx: int = 8010 + (round_half_up(t) - 2) * 36 + round_half_up(rh) - 65
     if idx >= len(PITABLE):
         logger.info(f"mold(): PITABLE[{idx}] does not exist, returning 0")
         return 0.0
@@ -210,7 +217,7 @@ def emc(t: Temperature, rh: RelativeHumidity) -> MoistureContent:
     """
     validate_rh(rh)
     clamped_t = clamp(t, -20, 65)
-    idx: int = round(clamped_t + 20) * 101 + round(rh)
+    idx: int = round_half_up(clamped_t + 20) * 101 + round_half_up(rh)
     if idx >= len(EMCTABLE):
         logger.info(f"emc(): EMCTABLE[{idx}] does not exist, returning 0")
         return 0.0
