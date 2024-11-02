@@ -11,7 +11,7 @@ TBD
 
 ## Development Notes
 
-This project was developed with assistance from Claude AI (Anthropic). All code has been validated and tested for accuracy.
+This project was developed with assistance from Claude AI (Anthropic) and to some extent GitHub Copilot. All code has been validated and tested for accuracy.
 
 ## License
 

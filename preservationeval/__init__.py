@@ -2,7 +2,7 @@ import logging
 import inspect
 from typing import Union
 from enum import Enum
-from const import PITABLE, EMCTABLE
+from preservationeval.const import PITABLE, EMCTABLE
 
 
 # Setup logging
