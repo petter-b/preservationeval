@@ -46,6 +46,12 @@ def round_half_up(n: float) -> int:
         return int(n - 0.5)
 
 
+# To get exact same behavior as in the original JS code we use round_half_up()
+# when converting float to int, could be changed to round() if you dont care
+# about that
+to_int = round_half_up
+
+
 def to_celsius(x: Temperature, scale: str = 'f') -> Temperature:
     """Convert temperature to specified scale.
 
@@ -84,7 +90,7 @@ def validate_rh(rh: RelativeHumidity) -> None:
     """
     if not (0 <= rh <= 100):
         raise HumidityError(
-            f"Relative humidity must be between {min}% and {max}%, got {rh}%"
+            f"Relative humidity must be between 0 [%] and 100 [%], got {rh} [%]"  # noqa E501
         )
 
 
@@ -181,8 +187,8 @@ def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
     validate_rh(rh)
     clamped_rh = clamp(rh, 6, 95)  # Make sure that 6 <= rh <= 95
     clamped_t = clamp(t, -23, 65)  # Make sure that -23 <= rh <= 65
-    idx: int = ((round_half_up(clamped_t) + 23) * 90) + \
-        round_half_up(clamped_rh) - 6
+    idx: int = ((to_int(clamped_t) + 23) * 90) + \
+        to_int(clamped_rh) - 6
     if idx >= len(PITABLE):
         logger.info(f"pi(): PITABLE[{idx}] does not exist, returning 0")
         return 0.0
@@ -204,7 +210,7 @@ def mold(t: Temperature, rh: RelativeHumidity) -> MoldRisk:
     validate_rh(rh)
     if t > 45 or t < 2 or rh < 65:
         return 0.0
-    idx: int = 8010 + (round_half_up(t) - 2) * 36 + round_half_up(rh) - 65
+    idx: int = 8010 + (to_int(t) - 2) * 36 + to_int(rh) - 65
     if idx >= len(PITABLE):
         logger.info(f"mold(): PITABLE[{idx}] does not exist, returning 0")
         return 0.0
@@ -227,7 +233,7 @@ def emc(t: Temperature, rh: RelativeHumidity) -> MoistureContent:
     """
     validate_rh(rh)
     clamped_t = clamp(t, -20, 65)
-    idx: int = round_half_up(clamped_t + 20) * 101 + round_half_up(rh)
+    idx: int = to_int(clamped_t + 20) * 101 + to_int(rh)
     if idx >= len(EMCTABLE):
         logger.info(f"emc(): EMCTABLE[{idx}] does not exist, returning 0")
         return 0.0
