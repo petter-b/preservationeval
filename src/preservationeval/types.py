@@ -1,68 +1,98 @@
 # Standard library imports
-from enum import Flag, auto
-import logging
-from typing import Generic, Tuple, TypeVar
+from enum import Enum, Flag, auto
+from typing import Tuple, TypeAlias, Union
 
 # Third-party imports
 import numpy as np
 
-# Type definitions
-T = TypeVar('T')
+# Local imports
+from preservationeval.logging import setup_logging
 
-__all__ = [
-    'ShiftedArray',
-    'BoundaryBehavior',
-    'IndexRangeError',
-    'XBelowMinError',
-    'XAboveMaxError',
-    'YBelowMinError',
-    'YAboveMaxError',
-]
+# Types aliases
+Number: TypeAlias = Union[int, float]
+Temperature: TypeAlias = Number
+RelativeHumidity: TypeAlias = Number
+PreservationIndex: TypeAlias = float
+MoldRisk: TypeAlias = float
+MoistureContent: TypeAlias = float
+
+
+# Custom Exceptions
+class PreservationError(Exception):
+    """Base exception for preservation calculation errors."""
+
+    ...
+
+
+class TemperatureError(PreservationError):
+    """Exception for temperature range violations."""
+
+    ...
+
+
+class HumidityError(PreservationError):
+    """Exception for humidity range violations."""
+
+    ...
+
+
+class IndexRangeError(PreservationError):
+    """Exception for index range violations."""
+
+    ...
+
+
+class XBelowMinError(IndexRangeError):
+    """X index below minimum value."""
+
+    ...
+
+
+class XAboveMaxError(IndexRangeError):
+    """X index above maximum value."""
+
+    ...
+
+
+class YBelowMinError(IndexRangeError):
+    """Y index below minimum value."""
+
+    ...
+
+
+class YAboveMaxError(IndexRangeError):
+    """Y index above maximum value."""
+
+    ...
+
+
+class EnvironmentalRating(Enum):
+    GOOD = "GOOD"
+    OK = "OK"
+    RISK = "RISK"
 
 
 class BoundaryBehavior(Flag):
     """Defines how to handle indices outside array bounds."""
+
     RAISE = auto()  # Raise exception for out-of-bounds
     CLAMP_X = auto()  # Clamp x values to min/max, raise for y
     CLAMP_Y = auto()  # Clamp y values to min/max, raise for x
     CLAMP = CLAMP_X | CLAMP_Y  # Clamp both x and y values
 
 
-class IndexRangeError(Exception):
-    """Exception for index range violations."""
-    pass
-
-
-class XBelowMinError(IndexRangeError):
-    """X index below minimum value."""
-    pass
-
-
-class XAboveMaxError(IndexRangeError):
-    """X index above maximum value."""
-    pass
-
-
-class YBelowMinError(IndexRangeError):
-    """Y index below minimum value."""
-    pass
-
-
-class YAboveMaxError(IndexRangeError):
-    """Y index above maximum value."""
-    pass
-
-
-class ShiftedArray(Generic[T]):
+class ShiftedArray:
     """
     Array with shifted index ranges, backed by numpy.array.
     """
 
-    def __init__(self,
-                 data: np.ndarray,
-                 x_min: int,
-                 y_min: int,
-                 boundary_behavior: BoundaryBehavior = BoundaryBehavior.RAISE):
+    def __init__(
+        self,
+        data: np.ndarray,
+        x_min: int,
+        y_min: int,
+        boundary_behavior: BoundaryBehavior = BoundaryBehavior.RAISE,
+    ):
         """
         Args:
             data: 2D numpy array
@@ -70,7 +100,7 @@ class ShiftedArray(Generic[T]):
             y_min: Minimum y index
             boundary: How to handle out-of-bounds indices
         """
-        self._logger = logging.getLogger(self.__class__.__name__)
+        self._logger = setup_logging(self.__class__.__name__)
 
         if not isinstance(data, np.ndarray) or data.ndim != 2:
             raise TypeError("Data must be a 2D numpy array")
@@ -82,16 +112,16 @@ class ShiftedArray(Generic[T]):
 
     @property
     def x_max(self) -> int:
-        return self.x_min + self.data.shape[0] - 1
+        return int(self.x_min + self.data.shape[0] - 1)
 
     @property
     def y_max(self) -> int:
-        return self.y_min + self.data.shape[1] - 1
+        return int(self.y_min + self.data.shape[1] - 1)
 
     def __getitem__(
-            self,
-            indices: Tuple[int, int],
-    ) -> T:
+        self,
+        indices: Tuple[int, int],
+    ) -> Number:
         """
         Get value using original indices.
 
@@ -113,9 +143,7 @@ class ShiftedArray(Generic[T]):
 
         # Check for integer indices
         if not isinstance(x, int) or not isinstance(y, int):
-            raise TypeError(
-                f"Indices must be integers, got x: {type(x)}, y: {type(y)}"
-            )
+            raise TypeError(f"Indices must be integers, got x: {type(x)}, y: {type(y)}")
 
         # Check for out-of-bounds indices
         if x < self.x_min:
@@ -156,7 +184,7 @@ class ShiftedArray(Generic[T]):
 
         x_idx = int(x - self.x_min)
         y_idx = int(y - self.y_min)
-        return self.data[x_idx, y_idx]
+        return self.data[x_idx, y_idx]  # type: ignore
 
     def __str__(self) -> str:
         return (

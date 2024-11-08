@@ -48,7 +48,7 @@ import requests
 
 # Local imports
 from preservationeval.logging import setup_logging
-from preservationeval.shifted_array import BoundaryBehavior, ShiftedArray
+from preservationeval.types import BoundaryBehavior, ShiftedArray
 
 from .patterns import COMPILED_PATTERNS
 
@@ -457,7 +457,7 @@ def extract_raw_arrays(
 
 def fetch_and_validate_tables(
     url: str,
-) -> Tuple[ShiftedArray[np.int8], ShiftedArray[np.float16], ShiftedArray[np.int8]]:
+) -> Tuple[ShiftedArray, ShiftedArray, ShiftedArray]:
     """Fetch and process all tables.
 
     Args:

@@ -1,4 +1,22 @@
-"""Logging configuration for preservationeval package."""
+"""
+This module contains functions and classes to configure and use structured
+logging in the preservationeval package.
+
+The main function is `setup_logging`, which sets up a structured logger with
+the name 'preservationeval'. This logger logs to the console and optionally
+to a file. The log format is a JSON object with the following fields:
+
+    - 'logger': the name of the logger
+    - 'level': the log level (one of DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    - 'time': the time of the log event in ISO 8601 format
+    - 'message': the log message
+    - 'extra': any extra metadata associated with the log event
+
+The module also defines a dataclass `LogConfig` to hold configuration
+parameters for the logger, and an enum `LogLevel` to represent the log
+levels.
+
+"""
 
 import json
 import logging
@@ -8,9 +26,18 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+__all__ = [
+    "setup_logging",
+    "get_default_config",
+    "StructuredLogger",
+    "LogLevel",
+    "LogConfig",
+]
+
 
 class LogLevel(str, Enum):
     """Logging levels with string representations."""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -18,13 +45,21 @@ class LogLevel(str, Enum):
     CRITICAL = "CRITICAL"
 
     def to_level(self) -> int:
-        """Convert to logging level."""
+        """
+        Convert the LogLevel instance to a numeric logging level.
+
+        Returns:
+            int: The numeric logging level corresponding to this LogLevel.
+        """
+        # Use getattr to retrieve the numerical value associated with
+        # the log level name stored in self.value
         return int(getattr(logging, self.value))
 
 
 @dataclass
 class LogConfig:
     """Logging configuration settings."""
+
     # General settings
     level: LogLevel = LogLevel.DEBUG
     format: str = (
@@ -58,18 +93,14 @@ class StructuredLogger(logging.Logger):
         level: int,
         msg: str,
         extra: Optional[Dict[str, Any]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """Log a message with structured data."""
         if extra is None:
             extra = {}
 
         # Create structured log entry
-        log_entry = {
-            "message": msg,
-            "data": extra,
-            **kwargs
-        }
+        log_entry = {"message": msg, "data": extra, **kwargs}
 
         # Convert to JSON string
         structured_msg = json.dumps(log_entry)
@@ -79,7 +110,7 @@ class StructuredLogger(logging.Logger):
 def setup_logging(
     name: Optional[str] = None,
     config: Optional[LogConfig] = None,
-    env: str = "development"
+    env: str = "development",
 ) -> logging.Logger:
     """Configure and return a logger with given configuration.
 
@@ -109,10 +140,7 @@ def setup_logging(
     logger.handlers.clear()
 
     # Create formatter
-    formatter = logging.Formatter(
-        fmt=config.format,
-        datefmt=config.date_format
-    )
+    formatter = logging.Formatter(fmt=config.format, datefmt=config.date_format)
 
     # Add console handler if enabled
     if config.console_output:
@@ -150,7 +178,7 @@ def get_default_config(env: str = "development") -> LogConfig:
             console_output=True,
             file_output=True,
             log_dir=Path("logs"),
-            file_name="preservationeval-dev.log"
+            file_name="preservationeval-dev.log",
         )
     elif env == "production":
         return LogConfig(
@@ -158,7 +186,7 @@ def get_default_config(env: str = "development") -> LogConfig:
             console_output=False,
             file_output=True,
             log_dir=Path("/var/log/preservationeval"),
-            file_name="preservationeval.log"
+            file_name="preservationeval.log",
         )
     else:
         raise ValueError(f"Unknown environment: {env}")
