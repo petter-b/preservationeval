@@ -44,7 +44,7 @@ dmypy.json
 !.vscode/tasks.json       # Keep task configurations
 *.swp
 *.swo
-.DS_Store
+.DS_Store*
 *.sublime-workspace
 *.sublime-project
 
