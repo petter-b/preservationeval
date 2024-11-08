@@ -1,27 +1,73 @@
 """
-Alternate implementation of PI, MRF and EMC calculation using numpy 2D arrays.
+Alternate implementation of PI, MRF, and EMC calculation using numpy 2D arrays.
+
+This module provides functions to calculate Preservation Index (PI),
+Mold Risk Factor (MRF),and Equilibrium Moisture Content (EMC) using numpy 2D
+arrays for efficient computation.
+
+Functions:
+    round_half_up(n: float) -> int:
+        Round a number to the nearest integer. Ties are rounded away from zero.
+
+    to_celsius(x: float, scale: str = 'f') -> float:
+        Convert temperature to Celsius.
+
+    pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
+        Calculate Preservation Index (PI) value.
+
+    mold(t: Temperature, rh: RelativeHumidity) -> MoldRisk:
+        Calculate Mold Risk Factor.
+
+    emc(t: Temperature, rh: RelativeHumidity) -> MoistureContent:
+        Calculate Equilibrium Moisture Content (EMC).
+
+Classes:
+    BoundaryBehavior(Enum):
+        Enum for boundary behavior options.
+
+    ShiftedArray:
+        Class for handling shifted arrays with boundary behavior.
 """
-import logging
-from typing import Union, Final
+
+# Standard library imports
 from enum import Enum
+from typing import Final, Union, TypeAlias
+
+# Third-party imports
 import numpy as np
-from preservationeval.const import (
-    PITABLE as JS_PITABLE,
-    EMCTABLE as JS_EMCTABLE
+
+# Local imports
+from .logging import setup_logging, LogConfig, LogLevel
+from .const import PITABLE, EMCTABLE
+from .shifted_array import (
+    BoundaryBehavior,
+    IndexRangeError,
+    ShiftedArray,
+    XAboveMaxError,
+    XBelowMinError,
+    YAboveMaxError,
+    YBelowMinError,
 )
-from preservationeval.shifted_array import (
-    ShiftedArray, XBelowMinError, XAboveMaxError,
-    YBelowMinError, YAboveMaxError, BoundaryBehavior,
-    IndexRangeError
-)
+# from .tables import fetch_and_validate_tables
+
+# Types aliases
+Number: TypeAlias = Union[int, float]
+Temperature: TypeAlias = Number
+RelativeHumidity: TypeAlias = Number
+PreservationIndex: TypeAlias = float
+MoldRisk: TypeAlias = float
+MoistureContent: TypeAlias = float
 
 
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(funcName)s - %(message)s'
+# Configure package-level logging
+package_logger = setup_logging(
+    name="preservationeval",
+    config=LogConfig(
+        level=LogLevel.DEBUG,
+        console_output=True,
+    )
 )
-logger = logging.getLogger(__name__)
+logger = package_logger
 
 
 # Custom Exceptions
@@ -40,22 +86,43 @@ class HumidityError(PreservationError):
     pass
 
 
-# Types
-Number = Union[int, float]
-Temperature = Number
-RelativeHumidity = Number
-PreservationIndex = float
-MoldRisk = float
-MoistureContent = float
-
-
 class EnvironmentalRating(Enum):
     GOOD = "GOOD"
     OK = "OK"
     RISK = "RISK"
 
 
+# Initialize ShiftedArrays
+pi_table: Final[ShiftedArray] = ShiftedArray(
+    np.array(PITABLE[:8010]).reshape(89, 90),
+    -23,
+    6,
+    BoundaryBehavior.CLAMP
+)
+mold_table: Final[ShiftedArray] = ShiftedArray(
+    np.array(PITABLE[8010:]).reshape(44, 36),
+    2,
+    65,
+    BoundaryBehavior.RAISE
+)
+emc_table: Final[ShiftedArray] = ShiftedArray(
+    np.array(EMCTABLE).reshape(86, 101),
+    -20,
+    0,
+    BoundaryBehavior.CLAMP
+)
+
+
 def round_half_up(n: float) -> int:
+    """
+    Round a number to the nearest integer. Ties are rounded away from zero.
+
+    Args:
+        n (float): The number to round.
+
+    Returns:
+        int: The rounded integer.
+    """
     if n >= 0:
         return int(n + 0.5)
     else:
@@ -66,26 +133,6 @@ def round_half_up(n: float) -> int:
 # when converting float to int, could be changed to round() if you dont care
 # about that
 to_int = round_half_up
-
-
-PITABLE: Final[ShiftedArray] = ShiftedArray(
-    np.array(JS_PITABLE[:8010]).reshape(89, 90),
-    -23,
-    6,
-    BoundaryBehavior.CLAMP
-)
-MOLDTABLE: Final[ShiftedArray] = ShiftedArray(
-    np.array(JS_PITABLE[8010:]).reshape(44, 36),
-    2,
-    65,
-    BoundaryBehavior.RAISE
-)
-EMCTABLE: Final[ShiftedArray] = ShiftedArray(
-    np.array(JS_EMCTABLE).reshape(86, 101),
-    -20,
-    0,
-    BoundaryBehavior.CLAMP
-)
 
 
 def to_celsius(x: Temperature, scale: str = 'f') -> Temperature:
@@ -189,7 +236,7 @@ def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
     """
     validate_rh(rh)
     try:
-        pi = PITABLE[to_int(t), to_int(rh)]
+        pi = pi_table[to_int(t), to_int(rh)]
     except (XBelowMinError, XAboveMaxError) as e:
         logger.error(f"Temperature out of bounds: {e}")
         raise TemperatureError("Temperature out of bounds") from e
@@ -216,7 +263,7 @@ def mold(t: Temperature, rh: RelativeHumidity) -> MoldRisk:
     """
     validate_rh(rh)
     try:
-        mold = MOLDTABLE[to_int(t), to_int(rh)]
+        mold = mold_table[to_int(t), to_int(rh)]
     except IndexRangeError:
         return 0.0
     except Exception as e:
@@ -241,7 +288,7 @@ def emc(t: Temperature, rh: RelativeHumidity) -> MoistureContent:
     """
     validate_rh(rh)
     try:
-        emc = EMCTABLE[to_int(t), to_int(rh)]
+        emc = emc_table[to_int(t), to_int(rh)]
     except (XBelowMinError, XAboveMaxError) as e:
         logger.error(f"Temperature out of bounds: {e}")
         raise TemperatureError("Temperature out of bounds") from e
@@ -256,10 +303,16 @@ def emc(t: Temperature, rh: RelativeHumidity) -> MoistureContent:
 
 def rate_natural_aging(pi: PreservationIndex) -> EnvironmentalRating:
     """
-    Evaluates Natural Aging risk as a function of PI:
-        ≥75: Good
-        45-75: OK
-        <45: Risk
+    Evaluate Natural Aging risk as a function of Preservation Index (PI).
+
+    Args:
+        pi (PreservationIndex): The Preservation Index value.
+
+    Returns:
+        EnvironmentalRating: The environmental rating based on PI.
+            - GOOD: If PI is ≥75
+            - OK: If PI is between 45 and 75
+            - RISK: If PI is <45
     """
     if pi >= 75:
         return EnvironmentalRating.GOOD
@@ -271,9 +324,16 @@ def rate_natural_aging(pi: PreservationIndex) -> EnvironmentalRating:
 
 def rate_mechanical_damage(emc: MoistureContent) -> EnvironmentalRating:
     """
-    Evaluates risk of Mechanical Damage as a function of %EMC:
-        5-12.5: OK
-        <5 or >12.5: Risk
+    Evaluate the risk of Mechanical Damage as a function of Equilibrium
+    Moisture Content (EMC).
+
+    Args:
+        emc (MoistureContent): The Equilibrium Moisture Content value.
+
+    Returns:
+        EnvironmentalRating: The environmental rating based on EMC.
+            - OK: If EMC is between 5 and 12.5
+            - RISK: If EMC is outside the range 5-12.5
     """
     if 5 <= emc <= 12.5:
         return EnvironmentalRating.OK
@@ -283,9 +343,15 @@ def rate_mechanical_damage(emc: MoistureContent) -> EnvironmentalRating:
 
 def rate_mold_growth(mrf: MoldRisk) -> EnvironmentalRating:
     """
-    Evaluates risk  of Mold Growth as a fucntion of Mold Risk Factor:
-        0: No Risk
-        >0: Risk (value represents days to mold)
+    Evaluate the risk of Mold Growth as a function of Mold Risk Factor (MRF).
+
+    Args:
+        mrf (MoldRisk): The Mold Risk Factor value.
+
+    Returns:
+        EnvironmentalRating: The environmental rating based on MRF.
+            - GOOD: If MRF is 0 (No Risk)
+            - RISK: If MRF is >0 (Risk, value represents days to mold)
     """
     if mrf == 0:
         return EnvironmentalRating.GOOD
@@ -295,10 +361,17 @@ def rate_mold_growth(mrf: MoldRisk) -> EnvironmentalRating:
 
 def rate_metal_corrosion(emc: MoistureContent) -> EnvironmentalRating:
     """
-    Evaluates risk of Metal Corrosion as a function of %EMC:
-        <7.0: Good
-        7.1-10.5: OK
-        ≥10.5: Risk
+    Evaluate the risk of Metal Corrosion as a function of Equilibrium Moisture
+    Content (EMC).
+
+    Args:
+        emc (MoistureContent): The Equilibrium Moisture Content value.
+
+    Returns:
+        EnvironmentalRating: The environmental rating based on EMC.
+            - GOOD: If EMC is <7.0
+            - OK: If EMC is between 7.1 and 10.5
+            - RISK: If EMC is ≥10.5
     """
     if emc < 7.0:
         return EnvironmentalRating.GOOD

@@ -1,0 +1,135 @@
+[project]
+name = "preservationeval"
+version = "0.1.0"
+authors = [
+    {name = "Petter Blomberg", email = "petter.blomberg@gmail.com"}
+]
+description = "A Python module to mimic the calculations done by the Dew Point Calculator from Image Permanence Institute (IPI)."
+requires-python = ">=3.11"
+license = {text = "MIT"}
+keywords = ["preservation", "climate", "numpy"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=1.24.0",
+    "requests>=2.31.0",
+]
+readme = "README.md"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-mypy>=0.10.3",
+    "pytest-cov>=4.1.0",
+    "mypy>=1.6.0",
+    "black>=23.9.1",
+    "isort>=5.12.0",
+    "flake8>=6.1.0",
+    "pytest-benchmark>=4.0.0",
+    "memory_profiler>=0.61.0",
+]
+
+[project.scripts]
+preservationeval = "preservationeval.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.urls]
+Homepage = "https://github.com/petter-b/preservationeval"
+Documentation = "https://github.com/petter-b/preservationeval#readme"
+Repository = "https://github.com/petter-b/preservationeval.git"
+Issues = "https://github.com/petter-b/preservationeval/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "--mypy --cov=preservationeval --cov-report=html"
+pythonpath = [".", "tests"]
+markers = [
+    "slow: marks tests as slow",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests"
+]
+
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+files = ["src/**/*.py", "tests/**/*.py"]
+
+[[tool.mypy.overrides]]
+module = ["numpy.*", "requests.*"]
+ignore_missing_imports = true
+
+[tool.pyright]
+include = ["src"]
+exclude = [
+    "**/node_modules",
+    "**/__pycache__"
+]
+typeCheckingMode = "basic"
+reportMissingTypeStubs = false
+pythonVersion = "3.13"
+pythonPlatform = "All"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+select = [
+    "D",   # pydocstyle
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "B",   # flake8-bugbear
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "S",   # flake8-bandit
+    "C4",  # flake8-comprehensions
+]
+ignore = ["D203", "D213"]
+
+[tool.ruff.pydocstyle]
+convention = "google"

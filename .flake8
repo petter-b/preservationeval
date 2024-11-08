@@ -1,0 +1,11 @@
+[flake8]
+max-line-length = 88
+extend-ignore = E203
+exclude = .git,__pycache__,build,dist,.pytest_cache,.mypy_cache
+per-file-ignores =
+    __init__.py: F401
+    tests/*: S101
+
+# E203: Whitespace before ':' (for Black compatibility)
+# F401: Module imported but unused (for __init__.py files)
+# S101: Use of assert detected (acceptable in tests)

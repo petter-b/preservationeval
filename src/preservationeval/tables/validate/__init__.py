@@ -17,26 +17,24 @@ Requirements:
 Example usage:
     python validate.py
 """
-import subprocess
+
 import json
-import numpy as np
-from pathlib import Path
-import tempfile
-import requests
-from typing import List, Dict, Optional
 import logging
 import shutil
-from dataclasses import dataclass
+import subprocess
 import sys
+import tempfile
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Optional
 
-# Add project root to Python path
-parent_dir = Path(__file__).parent.parent
-sys.path.append(str(parent_dir))
+import numpy as np
+import requests
 
-from preservationeval import pi, emc, mold  # noqa: E402
-from tests.config import TEST_CONFIG, JS_CONFIG, COMPARISON_CONFIG  # noqa: E402, E501
-from tests.templates import HTML_TEMPLATE, NODE_SCRIPT_TEMPLATE  # noqa: E402
+from preservationeval import emc, mold, pi
 
+from .config import COMPARISON_CONFIG, JS_CONFIG, TEST_CONFIG
+from .templates import HTML_TEMPLATE, NODE_SCRIPT_TEMPLATE
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -46,6 +44,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ValidationResult:
     """Single test case result with all calculation values."""
+
     temp: float
     rh: float
     pi: int
@@ -56,6 +55,7 @@ class ValidationResult:
 @dataclass
 class Difference:
     """Represents a difference between JavaScript and Python results."""
+
     temp: float
     rh: float
     js_value: float
@@ -79,19 +79,13 @@ class NodeEnvironment:
         try:
             # Check Node.js
             node_version = subprocess.run(
-                ['node', '--version'],
-                capture_output=True,
-                text=True,
-                check=True
+                ["node", "--version"], capture_output=True, text=True, check=True
             )
             logger.debug(f"Found Node.js: {node_version.stdout.strip()}")
 
             # Check npm
             npm_version = subprocess.run(
-                ['npm', '--version'],
-                capture_output=True,
-                text=True,
-                check=True
+                ["npm", "--version"], capture_output=True, text=True, check=True
             )
             logger.debug(f"Found npm: {npm_version.stdout.strip()}")
 
@@ -141,41 +135,41 @@ class TempTestEnvironment:
     def _create_package_json(self):
         """Create package.json file."""
         if self.temp_dir:
-            (self.temp_dir / 'package.json').write_text(
-                json.dumps(JS_CONFIG['package_json'], indent=2)
+            (self.temp_dir / "package.json").write_text(
+                json.dumps(JS_CONFIG["package_json"], indent=2)
             )
 
     def _install_dependencies(self):
         """Install Node.js dependencies."""
         if self.temp_dir:
             subprocess.run(
-                ['npm', 'install'],
+                ["npm", "install"],
                 cwd=self.temp_dir,
                 check=True,
                 capture_output=True,
-                text=True
+                text=True,
             )
             logger.debug("Installed Node.js dependencies")
 
     def _download_dp_js(self):
         """Download the original dp.js file and analyze its contents."""
         if self.temp_dir:
-            response = requests.get(JS_CONFIG['dp_js_url'])
+            response = requests.get(JS_CONFIG["dp_js_url"])
             response.raise_for_status()
             js_content = response.text
 
             # Log the actual JavaScript implementation
-#            logger.debug("JavaScript implementation:")
-#            logger.debug(js_content)
+            #            logger.debug("JavaScript implementation:")
+            #            logger.debug(js_content)
 
-            (self.temp_dir / 'dp.js').write_text(js_content)
+            (self.temp_dir / "dp.js").write_text(js_content)
             logger.info("Downloaded dp.js")
 
     def _create_test_files(self):
         """Create HTML and Node.js test files."""
         if self.temp_dir:
-            (self.temp_dir / 'test.html').write_text(HTML_TEMPLATE)
-            (self.temp_dir / 'run_tests.js').write_text(NODE_SCRIPT_TEMPLATE)
+            (self.temp_dir / "test.html").write_text(HTML_TEMPLATE)
+            (self.temp_dir / "run_tests.js").write_text(NODE_SCRIPT_TEMPLATE)
             logger.debug("Created test files")
 
 
@@ -194,7 +188,7 @@ class PreservationTester:
         """
         NodeEnvironment.check_installation()
 
-        test_cases = self._generate_test_cases(TEST_CONFIG['num_tests'])  # type: ignore  # noqa: E501
+        test_cases = self._generate_test_cases(TEST_CONFIG["num_tests"])  # type: ignore  # noqa: E501
         logger.info(f"Generated {len(test_cases)} test cases")
 
         js_results = self._run_javascript_tests(test_cases)
@@ -219,13 +213,13 @@ class PreservationTester:
         decimal.getcontext().prec = 2  # Since we use 0.5 as step
 
         # Convert range values to Decimal
-        t_start = Decimal(str(TEST_CONFIG['temp_range'][0]))  # type: ignore
-        t_stop = Decimal(str(TEST_CONFIG['temp_range'][1]))  # type: ignore
-        t_step = Decimal(str(TEST_CONFIG['temp_range'][2]))  # type: ignore
+        t_start = Decimal(str(TEST_CONFIG["temp_range"][0]))  # type: ignore
+        t_stop = Decimal(str(TEST_CONFIG["temp_range"][1]))  # type: ignore
+        t_step = Decimal(str(TEST_CONFIG["temp_range"][2]))  # type: ignore
 
-        rh_start = Decimal(str(TEST_CONFIG['rh_range'][0]))  # type: ignore
-        rh_stop = Decimal(str(TEST_CONFIG['rh_range'][1]))  # type: ignore
-        rh_step = Decimal(str(TEST_CONFIG['rh_range'][2]))  # type: ignore
+        rh_start = Decimal(str(TEST_CONFIG["rh_range"][0]))  # type: ignore
+        rh_stop = Decimal(str(TEST_CONFIG["rh_range"][1]))  # type: ignore
+        rh_step = Decimal(str(TEST_CONFIG["rh_range"][2]))  # type: ignore
 
         # Calculate number of possible steps
         t_steps = int((t_stop - t_start) / t_step)
@@ -237,31 +231,19 @@ class PreservationTester:
         rh_indices = rng.integers(0, rh_steps + 1, size=num_tests)
 
         # Convert indices to actual values using Decimal arithmetic
-        t_samples = [
-            t_start + (Decimal(str(i)) * t_step) for i in t_indices
-        ]
-        rh_samples = [
-            rh_start + (Decimal(str(i)) * rh_step) for i in rh_indices
-        ]
+        t_samples = [t_start + (Decimal(str(i)) * t_step) for i in t_indices]
+        rh_samples = [rh_start + (Decimal(str(i)) * rh_step) for i in rh_indices]
 
         # Combine into test cases
-        test_cases = [
-            [float(t), float(rh)] for t, rh in zip(t_samples, rh_samples)
-            ]
+        test_cases = [[float(t), float(rh)] for t, rh in zip(t_samples, rh_samples)]
 
         logger.info(f"Generated {len(test_cases)} test cases randomly")
-        logger.info(
-            f"Using temperature steps of {t_step} from {t_start} to {t_stop}"
-            )
-        logger.info(
-            f"Using humidity steps of {rh_step} from {rh_start} to {rh_stop}"
-            )
+        logger.info(f"Using temperature steps of {t_step} from {t_start} to {t_stop}")
+        logger.info(f"Using humidity steps of {rh_step} from {rh_start} to {rh_stop}")
 
         return test_cases
 
-    def _run_javascript_tests(
-            self, test_cases: List[List[float]]
-            ) -> List[Dict]:
+    def _run_javascript_tests(self, test_cases: List[List[float]]) -> List[Dict]:
         """Run tests through JavaScript implementation."""
         try:
             temp_dir = self.test_env.setup()
@@ -271,15 +253,11 @@ class PreservationTester:
 
             # Run tests using Node.js
             process = subprocess.Popen(
-                [
-                    'node',
-                    str(temp_dir / 'run_tests.js'),
-                    str(temp_dir / 'test.html')
-                ],
+                ["node", str(temp_dir / "run_tests.js"), str(temp_dir / "test.html")],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True
+                text=True,
             )
 
             stdout, stderr = process.communicate(input_json)
@@ -296,36 +274,30 @@ class PreservationTester:
         """Run tests through Python implementation."""
         return [
             {
-                'temp': t,
-                'rh': rh,
-                'pi': pi(t, rh),
-                'emc': emc(t, rh),
-                'mold': mold(t, rh)
+                "temp": t,
+                "rh": rh,
+                "pi": pi(t, rh),
+                "emc": emc(t, rh),
+                "mold": mold(t, rh),
             }
             for t, rh in test_cases
         ]
 
     def _compare_results(
-        self,
-        js_results: List[Dict],
-        py_results: List[Dict]
+        self, js_results: List[Dict], py_results: List[Dict]
     ) -> Dict[str, List[Difference]]:
         """Compare JavaScript and Python results with detailed analysis."""
-        differences: dict[str, list] = {
-            'pi': [],
-            'emc': [],
-            'mold': []
-        }
+        differences: dict[str, list] = {"pi": [], "emc": [], "mold": []}
 
         # Analysis counters
         analysis = {
-            'pi': {'total': 0, 'by_range': {}},
-            'emc': {'total': 0, 'by_range': {}},
-            'mold': {'total': 0, 'by_range': {}}
+            "pi": {"total": 0, "by_range": {}},
+            "emc": {"total": 0, "by_range": {}},
+            "mold": {"total": 0, "by_range": {}},
         }
 
         for js_result, py_result in zip(js_results, py_results):
-            t, rh = js_result['temp'], js_result['rh']
+            t, rh = js_result["temp"], js_result["rh"]
 
             # Group into ranges for analysis
             t_range = f"{int(t/10)*10}-{int(t/10)*10+10}"
@@ -333,13 +305,13 @@ class PreservationTester:
             range_key = f"T:{t_range},RH:{rh_range}"
 
             # Compare PI values
-            if js_result['pi'] != py_result['pi']:
-                differences['pi'].append(
-                    Difference(t, rh, js_result['pi'], py_result['pi'])
+            if js_result["pi"] != py_result["pi"]:
+                differences["pi"].append(
+                    Difference(t, rh, js_result["pi"], py_result["pi"])
                 )
-                analysis['pi']['total'] += 1  # type: ignore
-                analysis['pi']['by_range'][range_key] = (  # type: ignore
-                    analysis['pi']['by_range'].get(range_key, 0) + 1  # type: ignore  # noqa: E501
+                analysis["pi"]["total"] += 1  # type: ignore
+                analysis["pi"]["by_range"][range_key] = (  # type: ignore
+                    analysis["pi"]["by_range"].get(range_key, 0) + 1  # type: ignore
                 )
                 logger.debug(
                     f"PI difference at T={t}, RH={rh}: "
@@ -348,12 +320,16 @@ class PreservationTester:
                 )
 
             # Compare EMC values
-            if abs(js_result['emc'] - py_result['emc']) > COMPARISON_CONFIG['emc_tolerance']:  # noqa: E501
-                differences['emc'].append(Difference(t, rh, js_result['emc'],
-                                                     py_result['emc']))
-                analysis['emc']['total'] += 1  # type: ignore
-                analysis['emc']['by_range'][range_key] = (  # type: ignore
-                    analysis['emc']['by_range'].get(range_key, 0) + 1  # type: ignore  # noqa: E501
+            if (
+                abs(js_result["emc"] - py_result["emc"])
+                > COMPARISON_CONFIG["emc_tolerance"]
+            ):  # noqa: E501
+                differences["emc"].append(
+                    Difference(t, rh, js_result["emc"], py_result["emc"])
+                )
+                analysis["emc"]["total"] += 1  # type: ignore
+                analysis["emc"]["by_range"][range_key] = (  # type: ignore
+                    analysis["emc"]["by_range"].get(range_key, 0) + 1  # type: ignore
                 )
                 logger.debug(
                     f"EMC difference at T={t}, RH={rh}: "
@@ -362,12 +338,13 @@ class PreservationTester:
                 )
 
             # Compare Mold values
-            if js_result['mold'] != py_result['mold']:
-                differences['mold'].append(Difference(t, rh, js_result['mold'],
-                                                      py_result['mold']))
-                analysis['mold']['total'] += 1  # type: ignore
-                analysis['mold']['by_range'][range_key] = (  # type: ignore
-                    analysis['mold']['by_range'].get(range_key, 0) + 1  # type: ignore  # noqa: E501
+            if js_result["mold"] != py_result["mold"]:
+                differences["mold"].append(
+                    Difference(t, rh, js_result["mold"], py_result["mold"])
+                )
+                analysis["mold"]["total"] += 1  # type: ignore
+                analysis["mold"]["by_range"][range_key] = (  # type: ignore
+                    analysis["mold"]["by_range"].get(range_key, 0) + 1  # type: ignore
                 )
                 logger.debug(
                     f"Mold difference at T={t}, RH={rh}: "
@@ -376,12 +353,12 @@ class PreservationTester:
                 )
 
         # Log analysis summary
-        for func in ['pi', 'emc', 'mold']:
-            if analysis[func]['total'] > 0:  # type: ignore
+        for func in ["pi", "emc", "mold"]:
+            if analysis[func]["total"] > 0:  # type: ignore
                 logger.info(f"\n{func.upper()} Analysis:")
                 logger.info(f"Total differences: {analysis[func]['total']}")
                 logger.info("Differences by range:")
-                for range_key, count in sorted(analysis[func]['by_range'].items()):  # type: ignore  # noqa: E501
+                for range_key, count in sorted(analysis[func]["by_range"].items()):  # type: ignore  # noqa: E501
                     logger.info(f"  {range_key}: {count} differences")
 
         return differences
@@ -397,17 +374,21 @@ def report_differences(differences: Dict[str, List[Difference]]) -> int:
 
     for func_name, diffs in differences.items():
         if diffs:
-            print(f"\nDifferences in {func_name} function ({len(diffs)} cases):")  # noqa: E501
-            for diff in diffs[:COMPARISON_CONFIG['max_differences_shown']]:  # type: ignore  # noqa: E501
+            print(
+                f"\nDifferences in {func_name} function ({len(diffs)} cases):"
+            )  # noqa: E501
+            for diff in diffs[: COMPARISON_CONFIG["max_differences_shown"]]:  # type: ignore  # noqa: E501
                 print(f"  T={diff.temp}°C, RH={diff.rh}%:")
                 print(f"    JavaScript: {diff.js_value}")
                 print(f"    Python:     {diff.py_value}")
-            if len(diffs) > COMPARISON_CONFIG['max_differences_shown']:
-                print(f"  ... and {len(diffs)-COMPARISON_CONFIG['max_differences_shown']} more differences")  # noqa: E501
+            if len(diffs) > COMPARISON_CONFIG["max_differences_shown"]:
+                print(
+                    f"  ... and {len(diffs)-COMPARISON_CONFIG['max_differences_shown']} more differences"  # noqa: E501
+                )
     return total_differences
 
 
-def test_validate_package():
+def test_validate_package() -> None:
     """Main execution function."""
     try:
         tester = PreservationTester()

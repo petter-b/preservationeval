@@ -48,7 +48,7 @@ async function runTests() {
     process.stdin.on('data', (chunk) => {
         data += chunk;
     });
-    
+
     process.stdin.on('end', async () => {
         const inputs = JSON.parse(data);
         const results = await page.evaluate((testInputs) => {
