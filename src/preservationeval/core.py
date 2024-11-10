@@ -44,12 +44,12 @@ from .types import (
     EnvironmentalRating,
     HumidityError,
     IndexRangeError,
+    LookupTable,
     MoistureContent,
     MoldRisk,
     PreservationError,
     PreservationIndex,
     RelativeHumidity,
-    ShiftedArray,
     Temperature,
     TemperatureError,
     XAboveMaxError,
@@ -65,37 +65,15 @@ logger = setup_logging(__name__)
 
 
 # Initialize ShiftedArrays
-pi_table: Final[ShiftedArray] = ShiftedArray(
+pi_table: Final[LookupTable] = LookupTable(
     np.array(PITABLE[:8010]).reshape(89, 90), -23, 6, BoundaryBehavior.CLAMP
 )
-mold_table: Final[ShiftedArray] = ShiftedArray(
+mold_table: Final[LookupTable] = LookupTable(
     np.array(PITABLE[8010:]).reshape(44, 36), 2, 65, BoundaryBehavior.RAISE
 )
-emc_table: Final[ShiftedArray] = ShiftedArray(
+emc_table: Final[LookupTable] = LookupTable(
     np.array(EMCTABLE).reshape(86, 101), -20, 0, BoundaryBehavior.CLAMP
 )
-
-
-def round_half_up(n: float) -> int:
-    """
-    Round a number to the nearest integer. Ties are rounded away from zero.
-
-    Args:
-        n (float): The number to round.
-
-    Returns:
-        int: The rounded integer.
-    """
-    if n >= 0:
-        return int(n + 0.5)
-    else:
-        return int(n - 0.5)
-
-
-# To get exact same behavior as in the original JS code we use round_half_up()
-# when converting float to int, could be changed to round() if you dont care
-# about that
-to_int = round_half_up
 
 
 def to_celsius(x: Temperature, scale: str = "f") -> Temperature:
@@ -199,7 +177,7 @@ def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
     """
     validate_rh(rh)
     try:
-        pi = pi_table[to_int(t), to_int(rh)]
+        pi = pi_table[t, rh]
     except (XBelowMinError, XAboveMaxError) as e:
         logger.error(f"Temperature out of bounds: {e}")
         raise TemperatureError("Temperature out of bounds") from e
@@ -226,7 +204,7 @@ def mold(t: Temperature, rh: RelativeHumidity) -> MoldRisk:
     """
     validate_rh(rh)
     try:
-        mold = mold_table[to_int(t), to_int(rh)]
+        mold = mold_table[t, rh]
     except IndexRangeError:
         return 0.0
     except Exception as e:
@@ -251,7 +229,7 @@ def emc(t: Temperature, rh: RelativeHumidity) -> MoistureContent:
     """
     validate_rh(rh)
     try:
-        emc = emc_table[to_int(t), to_int(rh)]
+        emc = emc_table[t, rh]
     except (XBelowMinError, XAboveMaxError) as e:
         logger.error(f"Temperature out of bounds: {e}")
         raise TemperatureError("Temperature out of bounds") from e
