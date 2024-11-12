@@ -1,9 +1,10 @@
 # Standard library imports
 
 # Package imports
+from preservationeval.install.parse import fetch_and_validate_tables
 from preservationeval.logging import LogConfig, LogLevel, setup_logging
-from preservationeval.shifted_array import IndexRangeError
-from preservationeval.tables import fetch_and_validate_tables
+from preservationeval.lookup import EMCTable, MoldTable, PITable
+from preservationeval.types import IndexRangeError
 
 # Set up logging
 config = LogConfig(
@@ -31,8 +32,8 @@ def example_usage() -> None:
         print("=================")
 
         print("\nPI Table:")
-        print(f"Temperature range: {pi_table.x_min}°C to {pi_table.x_max}°C")
-        print(f"RH range: {pi_table.y_min}% to {pi_table.y_max}%")
+        print(f"Temperature range: {pi_table.temp_min}°C to {pi_table.temp_max}°C")
+        print(f"RH range: {pi_table.rh_min}% to {pi_table.rh_max}%")
         print(f"Shape: {pi_table.data.shape}")
         print("Data statistics:")
         print(f"  Min value: {pi_table.data.min()}")
@@ -40,8 +41,8 @@ def example_usage() -> None:
         print(f"  Mean value: {pi_table.data.mean():.1f}")
 
         print("\nEMC Table:")
-        print(f"Temperature range: {emc_table.x_min}°C to {emc_table.x_max}°C")
-        print(f"RH range: {emc_table.y_min}% to {emc_table.y_max}%")
+        print(f"Temperature range: {emc_table.temp_min}°C to {emc_table.temp_max}°C")
+        print(f"RH range: {emc_table.rh_min}% to {emc_table.rh_max}%")
         print(f"Shape: {emc_table.data.shape}")
         print("Data statistics:")
         print(f"  Min value: {emc_table.data.min():.1f}")
@@ -49,8 +50,8 @@ def example_usage() -> None:
         print(f"  Mean value: {emc_table.data.mean():.1f}")
 
         print("\nMold Table:")
-        print(f"Temperature range: {mold_table.x_min}°C to {mold_table.x_max}°C")
-        print(f"RH range: {mold_table.y_min}% to {mold_table.y_max}%")
+        print(f"Temperature range: {mold_table.temp_min}°C to {mold_table.temp_max}°C")
+        print(f"RH range: {mold_table.rh_min}% to {mold_table.rh_max}%")
         print(f"Shape: {mold_table.data.shape}")
         print("Data statistics:")
         print(f"  Min value: {mold_table.data.min()}")

@@ -1,5 +1,16 @@
 # Project specific
 dp.js   # In case dp.js is downloaded from the internet
+data/
+data/dp.js
+data/dp.js.hash
+data/dp.hash
+data/test_data.json
+
+tests/data/
+tests/data/dp.js
+tests/data/dp.js.hash
+tests/data/dp.hash
+tests/data/test_data.json
 
 # Python
 __pycache__/

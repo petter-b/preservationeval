@@ -42,6 +42,27 @@ class BuildPyCommand(build_py):
         build_py.run(self)
 
 
+# setup.py - Handles installation
+class BuildPyCommand(build_py):
+    """Generate tables during installation"""
+    def run(self):
+        self.generate_tables_module()
+        build_py.run(self)
+
+# core.py - Robust table handling
+try:
+    from .tables_data import PI_DATA, EMC_DATA  # Generated
+except ImportError:
+    from .const import PITABLE, EMCTABLE  # Fallback
+
+# validate_core.py - Testing framework
+class PreservationTester:
+    """Handles validation against JavaScript"""
+    def run_validation(self):
+        # Check dp.js updates
+        # Run comparisons
+        # Save test data
+
 setup(
     # ... your other setup parameters ...
     cmdclass={

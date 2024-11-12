@@ -4,16 +4,17 @@
 import numpy as np
 import pytest
 
+from preservationeval.shifted_array import IndexRangeError
+
 # Package imports
 from preservationeval.tables import fetch_and_validate_tables
-from preservationeval.shifted_array import (
-    IndexRangeError,
-)
 
 
 def test_table_shapes() -> None:
     """Test if tables have expected shapes and dimensions."""
-    pi_table, emc_table, mold_table = fetch_and_validate_tables("http://www.dpcalc.org/dp.js")
+    pi_table, emc_table, mold_table = fetch_and_validate_tables(
+        "http://www.dpcalc.org/dp.js"
+    )
 
     # Check shapes
     assert pi_table.data.shape == (89, 90)  # PI table shape
@@ -23,7 +24,9 @@ def test_table_shapes() -> None:
 
 def test_table_ranges() -> None:
     """Test if tables have correct index ranges."""
-    pi_table, emc_table, mold_table = fetch_and_validate_tables("http://www.dpcalc.org/dp.js")
+    pi_table, emc_table, mold_table = fetch_and_validate_tables(
+        "http://www.dpcalc.org/dp.js"
+    )
 
     # Check ranges
     assert pi_table.x_min == -23
@@ -38,7 +41,9 @@ def test_table_ranges() -> None:
 
 def test_boundary_behavior() -> None:
     """Test boundary behaviors of tables."""
-    pi_table, emc_table, mold_table = fetch_and_validate_tables("http://www.dpcalc.org/dp.js")
+    pi_table, emc_table, mold_table = fetch_and_validate_tables(
+        "http://www.dpcalc.org/dp.js"
+    )
 
     # PI table should clamp
     assert pi_table[-24, 7] == pi_table[-23, 7]  # x below min
@@ -57,7 +62,9 @@ def test_boundary_behavior() -> None:
 
 def test_valid_lookups() -> None:
     """Test some known valid lookup values."""
-    pi_table, emc_table, mold_table = fetch_and_validate_tables("http://www.dpcalc.org/dp.js")
+    pi_table, emc_table, mold_table = fetch_and_validate_tables(
+        "http://www.dpcalc.org/dp.js"
+    )
 
     # Test some known values (you'll need to replace these with actual known values)
     assert pi_table[20, 50] > 0
@@ -67,7 +74,9 @@ def test_valid_lookups() -> None:
 
 def test_data_types() -> None:
     """Test if tables have correct data types."""
-    pi_table, emc_table, mold_table = fetch_and_validate_tables("http://www.dpcalc.org/dp.js")
+    pi_table, emc_table, mold_table = fetch_and_validate_tables(
+        "http://www.dpcalc.org/dp.js"
+    )
 
     assert pi_table.data.dtype == np.int32
     assert emc_table.data.dtype == np.float64
