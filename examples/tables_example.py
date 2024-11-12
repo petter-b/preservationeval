@@ -3,7 +3,6 @@
 # Package imports
 from preservationeval.install.parse import fetch_and_validate_tables
 from preservationeval.logging import LogConfig, LogLevel, setup_logging
-from preservationeval.lookup import EMCTable, MoldTable, PITable
 from preservationeval.types import IndexRangeError
 
 # Set up logging

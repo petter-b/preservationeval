@@ -39,7 +39,7 @@ TestCase = List[float]  # [temperature, relative_humidity]
 JSResult = Dict[str, Number]  # {'pi': int, 'emc': float, 'mold': int}
 
 # Constants
-TEST_DATA_DIR = Path(__file__).parent.parent / "data"  # Go up one level to tests/data
+TEST_DATA_DIR = Path(__file__).parent / "data"  # Go up one level to tests/data
 DP_JS_PATH = TEST_DATA_DIR / "dp.js"
 TEST_DATA_PATH = TEST_DATA_DIR / "test_data.json"
 

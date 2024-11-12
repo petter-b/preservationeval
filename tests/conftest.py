@@ -3,9 +3,11 @@ from pathlib import Path
 
 import pytest
 
+from tests.validate_core import ValidationTest
+
 
 @pytest.fixture
-def validation():
+def validation() -> ValidationTest:
     """Provide configured ValidationTest instance."""
     from .validate_core import ValidationTest
 
@@ -13,20 +15,6 @@ def validation():
 
 
 @pytest.fixture
-def test_data_dir():
+def test_data_dir() -> Path:
     """Provide path to test data directory."""
     return Path(__file__).parent / "data"
-
-
-@pytest.fixture
-def test_data_dir() -> Path:
-    """Return path to test data directory."""
-    return Path(__file__).parent / "data"
-
-
-@pytest.fixture
-def preservation_tester():
-    """Return PreservationTester instance configured for testing."""
-    from .validate_core import PreservationTester
-
-    return PreservationTester(use_local=True)

@@ -56,14 +56,16 @@ Issues = "https://github.com/petter-b/preservationeval/issues"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
+norecursedirs = ["__pycache__", "tests/wip"]
 addopts = "--mypy --cov=preservationeval --cov-report=html"
 pythonpath = [".", "tests"]
 markers = [
+    "javascript: marks tests that compare against JavaScript",
+    "specific: marks tests of specific cases",
     "slow: marks tests as slow",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests"
 ]
-
 
 [tool.mypy]
 python_version = "3.13"

@@ -40,8 +40,40 @@ cd preservationeval
 pip install -e ".[dev]"
 ```
 
-### Testing
-TBD
+## Testing
+
+### Validation Testing
+The package includes a validation framework that compares our Python implementation
+against the original JavaScript implementation from dpcalc.org.
+
+#### Requirements
+- Node.js and npm must be installed ([download](https://nodejs.org/))
+- Python test dependencies: `pip install -e ".[test]"`
+
+#### Test Data Setup
+The test framework automatically:
+- Creates a `data/` directory in the project root
+- Downloads the JavaScript reference implementation (`data/dp.js`)
+- Generates and saves test cases (`data/test_data.json`)
+
+You can manually trigger this setup:
+```bash
+# Download JavaScript reference implementation
+# This happens automatically when running tests, or manually:
+python -m tests.validate_core
+
+# Run all tests
+pytest
+
+# Run only validation tests
+pytest tests/test_validation.py
+
+# Run with verbose output
+pytest -v tests/test_validation.py
+
+# Generate new test cases (ignore cached)
+pytest tests/test_validation.py --force-update
+```
 
 ## Development Notes
 
