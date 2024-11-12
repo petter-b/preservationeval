@@ -52,9 +52,10 @@ against the original JavaScript implementation from dpcalc.org.
 
 #### Test Data Setup
 The test framework automatically:
-- Creates a `data/` directory in the project root
-- Downloads the JavaScript reference implementation (`data/dp.js`)
-- Generates and saves test cases (`data/test_data.json`)
+- Creates the `tests/data` directory (git-ignored)
+- Downloads the JavaScript reference implementation
+- Generates and saves test cases
+- Caches results for future test runs
 
 You can manually trigger this setup:
 ```bash
