@@ -1,0 +1,35 @@
+name: Auto PR
+on:
+  push:
+    branches-ignore:
+      - main  # Don't trigger on main branch pushes
+
+jobs:
+  auto-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for creating PR
+          
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.AUTO_PR_TOKEN }}
+          title: 'Auto PR: ${{ github.ref_name }}'
+          body: |
+            Automated pull request
+            Branch: ${{ github.ref_name }}
+          branch: ${{ github.ref_name }}
+          base: main
+          
+      - name: Enable Auto-merge
+        run: |
+          PR_NUMBER=$(gh pr list --state open --base main --head ${{ github.ref_name }} --json number -q '.[0].number')
+          gh pr review $PR_NUMBER --approve
+          gh pr merge $PR_NUMBER --auto --merge
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_PR_TOKEN }}
