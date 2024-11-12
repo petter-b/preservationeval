@@ -5,7 +5,7 @@ authors = [
     {name = "Petter Blomberg", email = "petter.blomberg@gmail.com"}
 ]
 description = "A Python module to mimic the calculations done by the Dew Point Calculator from Image Permanence Institute (IPI)."
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 license = {text = "MIT"}
 keywords = ["preservation", "climate", "numpy"]
 classifiers = [
