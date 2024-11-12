@@ -22,17 +22,28 @@ dependencies = [
 readme = "README.md"
 
 [project.optional-dependencies]
-dev = [
+# Testing tools
+test = [
     "pytest>=7.4.0",
     "pytest-mypy>=0.10.3",
     "pytest-cov>=4.1.0",
+    "pytest-benchmark>=4.0.0",
+]
+# Code quality tools
+lint = [
     "mypy>=1.6.0",
     "black>=23.9.1",
     "isort>=5.12.0",
     "ruff>=0.1.0",
     "flake8>=6.1.0",
-    "pytest-benchmark>=4.0.0",
+]
+# Performance tools
+profile = [
     "memory_profiler>=0.61.0",
+]
+# Full development environment (includes all above)
+dev = [
+    "preservationeval[test,lint,profile]"
 ]
 
 [project.scripts]
@@ -68,7 +79,7 @@ markers = [
 ]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -95,12 +106,12 @@ exclude = [
 ]
 typeCheckingMode = "basic"
 reportMissingTypeStubs = false
-pythonVersion = "3.13"
+pythonVersion = "3.9"
 pythonPlatform = "All"
 
 [tool.black]
 line-length = 88
-target-version = ['py311']
+target-version = ['py39']
 include = '\.pyi?$'
 
 [tool.isort]
@@ -125,7 +136,7 @@ exclude_lines = [
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py39"
 select = [
     "D",   # pydocstyle
     "E",   # pycodestyle
