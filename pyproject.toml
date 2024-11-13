@@ -108,7 +108,7 @@ exclude = [
 ]
 typeCheckingMode = "basic"
 reportMissingTypeStubs = false
-pythonVersion = "3.9"
+pythonVersion = "3.11"
 pythonPlatform = "All"
 
 [tool.black]

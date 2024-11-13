@@ -4,6 +4,8 @@ Configuration settings for preservation calculation validation.
 This module contains all configuration parameters used in the validation
 process, including test ranges, JavaScript environment settings, and comparison
 tolerances.
+
+TODO: Replace constants with dataclasses
 """
 
 # Test parameters for temperature and relative humidity ranges

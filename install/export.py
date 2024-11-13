@@ -20,13 +20,15 @@ modules with the following variables:
 from pathlib import Path
 from textwrap import dedent
 
-from preservationeval.types import LookupTable
+from preservationeval.lookup import EMCTable, MoldTable, PITable
+
+NUM_EMC_DECIMALS: int = 1
 
 
 def generate_tables_module(
-    pi_table: LookupTable,
-    emc_table: LookupTable,
-    mold_table: LookupTable,
+    pi_table: PITable,
+    emc_table: EMCTable,
+    mold_table: MoldTable,
     module_name: str = "lookup_tables",
     output_path: Path | None = None,
 ) -> None:
@@ -40,49 +42,59 @@ def generate_tables_module(
         module_name: Name of the module to generate
         output_path: Directory to write the module to (default: current working dir.)
     """
+    # Round EMC data to 2 decimal places (keeping as floats)
+    emc_data_rounded = [
+        [round(float(x), NUM_EMC_DECIMALS) for x in row]
+        for row in emc_table.data.tolist()
+    ]
+
     code = dedent(
         f'''
         """Generated lookup tables for preservation calculations.
 
         This module is auto-generated during package installation.
-        Do not edit manually.
         """
+        from typing import Final
+
         import numpy as np
-        from preservationeval.types import LookupTable, BoundaryBehavior
+
+        from preservationeval.lookup import (
+            BoundaryBehavior,
+            EMCTable,
+            LookupTable,
+            MoldTable,
+            PITable,
+        )
+
+        # ------------------------------------------------------------------------------
+        # ---------------------->  DO NOT EDIT MANUALLY BELOW THIS <--------------------
+        # ------------------------------------------------------------------------------
 
         # PI table data ({pi_table.data.shape})
-        PI_DATA = {repr(pi_table.data.tolist())}
-
-        # EMC table data ({emc_table.data.shape})
-        EMC_DATA = {repr(emc_table.data.tolist())}
-
-        # Mold table data ({mold_table.data.shape})
-        MOLD_DATA = {repr(mold_table.data.tolist())}
-
-        # Define LookupTables
-        pi_table: Final[LookupTable] = LookupTable(
-            np.array(PI_DATA, dtype=np.int16),
+        pi_table: Final[PITable] = LookupTable(
+            np.array({repr(pi_table.data.tolist())}, dtype=np.int16),  # noqa: E501
             {pi_table.temp_min},
             {pi_table.rh_min},
             BoundaryBehavior.CLAMP
         )
 
-        mold_table: Final[LookupTable] = LookupTable(
-            np.array(MOLD_DATA, dtype=np.int16),
+        # Mold table data ({mold_table.data.shape})
+        mold_table: Final[MoldTable] = LookupTable(
+            np.array({repr(mold_table.data.tolist())}, dtype=np.int16),  # noqa: E501
             {mold_table.temp_min},
             {mold_table.rh_min},
             BoundaryBehavior.RAISE
         )
 
-        emc_table: Final[LookupTable] = LookupTable(
-            np.array(EMC_DATA, dtype=np.float16),
+        # EMC table data ({emc_table.data.shape})
+        emc_table: Final[EMCTable] = LookupTable(
+            np.array({repr(emc_data_rounded)}, dtype=np.float16),  # noqa: E501
             {emc_table.temp_min},
             {emc_table.rh_min},
             BoundaryBehavior.CLAMP
         )
 
         _INITIALIZED: bool = True
-
         '''
     )
 

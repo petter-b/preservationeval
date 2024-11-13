@@ -193,13 +193,22 @@ logger = setup_logging(__name__)
 
 # Initialize lookup tables
 pi_table: Final[PITable] = LookupTable(
-    np.array(PITABLE[:8010]).reshape(89, 90), -23, 6, BoundaryBehavior.CLAMP
+    np.array(PITABLE[:8010], dtype=np.int16).reshape(89, 90),
+    -23,
+    6,
+    BoundaryBehavior.CLAMP,
 )
 mold_table: Final[MoldTable] = LookupTable(
-    np.array(PITABLE[8010:]).reshape(44, 36), 2, 65, BoundaryBehavior.RAISE
+    np.array(PITABLE[8010:], dtype=np.int16).reshape(44, 36),
+    2,
+    65,
+    BoundaryBehavior.RAISE,
 )
 emc_table: Final[EMCTable] = LookupTable(
-    np.array(EMCTABLE).reshape(86, 101), -20, 0, BoundaryBehavior.CLAMP
+    np.array(EMCTABLE, dtype=np.float16).reshape(86, 101),
+    -20,
+    0,
+    BoundaryBehavior.CLAMP,
 )
 
 

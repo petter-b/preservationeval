@@ -12,6 +12,10 @@ tests/data/dp.js.hash
 tests/data/dp.hash
 tests/data/test_data.json
 
+src/preservationeval/lookup_tables.py
+src/preservationeval/tables.py
+
+
 # Python
 __pycache__/
 *.py[cod]
