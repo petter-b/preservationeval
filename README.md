@@ -1,30 +1,30 @@
 # preservationeval
 
-<!-- Security -->
-[![CodeQL](https://github.com/petter-b/preservationeval/actions/workflows/codeql.yml/badge.svg)](https://github.com/petter-b/preservationeval/actions/workflows/codeql.yml)
+<!-- Status -->
+[![Development Status](https://img.shields.io/pypi/status/preservationeval.svg)](https://pypi.org/project/preservationeval/)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/petter-b/preservationeval/graphs/commit-activity)
+[![GitHub issues](https://img.shields.io/github/issues/petter-b/preservationeval.svg)](https://github.com/petter-b/preservationeval/issues/)
 
-<!-- Build and Coverage Status -->
-[![Tests](https://github.com/petter-b/preservationeval/actions/workflows/tests.yml/badge.svg)](https://github.com/petter-b/preservationeval/actions/workflows/tests.yml)
-[![codecov](https://codecov.io/gh/petter-b/preservationeval/branch/main/graph/badge.svg)](https://codecov.io/gh/petter-b/preservationeval)
-
-<!-- Package Information -->
+<!-- Package -->
 [![PyPI version](https://badge.fury.io/py/preservationeval.svg)](https://badge.fury.io/py/preservationeval)
 [![Python Version](https://img.shields.io/pypi/pyversions/preservationeval.svg)](https://pypi.org/project/preservationeval/)
 [![Downloads](https://static.pepy.tech/badge/preservationeval)](https://pepy.tech/project/preservationeval)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-<!-- Code Quality -->
+<!-- CI/CD -->
+[![CI](https://github.com/petter-b/preservationeval/actions/workflows/ci.yml/badge.svg)](https://github.com/petter-b/preservationeval/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/petter-b/preservationeval/branch/main/graph/badge.svg)](https://codecov.io/gh/petter-b/preservationeval)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/petter-b/preservationeval/main.svg)](https://results.pre-commit.ci/latest/github/petter-b/preservationeval/main)
+
+<!-- Security -->
+[![CodeQL](https://github.com/petter-b/preservationeval/actions/workflows/codeql.yml/badge.svg)](https://github.com/petter-b/preservationeval/actions/workflows/codeql.yml)
+[![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://renovatebot.com)
+
+<!-- Quality -->
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![mypy](https://img.shields.io/badge/mypy-typed-blue.svg)](http://mypy-lang.org/)
-[![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://renovatebot.com)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/petter-b/preservationeval/main.svg)](https://results.pre-commit.ci/latest/github/petter-b/preservationeval/main)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/petter-b/preservationeval/blob/main/.pre-commit-config.yaml)
-
-<!-- Development Status -->
-[![Development Status](https://img.shields.io/pypi/status/preservationeval.svg)](https://pypi.org/project/preservationeval/)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/petter-b/preservationeval/graphs/commit-activity)
-[![GitHub issues](https://img.shields.io/github/issues/petter-b/preservationeval.svg)](https://github.com/petter-b/preservationeval/issues/)
 
 A Python module to mimic the calculations done by the Dew Point Calculator from Image Permanence Institute (IPI).
 
