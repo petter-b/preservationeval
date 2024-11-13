@@ -98,7 +98,7 @@ def rate_metal_corrosion(emc: MoistureContent) -> EnvironmentalRating:
     Returns:
         EnvironmentalRating: The environmental rating based on EMC.
             - GOOD: If EMC is <7.0
-            - OK: If EMC is between 7.1 and 10.5
+            - OK: If EMC is between 7.0 and 10.5
             - RISK: If EMC is ≥10.5
     """
     if not isinstance(emc, (int, float)):

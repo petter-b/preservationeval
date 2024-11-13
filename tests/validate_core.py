@@ -146,6 +146,7 @@ class ValidationDifference:
     py_value: Number
 
 
+@dataclass
 class ValidationTest:
     """
     Handles validation of JavaScript vs Python implementation.

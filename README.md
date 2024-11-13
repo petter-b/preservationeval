@@ -21,18 +21,27 @@ pip install preservationeval
 ´´´
 
 ## Usage
+
+### Basic Examples
 ```python
 from preservationeval import pi, emc, mold
 
 # Calculate Preservation Index
 pi_value = pi(20, 50)  # temperature=20°C, RH=50%
+print(f"Preservation Index: {pi_value}")
 
-# Calculate EMC
+# Calculate EMC (Equilibrium Moisture Content)
 emc_value = emc(20, 50)
+print(f"EMC: {emc_value}%")
 
 # Calculate Mold Risk
 mold_risk = mold(20, 50)
+print(f"Mold Risk: {mold_risk}")
 ```
+
+### Interpreting Restults
+
+TBD
 
 ## Development
 
@@ -49,6 +58,28 @@ cd preservationeval
 
 # Install development dependencies
 pip install -e ".[dev]"
+```
+
+### Development Tools
+- `black`: Code formatting
+- `ruff`: Linting and code quality
+- `mypy`: Static type checking
+- `pytest`: Testing framework
+- `pre-commit`: Git hooks for code quality
+
+### Common Tasks
+```bash
+# Format code
+black .
+
+# Run linter
+ruff check .
+
+# Type checking
+mypy .
+
+# Run tests with coverage
+pytest --cov
 ```
 
 ### Testing
@@ -107,3 +138,7 @@ This project was developed with assistance from Claude AI (Anthropic) and to som
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for all changes and versioning details.

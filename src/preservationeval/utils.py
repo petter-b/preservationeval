@@ -49,11 +49,11 @@ def validate_temp(temp: Temperature) -> None:
 
 
 def to_celsius(x: Temperature, scale: str = "f") -> Temperature:
-    """Convert temperature to specified scale.
+    """Convert temperature from specified scale to Celsius.
 
     Args:
         x (float / int): Temperature value
-        scale (str):    Target scale
+        scale (str):    Input scale
                         - 'f' for Fahrenheit
                         - 'c' for Celsius
                         - 'k' for Kelvin)
@@ -70,16 +70,16 @@ def to_celsius(x: Temperature, scale: str = "f") -> Temperature:
         raise TypeError(f"Temperature must be integer or float, got {type(x)}")
     if scale == "f":
         if x < -459.67:
-            raise ValueError("Fahrenheit temperature must be >= -459.67, got {x}")
-        return float((x * 1.8) + 32.0)
+            raise ValueError("Fahrenheit temperature must be > -459.67, got {x}")
+        return float((x - 32) * 5 / 9)
     elif scale == "c":
         if x < -273.15:
-            raise ValueError("Celsius temperature must be >= -273.15, got {x}")
+            raise ValueError("Celsius temperature must be > -273.15, got {x}")
         return float(x)
     elif scale == "k":
         if x < 0:
             raise ValueError("Kelvin temperature must be >= 0, got {x}")
-        return float(x + 273.15)
+        return float(x - 273.15)
     else:
         raise ValueError(f"Unsupported scale '{scale}', must be 'f', 'c' or 'k'")
 

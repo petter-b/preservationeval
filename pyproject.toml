@@ -73,11 +73,10 @@ norecursedirs = ["__pycache__", "tests/wip"]
 addopts = "--mypy --cov=preservationeval --cov-report=xml --cov-report=html"
 pythonpath = [".", "tests"]
 markers = [
-    "javascript: marks tests that compare against JavaScript",
-    "specific: marks tests of specific cases",
-    "slow: marks tests as slow",
-    "integration: marks tests as integration tests",
-    "unit: marks tests as unit tests"
+    "unit: marks unit tests that test individual components in isolation",
+    "integration: marks integration tests that test component interactions",
+    "validation: marks tests that validate against JavaScript reference implementation",
+    "slow: marks tests that take longer to execute",
 ]
 
 [tool.mypy]
