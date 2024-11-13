@@ -1,30 +1,10 @@
 # preservationeval
 
-<!-- Status -->
-[![Project Status](https://img.shields.io/pypi/status/preservationeval?style=flat&color=blue&label=status)](https://pypi.org/project/preservationeval/)
-[![Maintained](https://img.shields.io/badge/maintained-yes-brightgreen?style=flat)](https://github.com/petter-b/preservationeval/graphs/commit-activity)
-[![Issues](https://img.shields.io/github/issues/petter-b/preservationeval?style=flat&color=yellow)](https://github.com/petter-b/preservationeval/issues/)
-
-<!-- Package -->
-[![PyPI](https://img.shields.io/pypi/v/preservationeval?style=flat&color=blue&label=pypi)](https://pypi.org/project/preservationeval/)
-[![Python](https://img.shields.io/pypi/pyversions/preservationeval?style=flat&color=blue)](https://pypi.org/project/preservationeval/)
-[![Downloads](https://img.shields.io/pepy/dt/preservationeval?style=flat&color=blue&label=downloads)](https://pepy.tech/project/preservationeval)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=flat)](https://opensource.org/licenses/MIT)
-
-<!-- CI/CD -->
-[![CI](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/ci.yml?style=flat&label=ci)](https://github.com/petter-b/preservationeval/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/codecov/c/github/petter-b/preservationeval?style=flat&color=brightgreen&label=coverage)](https://codecov.io/gh/petter-b/preservationeval)
-[![Pre-commit CI](https://img.shields.io/badge/pre--commit%20ci-passing-brightgreen?style=flat)](https://results.pre-commit.ci/latest/github/petter-b/preservationeval/main)
-
-<!-- Security -->
-[![CodeQL](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/codeql.yml?style=flat&label=codeql)](https://github.com/petter-b/preservationeval/actions/workflows/codeql.yml)
-[![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen?style=flat&logo=renovatebot)](https://renovatebot.com)
-
-<!-- Quality -->
-[![Black](https://img.shields.io/badge/code%20style-black-000000?style=flat)](https://github.com/psf/black)
-[![Ruff](https://img.shields.io/badge/ruff-recommended-red?style=flat&logo=ruff)](https://github.com/astral-sh/ruff)
-[![Mypy](https://img.shields.io/badge/mypy-typed-blue?style=flat&logo=python)](http://mypy-lang.org/)
-[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?style=flat&logo=pre-commit)](https://github.com/petter-b/preservationeval/blob/main/.pre-commit-config.yaml)
+[![PyPI](https://img.shields.io/pypi/v/preservationeval?style=flat&color=blue&label=pypi&logo=pypi)](https://pypi.org/project/preservationeval/)
+[![Python](https://img.shields.io/pypi/pyversions/preservationeval?style=flat&color=blue&logo=python)](https://pypi.org/project/preservationeval/)
+[![CI](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/ci.yml?style=flat&label=ci&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/petter-b/preservationeval?style=flat&color=brightgreen&label=coverage&logo=codecov)](https://codecov.io/gh/petter-b/preservationeval)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat&logo=opensourceinitiative&logoColor=white)](https://opensource.org/licenses/MIT)
 
 A Python module to mimic the calculations done by the Dew Point Calculator from Image Permanence Institute (IPI).
 
@@ -56,6 +36,10 @@ mold_risk = mold(20, 50)
 
 ## Development
 
+[![Project Status](https://img.shields.io/pypi/status/preservationeval?style=flat&color=blue&label=status&logo=pypi)](https://pypi.org/project/preservationeval/)
+[![Downloads](https://img.shields.io/pepy/dt/preservationeval?style=flat&color=blue&logo=python&logoColor=white)](https://pepy.tech/project/preservationeval)
+[![Issues](https://img.shields.io/github/issues/petter-b/preservationeval?style=flat&color=yellow&logo=github)](https://github.com/petter-b/preservationeval/issues/)
+
 ### Setup
 
 ```bash
@@ -67,17 +51,20 @@ cd preservationeval
 pip install -e ".[dev]"
 ```
 
-## Testing
+### Testing
+[![CI](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/ci.yml?style=flat&label=ci&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/petter-b/preservationeval?style=flat&color=brightgreen&label=coverage&logo=codecov)](https://codecov.io/gh/petter-b/preservationeval)
+[![CodeQL](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/codeql.yml?style=flat&label=codeql&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/codeql.yml)
 
-### Validation Testing
+#### Validation Testing
 The package includes a validation framework that compares our Python implementation
 against the original JavaScript implementation from dpcalc.org.
 
-#### Requirements
+##### Requirements
 - Node.js and npm must be installed ([download](https://nodejs.org/))
 - Python test dependencies: `pip install -e ".[test]"`
 
-#### Test Data Setup
+##### Test Data Setup
 The test framework automatically:
 - Creates the `tests/data` directory (git-ignored)
 - Downloads the JavaScript reference implementation
@@ -102,6 +89,16 @@ pytest -v tests/test_validation.py
 # Generate new test cases (ignore cached)
 pytest tests/test_validation.py --force-update
 ```
+
+### Code Quality
+[![Black](https://img.shields.io/badge/code%20style-black-000000?style=flat&logo=python&logoColor=white)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/badge/ruff-recommended-red?style=flat&logo=ruff&logoColor=white)](https://github.com/astral-sh/ruff)
+[![Mypy](https://img.shields.io/badge/mypy-typed-blue?style=flat&logo=python&logoColor=white)](http://mypy-lang.org/)
+
+### Automation
+[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?style=flat&logo=pre-commit&logoColor=white)](https://github.com/petter-b/preservationeval/blob/main/.pre-commit-config.yaml)
+[![Pre-commit CI](https://img.shields.io/badge/pre--commit%20ci-passing-brightgreen?style=flat&logo=pre-commit&logoColor=white)](https://results.pre-commit.ci/latest/github/petter-b/preservationeval/main)
+[![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen?style=flat&logo=renovatebot&logoColor=white)](https://renovatebot.com)
 
 ## Development Notes
 
