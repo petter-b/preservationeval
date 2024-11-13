@@ -44,6 +44,9 @@ coverage.xml
 *.cover
 .pytest_report.xml
 
+# pre-commit
+.pre-commit-config.yaml.cache
+
 # Type checking
 .mypy_cache/
 .dmypy.json
