@@ -1,5 +1,8 @@
 # preservationeval
 
+<!-- Security -->
+[![CodeQL](https://github.com/petter-b/preservationeval/actions/workflows/codeql.yml/badge.svg)](https://github.com/petter-b/preservationeval/actions/workflows/codeql.yml)
+
 <!-- Build and Coverage Status -->
 [![Tests](https://github.com/petter-b/preservationeval/actions/workflows/tests.yml/badge.svg)](https://github.com/petter-b/preservationeval/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/petter-b/preservationeval/branch/main/graph/badge.svg)](https://codecov.io/gh/petter-b/preservationeval)
