@@ -1,0 +1,59 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    ":dependencyDashboard",
+    ":semanticCommits"
+  ],
+  "packageRules": [
+    {
+      "description": "Group test dependencies",
+      "matchPackagePatterns": [
+        "^pytest",
+        "coverage",
+        "hypothesis"
+      ],
+      "groupName": "test dependencies",
+      "groupSlug": "test-deps"
+    },
+    {
+      "description": "Group type checking dependencies",
+      "matchPackagePatterns": [
+        "^mypy",
+        "^pyright",
+        "^types-"
+      ],
+      "groupName": "type checking dependencies",
+      "groupSlug": "type-deps"
+    },
+    {
+      "description": "Group lint dependencies",
+      "matchPackagePatterns": [
+        "^black",
+        "^ruff",
+        "^pre-commit"
+      ],
+      "groupName": "lint dependencies",
+      "groupSlug": "lint-deps"
+    },
+    {
+      "description": "Auto merge minor and patch updates",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true,
+      "automergeType": "branch"
+    }
+  ],
+  "schedule": ["every weekend"],
+  "prConcurrentLimit": 3,
+  "labels": ["dependencies"],
+  "assignees": ["petter-b"],
+  "pip_requirements": {
+    "fileMatch": [
+      "pyproject\\.toml$"
+    ]
+  },
+  "rangeStrategy": "pin",
+  "commitMessagePrefix": "chore(deps):",
+  "prCreation": "not-pending",
+  "dependencyDashboard": true
+}
