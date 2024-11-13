@@ -18,6 +18,8 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![mypy](https://img.shields.io/badge/mypy-typed-blue.svg)](http://mypy-lang.org/)
 [![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://renovatebot.com)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/petter-b/preservationeval/main.svg)](https://results.pre-commit.ci/latest/github/petter-b/preservationeval/main)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/petter-b/preservationeval/blob/main/.pre-commit-config.yaml)
 
 <!-- Development Status -->
 [![Development Status](https://img.shields.io/pypi/status/preservationeval.svg)](https://pypi.org/project/preservationeval/)
