@@ -14,6 +14,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![mypy](https://img.shields.io/badge/mypy-typed-blue.svg)](http://mypy-lang.org/)
+[![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://renovatebot.com)
 
 <!-- Development Status -->
 [![Development Status](https://img.shields.io/pypi/status/preservationeval.svg)](https://pypi.org/project/preservationeval/)
