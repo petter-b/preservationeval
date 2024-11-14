@@ -1,0 +1,21 @@
+{
+    "python.defaultInterpreterPath": ".venv/bin/python",
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.diagnosticMode": "workspace",
+    "python.languageServer": "Pylance",
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.rulers": [88],
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        }
+    }
+}

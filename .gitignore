@@ -1,17 +1,11 @@
-# Project specific
+# Project specific data files
 dp.js
 data/
-data/dp.js
-data/dp.js.hash
-data/dp.hash
-data/test_data.json
-
 tests/data/
-tests/data/dp.js
-tests/data/dp.js.hash
-tests/data/dp.hash
-tests/data/test_data.json
+*.hash
+test_data.json
 
+# Generated Python files
 src/preservationeval/lookup_tables.py
 src/preservationeval/tables.py
 
@@ -27,10 +21,6 @@ build/
 *.egg-info/
 __pypackages__/
 
-# Poetry
-poetry.lock
-.python-version
-
 # Testing and coverage
 .pytest_cache/
 .coverage
@@ -43,15 +33,15 @@ coverage.xml
 *.cover
 .pytest_report.xml
 
-# pre-commit
-.pre-commit-config.yaml.cache
-
 # Type checking
 .mypy_cache/
 .dmypy.json
 dmypy.json
 .pytype/
 .ruff_cache/
+
+# pre-commit
+.pre-commit
 
 # IDEs and editors
 .idea/
@@ -60,9 +50,9 @@ dmypy.json
 !.vscode/extensions.json
 !.vscode/launch.json
 !.vscode/tasks.json
-*.swp
-*.swo
-.DS_Store*
+.DS_Store
+*.sw[op]
+*~
 *.sublime-workspace
 *.sublime-project
 
@@ -73,17 +63,7 @@ env/
 venv/
 ENV/
 
-# Cache and temporary files
-.cache
-*.log
-.*.swp
-.*.swo
-*~
-
-# Build output
-*.pyc
-*.pyo
-*.pyd
+# Build artifacts
 *.so
 *.dll
 *.dylib
