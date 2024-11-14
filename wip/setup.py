@@ -1,71 +1,87 @@
-import sys
+"""Setup configuration for preservationeval package."""
 
-from setuptools import setup
+import sys
+from pathlib import Path
+from typing import List
+
+from setuptools import find_packages, setup
 from setuptools.command.build_py import build_py
 
-from preservationeval.logging import setup_logging
 
-# Setup logging
-logger = setup_logging(__name__)
+def check_build_dependencies() -> None:
+    """Verify that build dependencies are available.
 
-
-def check_build_depenmdencies():
+    Raises:
+        SystemExit: If any required dependencies are missing.
     """
-    Verify that build dependencies are available.
-
-    """
-    missing = []
-    try:
-        import numpy
-    except ImportError:
-        missing.append("numpy")
-    try:
-        import requests
-    except ImportError:
-        missing.append("requests")
+    missing: List[str] = []
+    
+    required_packages = ["numpy", "requests"]
+    for package in required_packages:
+        try:
+            __import__(package)
+        except ImportError:
+            missing.append(package)
 
     if missing:
         msg = "Missing build dependencies: " + ", ".join(missing)
-        logger.error(msg)
-        logger.error("Install with: pip install %s", " ".join(missing))
+        print(f"ERROR: {msg}", file=sys.stderr)
+        print(
+            f"Install with: pip install {' '.join(missing)}", 
+            file=sys.stderr
+        )
         sys.exit(1)
 
 
 class BuildPyCommand(build_py):
-    """Custom build command to generate tables."""
+    """Custom build command to generate lookup tables during installation."""
 
-    def run(self):
+    def run(self) -> None:
+        """Execute the build command.
+        
+        This method:
+        1. Checks for required build dependencies
+        2. Adds install directory to Python path
+        3. Generates the lookup tables
+        4. Runs the standard build process
+        
+        Raises:
+            SystemExit: If table generation fails
+        """
+        check_build_dependencies()
+        
+        # Add install directory to Python path
+        install_dir = Path(__file__).parent / "install"
+        sys.path.insert(0, str(install_dir))
+        
         # Generate tables before building
-        from generate_tables import generate_tables_module
-
-        generate_tables_module()
+        try:
+            from generate_tables import generate_all_tables
+            generate_all_tables()
+        except Exception as e:
+            print(f"ERROR: Failed to generate tables: {e}", file=sys.stderr)
+            sys.exit(1)
+        finally:
+            # Remove install directory from path
+            sys.path.pop(0)
+            
+        # Run the standard build
         build_py.run(self)
 
-
-# setup.py - Handles installation
-class BuildPyCommand(build_py):
-    """Generate tables during installation"""
-    def run(self):
-        self.generate_tables_module()
-        build_py.run(self)
-
-# core.py - Robust table handling
-try:
-    from .tables_data import PI_DATA, EMC_DATA  # Generated
-except ImportError:
-    from .const import PITABLE, EMCTABLE  # Fallback
-
-# validate_core.py - Testing framework
-class PreservationTester:
-    """Handles validation against JavaScript"""
-    def run_validation(self):
-        # Check dp.js updates
-        # Run comparisons
-        # Save test data
 
 setup(
-    # ... your other setup parameters ...
+    name="preservationeval",
+    version="0.1.0",  # Update with your version
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    python_requires=">=3.11",
+    install_requires=[
+        "numpy",
+        "requests",
+        # Add other requirements
+    ],
     cmdclass={
         "build_py": BuildPyCommand,
     },
+    # Add other setup parameters as needed
 )
