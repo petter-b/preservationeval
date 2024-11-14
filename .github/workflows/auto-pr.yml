@@ -1,0 +1,59 @@
+name: Auto PR
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  auto-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # For your pushes - create and auto-approve PR
+      - name: Create Auto-approved PR (owner)
+        if: github.actor == 'petter-b'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.AUTO_PR_TOKEN }}
+          title: 'Auto PR: ${{ github.ref_name }}'
+          body: |
+            Automated pull request from repository owner @petter-b
+            Branch: ${{ github.ref_name }}
+
+            Changes in this PR:
+            ${{ github.event.head_commit.message }}
+          branch: ${{ github.ref_name }}
+          base: main
+
+      - name: Enable Auto-merge (owner)
+        if: github.actor == 'petter-b'
+        run: |
+          PR_NUMBER=$(gh pr list --state open --base main --head ${{ github.ref_name }} --json number -q '.[0].number')
+          gh pr review $PR_NUMBER --approve
+          gh pr merge $PR_NUMBER --auto --merge
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_PR_TOKEN }}
+
+      # For outside contributors - just create PR
+      - name: Create Standard PR (contributors)
+        if: github.actor != 'petter-b'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: 'PR: ${{ github.ref_name }}'
+          body: |
+            Pull request from contributor @${{ github.actor }}
+            Branch: ${{ github.ref_name }}
+
+            Changes in this PR:
+            ${{ github.event.head_commit.message }}
+
+            Note: This PR requires review from repository owner.
+          branch: ${{ github.ref_name }}
+          base: main
