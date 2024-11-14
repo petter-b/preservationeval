@@ -1,3 +1,11 @@
+"""Unit tests for preservation environment evaluation functions.
+
+This module provides unit tests for the evaluation functions in the
+preservationeval.eval module, covering various scenarios and edge cases.
+"""
+
+# pylint: disable=missing-docstring
+
 import pytest
 
 from preservationeval.eval import (

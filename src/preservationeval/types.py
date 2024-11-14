@@ -1,3 +1,9 @@
+"""Types and exceptions for preservation evaluation.
+
+Defines annotated types for domain-specific values and custom exceptions for
+preservation calculation errors.
+"""
+
 from typing import Annotated
 
 # Domain-specific types with documentation

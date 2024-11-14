@@ -1,11 +1,12 @@
-# scripts/make_test_data.py
-from preservationeval.validate_core import PreservationTester
+"""Generate fresh test data from online source."""
+
+from tests.validate_core import ValidationTest
 
 
-def main():
+def main() -> None:
     """Generate fresh test data from online source."""
-    tester = PreservationTester(use_local=False)
-    tester.run_validation()
+    tester = ValidationTest(force_update=True)
+    tester.run_tests()
 
 
 if __name__ == "__main__":

@@ -1,5 +1,4 @@
-"""
-Validation framework for comparing JavaScript and Python implementations.
+"""Validation framework for comparing JavaScript and Python implementations.
 
 This module provides tools to validate the Python implementation against
 the original JavaScript code from dpcalc.org. It handles:
@@ -9,6 +8,7 @@ the original JavaScript code from dpcalc.org. It handles:
 - Managing test data for offline validation
 """
 
+# pylint: disable=missing-docstring
 import hashlib
 import json
 import logging
@@ -19,7 +19,6 @@ import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import requests
@@ -27,27 +26,29 @@ import requests
 from preservationeval import emc, mold, pi
 from preservationeval.const import DP_JS_URL
 from preservationeval.logging import setup_logging
-from tests.config import COMPARISON_CONFIG, JS_CONFIG, TEST_CONFIG
+from tests.config import JS_CONFIG, ComparisonConfig, TestConfig
+from tests.safepath import create_safe_path
 from tests.templates import HTML_TEMPLATE, NODE_SCRIPT_TEMPLATE
 
 # Setup logging
 logger = setup_logging(__name__)
 
 # Type aliases
-Number = Union[int, float]
-TestCase = List[float]  # [temperature, relative_humidity]
-JSResult = Dict[str, Number]  # {'pi': int, 'emc': float, 'mold': int}
+Number = int | float
+TestCase = list[float]  # [temperature, relative_humidity]
+JSResult = dict[str, Number]  # {'pi': int, 'emc': float, 'mold': int}
 
 # Constants
-TEST_DATA_DIR = Path(__file__).parent / "data"  # Go up one level to tests/data
-DP_JS_PATH = TEST_DATA_DIR / "dp.js"
-TEST_DATA_PATH = TEST_DATA_DIR / "test_data.json"
+TEST_DATA_DIR = create_safe_path(
+    Path(__file__).parent, "data"
+)  # Go up one level to tests/data
+DP_JS_PATH = create_safe_path(TEST_DATA_DIR, "dp.js")
+TEST_DATA_PATH = create_safe_path(TEST_DATA_DIR, "test_data.json")
 
 
 @dataclass
 class DPJSInfo:
-    """
-    Information about dp.js file including content and version hash.
+    """Information about dp.js file including content and version hash.
 
     Attributes:
         content: The JavaScript source code
@@ -70,8 +71,7 @@ class DPJSInfo:
 
     @classmethod
     def from_url(cls, url: str) -> "DPJSInfo":
-        """
-        Download and create DPJSInfo from URL.
+        """Download and create DPJSInfo from URL.
 
         Args:
             url: URL to download dp.js from
@@ -89,8 +89,7 @@ class DPJSInfo:
         return cls(content=content, hash=hash_value, url=url)
 
     def save(self, path: Path) -> None:
-        """
-        Save dp.js content and hash information.
+        """Save dp.js content and hash information.
 
         Args:
             path: Path to save dp.js file
@@ -111,8 +110,7 @@ class DPJSInfo:
 
     @staticmethod
     def load_hash(path: Path) -> str | None:
-        """
-        Load stored hash for a dp.js file.
+        """Load stored hash for a dp.js file.
 
         Args:
             path: Path to dp.js file (hash file should be alongside)
@@ -130,8 +128,7 @@ class DPJSInfo:
 
 @dataclass
 class ValidationDifference:
-    """
-    Represents a difference between JavaScript and Python implementations.
+    """Represents a difference between JavaScript and Python implementations.
 
     Attributes:
         temp: Temperature value where difference occurred
@@ -148,8 +145,7 @@ class ValidationDifference:
 
 @dataclass
 class ValidationTest:
-    """
-    Handles validation of JavaScript vs Python implementation.
+    """Handles validation of JavaScript vs Python implementation.
 
     This class manages the complete validation process including:
     - Setting up test environment
@@ -161,11 +157,10 @@ class ValidationTest:
     def __init__(
         self,
         force_update: bool = False,
-        temp_range: Tuple[float, float, float] = (-30, 70, 0.5),
-        rh_range: Tuple[float, float, float] = (0, 100, 0.5),
+        temp_range: tuple[float, float, float] = (-30, 70, 0.5),
+        rh_range: tuple[float, float, float] = (0, 100, 0.5),
     ):
-        """
-        Initialize validation test environment.
+        """Initialize validation test environment.
 
         Args:
             force_update: If True, force download of new dp.js
@@ -178,8 +173,7 @@ class ValidationTest:
         self.temp_dir: Path | None = None
 
     def setup(self) -> None:
-        """
-        Set up test environment.
+        """Set up test environment.
 
         Creates necessary directories and ensures dp.js is available.
 
@@ -197,8 +191,7 @@ class ValidationTest:
             self.temp_dir = None
 
     def _ensure_dpjs(self) -> None:
-        """
-        Ensure dp.js is available and up to date.
+        """Ensure dp.js is available and up to date.
 
         Downloads new version if:
         - force_update is True
@@ -221,9 +214,8 @@ class ValidationTest:
                 if not DP_JS_PATH.exists():
                     raise RuntimeError("No dp.js available") from e
 
-    def _generate_test_cases(self, num_cases: int) -> List[TestCase]:
-        """
-        Generate random test cases within configured ranges.
+    def _generate_test_cases(self, num_cases: int) -> list[TestCase]:
+        """Generate random test cases within configured ranges.
 
         Args:
             num_cases: Number of test cases to generate
@@ -245,9 +237,9 @@ class ValidationTest:
         rh_indices = rng.integers(0, rh_steps + 1, size=num_cases)
         rhs = rh_min + (rh_indices * rh_step)
 
-        return [[float(t), float(rh)] for t, rh in zip(temps, rhs)]
+        return [[float(t), float(rh)] for t, rh in zip(temps, rhs, strict=False)]
 
-    def _save_test_data(self, cases: List[List[float]], results: List[Dict]) -> None:
+    def _save_test_data(self, cases: list[list[float]], results: list[dict]) -> None:
         """Save test data for future use."""
         data = {
             "generated": datetime.now().isoformat(),
@@ -255,13 +247,12 @@ class ValidationTest:
             "cases": cases,
             "results": results,
         }
-        TEST_DATA_DIR.mkdir(parents=True, exist_ok=True)
-        path = TEST_DATA_DIR / "test_data.json"
+        path = create_safe_path(TEST_DATA_DIR, "test_data.json")
         path.write_text(json.dumps(data, indent=2))
 
-    def load_test_data(self) -> Tuple[List[List[float]], List[Dict]]:
+    def load_test_data(self) -> tuple[list[list[float]], list[dict]]:
         """Load saved test cases and verify dp.js hash."""
-        test_data_path = TEST_DATA_DIR / "test_data.json"
+        test_data_path = create_safe_path(TEST_DATA_DIR, "test_data.json")
         if not test_data_path.exists():
             raise FileNotFoundError("Test data file not found")
 
@@ -278,10 +269,9 @@ class ValidationTest:
         return test_data["cases"], test_data["results"]
 
     def run_tests(
-        self, num_cases: int = 1000, use_cached: bool = True
-    ) -> Dict[str, List[ValidationDifference]]:
-        """
-        Run complete validation test suite.
+        self, num_cases: int = TestConfig.num_tests, use_cached: bool = True
+    ) -> dict[str, list[ValidationDifference]]:
+        """Run complete validation test suite.
 
         Args:
             num_cases: Number of random test cases to generate
@@ -346,9 +336,8 @@ class ValidationTest:
         finally:
             self.cleanup()
 
-    def _run_javascript_tests(self, test_cases: List[TestCase]) -> List[JSResult]:
-        """
-        Run test cases through JavaScript implementation.
+    def _run_javascript_tests(self, test_cases: list[TestCase]) -> list[JSResult]:
+        """Run test cases through JavaScript implementation.
 
         Args:
             test_cases: List of [temperature, relative_humidity] pairs
@@ -363,25 +352,34 @@ class ValidationTest:
             raise RuntimeError("Test environment not set up")
 
         # Create package.json
-        package_json_path = self.temp_dir / "package.json"
-        with open(package_json_path, "w") as f:
+        package_json_path = create_safe_path(self.temp_dir, "package.json")
+        with package_json_path.open("w") as f:
             json.dump(JS_CONFIG["package_json"], f, indent=2)
 
         # Create test files
-        test_html_path = self.temp_dir / "test.html"
+        test_html_path = create_safe_path(self.temp_dir, "test.html")
         test_html_path.write_text(HTML_TEMPLATE)
 
-        test_js_path = self.temp_dir / "run_tests.js"
+        test_js_path = create_safe_path(self.temp_dir, "run_tests.js")
         test_js_path.write_text(NODE_SCRIPT_TEMPLATE)
 
         # Copy dp.js to temp directory
-        dp_js_dest = self.temp_dir / "dp.js"
+        dp_js_dest = create_safe_path(self.temp_dir, "dp.js")
         shutil.copy(DP_JS_PATH, dp_js_dest)
 
+        npm_path = shutil.which("npm")
+        if npm_path is None:
+            raise RuntimeError("npm executable not found")
+
+        node_path = shutil.which("node")
+        if node_path is None:
+            raise RuntimeError("node executable not found")
+
+        # Run npm install
         try:
             # Install dependencies
-            subprocess.run(
-                ["npm", "install"],
+            subprocess.run(  # noqa: S603
+                [npm_path, "install"],
                 cwd=self.temp_dir,
                 check=True,
                 capture_output=True,
@@ -389,8 +387,8 @@ class ValidationTest:
             )
 
             # Run tests
-            process = subprocess.Popen(
-                ["node", str(test_js_path), str(test_html_path)],
+            process = subprocess.Popen(  # noqa: S603
+                [node_path, str(test_js_path), str(test_html_path)],
                 cwd=self.temp_dir,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
@@ -413,9 +411,8 @@ class ValidationTest:
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Failed to run JavaScript tests: {e}") from e
 
-    def _run_python_tests(self, test_cases: List[TestCase]) -> List[JSResult]:
-        """
-        Run test cases through Python implementation.
+    def _run_python_tests(self, test_cases: list[TestCase]) -> list[JSResult]:
+        """Run test cases through Python implementation.
 
         Args:
             test_cases: List of [temperature, relative_humidity] pairs
@@ -435,10 +432,9 @@ class ValidationTest:
         ]
 
     def _compare_results(
-        self, js_results: List[JSResult], py_results: List[JSResult]
-    ) -> Dict[str, List[ValidationDifference]]:
-        """
-        Compare JavaScript and Python results.
+        self, js_results: list[JSResult], py_results: list[JSResult]
+    ) -> dict[str, list[ValidationDifference]]:
+        """Compare JavaScript and Python results.
 
         Args:
             js_results: Results from JavaScript implementation
@@ -447,13 +443,13 @@ class ValidationTest:
         Returns:
             Dictionary with function names as keys and lists of differences
         """
-        differences: Dict[str, List[ValidationDifference]] = {
+        differences: dict[str, list[ValidationDifference]] = {
             "pi": [],
             "emc": [],
             "mold": [],
         }
 
-        for js, py in zip(js_results, py_results):
+        for js, py in zip(js_results, py_results, strict=False):
             t, rh = js["temp"], js["rh"]
 
             # Compare PI values
@@ -463,7 +459,7 @@ class ValidationTest:
                 )
 
             # Compare EMC values (with tolerance)
-            if abs(js["emc"] - py["emc"]) > COMPARISON_CONFIG["emc_tolerance"]:
+            if abs(js["emc"] - py["emc"]) > ComparisonConfig.emc_tolerance:
                 differences["emc"].append(
                     ValidationDifference(t, rh, js["emc"], py["emc"])
                 )
@@ -478,16 +474,22 @@ class ValidationTest:
 
     @staticmethod
     def _check_node_installation() -> None:
-        """
-        Check if Node.js and npm are available.
+        """Check if Node.js and npm are available.
 
         Raises:
             RuntimeError: If Node.js or npm is not installed
         """
+        npm_path = shutil.which("npm")
+        if npm_path is None:
+            raise RuntimeError("npm executable not found")
+
+        node_path = shutil.which("node")
+        if node_path is None:
+            raise RuntimeError("node executable not found")
         try:
             # Check Node.js
-            node_version = subprocess.run(
-                ["node", "--version"],
+            node_version = subprocess.run(  # noqa: S603
+                [node_path, "--version"],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -495,8 +497,8 @@ class ValidationTest:
             logger.debug("Found Node.js: %s", node_version.stdout.strip())
 
             # Check npm
-            npm_version = subprocess.run(
-                ["npm", "--version"],
+            npm_version = subprocess.run(  # noqa: S603
+                [npm_path, "--version"],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -520,7 +522,8 @@ def main() -> None:
     try:
         validator = ValidationTest(force_update=False)
         differences = validator.run_tests(
-            num_cases=TEST_CONFIG["num_tests"], use_cached=True  # type: ignore
+            num_cases=TestConfig.num_tests,
+            use_cached=True,
         )
 
         # Report results
@@ -535,7 +538,7 @@ def main() -> None:
                         "%s: %d differences (showing first %d)",
                         func.upper(),
                         len(diffs),
-                        COMPARISON_CONFIG["max_differences_shown"],
+                        ComparisonConfig.max_differences,
                     )
                     for diff in diffs[: COMPARISON_CONFIG["max_differences_shown"]]:  # type: ignore # noqa E501
                         logger.warning(

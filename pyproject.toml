@@ -1,12 +1,10 @@
 [project]
 name = "preservationeval"
 version = "0.1.0"
-authors = [
-    {name = "Petter Blomberg", email = "petter.blomberg@gmail.com"}
-]
+authors = [{ name = "Petter Blomberg", email = "petter.blomberg@gmail.com" }]
 description = "A Python module to mimic the calculations done by the Dew Point Calculator from Image Permanence Institute (IPI)."
 requires-python = ">=3.11"
-license = {text = "MIT"}
+license = { text = "MIT" }
 keywords = ["preservation", "climate", "numpy"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -17,10 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-    "numpy>=1.24.0",
-    "requests>=2.31.0",
-]
+dependencies = ["numpy>=1.24.0", "requests>=2.31.0"]
 readme = "README.md"
 
 [project.optional-dependencies]
@@ -33,20 +28,15 @@ test = [
 ]
 # Code quality tools
 lint = [
-    "mypy>=1.6.0",
-    "black>=23.9.1",
-    "ruff>=0.1.0",
-    "flake8>=6.1.0",
-    "pre-commit>=3.5.0",
+    "mypy>=1.13.0",      # Match your pre-commit hook version
+    "black>=24.10.0",    # Match your pre-commit hook version
+    "ruff>=0.7.3",       # Match your pre-commit hook version
+    "pre-commit>=3.6.0", # Current version
 ]
 # Performance tools
-profile = [
-    "memory_profiler>=0.61.0",
-]
+profile = ["memory_profiler>=0.61.0"]
 # Full development environment (includes all above)
-dev = [
-    "preservationeval[test,lint,profile]"
-]
+dev = ["preservationeval[test,lint,profile]"]
 
 [project.scripts]
 preservationeval = "preservationeval.__main__:main"
@@ -56,9 +46,12 @@ build-backend = "setuptools.build_meta"
 requires = [
     "setuptools>=45",
     "wheel",
-    "numpy>=1.24.0",     # Needed during build
-    "requests>=2.31.0",  # Needed for downloading
+    "numpy>=1.24.0",    # Needed during build
+    "requests>=2.31.0", # Needed for downloading
 ]
+
+[tool.setuptools]
+package-data = { preservationeval = [".pre-commit-config.yaml"] }
 
 [project.urls]
 Homepage = "https://github.com/petter-b/preservationeval"
@@ -99,11 +92,20 @@ files = ["src/**/*.py", "tests/**/*.py"]
 module = ["numpy.*", "requests.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "tests.*"
+disable_error_code = ["misc"]
+
 [tool.pyright]
 include = ["src"]
 exclude = [
     "**/node_modules",
-    "**/__pycache__"
+    "**/__pycache__",
+    ".venv",
+    "build",
+    "dist",
+    "tests/data",
+    "docs/generated",
 ]
 typeCheckingMode = "basic"
 reportMissingTypeStubs = false
@@ -114,11 +116,7 @@ pythonPlatform = "All"
 line-length = 88
 target-version = ['py311']
 include = '\.pyi?$'
-
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 88
+extend-exclude = "tests/data/.*"
 
 [tool.coverage.run]
 source = ["src"]
@@ -133,23 +131,40 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "pass",
     "raise ImportError",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
 ]
 
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+
+[tool.ruff.lint]
 select = [
-    "D",   # pydocstyle
-    "E",   # pycodestyle
-    "F",   # pyflakes
-    "B",   # flake8-bugbear
-    "I",   # isort
-    "N",   # pep8-naming
-    "UP",  # pyupgrade
-    "S",   # flake8-bandit
-    "C4",  # flake8-comprehensions
+    "D",  # pydocstyle
+    "E",  # pycodestyle
+    "F",  # pyflakes
+    "B",  # flake8-bugbear
+    "I",  # isort
+    "N",  # pep8-naming
+    "UP", # pyupgrade
+    "S",  # flake8-bandit
+    "C4", # flake8-comprehensions
 ]
 ignore = ["D203", "D213"]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"
+
+# Optional: Add these sections if you need them
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = [
+    "D103", # Missing docstring in public function
+    "S101", # Use of assert detected
+]

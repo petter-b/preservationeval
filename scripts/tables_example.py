@@ -1,3 +1,5 @@
+"""Example used during development to show / test table fetching and validation code."""
+
 # Standard library imports
 
 # Package imports

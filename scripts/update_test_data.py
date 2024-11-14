@@ -1,8 +1,9 @@
-# scripts/update_test_data.py
+"""Update test data from JavaScript source."""
+
 from tests.validate_core import ValidationTest
 
 
-def main():
+def main() -> None:
     """Update test data from JavaScript source."""
     validation = ValidationTest(force_update=True)
     validation.run_tests(num_cases=1000)

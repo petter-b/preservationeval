@@ -1,3 +1,15 @@
+"""Unit tests for preservationeval.utils module.
+
+Functions:
+    test_validate_rh: Test the validate_rh function by checking that it does not raise
+    an exception for valid relative humidity values.
+    test_validate_temp: Test the validate_temp function by checking that it does not
+    raise an exception for valid temperature values.
+
+These tests ensure that the utility functions in the preservationeval.utils module are
+functioning correctly.
+"""
+
 import pytest
 
 from preservationeval.utils import to_celsius, validate_rh, validate_temp

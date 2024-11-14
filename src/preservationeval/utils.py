@@ -1,24 +1,27 @@
+"""Utility functions for preservation calculations.
+
+This module provides various utility functions for validating and converting
+temperature, relative humidity, and dew point values, as well as calculating
+derived quantities such as equilibrium moisture content.
+"""
+
 from .const import RH_MAX, RH_MIN, TEMP_MAX, TEMP_MIN
 from .types import RelativeHumidity, Temperature
 
 
 def validate_rh(rh: RelativeHumidity) -> None:
-    """
-    Validate that relative humidity is an integer or float between RH_MIN [%] and
-    RH_MAX [%] incluive.
+    """Validate that relative humidity is a number between RH_MIN [%] and RH_MAX [%].
 
     Args:
-        rh (int / float)
+        rh: Relative humidity value
 
     Raises:
-        TypeError: If 'rh' is not integer or float.
-        ValueError: If 'rh' is < RH_MIN or 'rh' > RH_MAX.
+        TypeError: If 'rh' is not a number.
+        ValueError: If 'rh' is not within the valid range.
     """
-    if not isinstance(rh, (int, float)):
-        raise TypeError(
-            f"Relative humidity must be integer or float, got {type(rh).__name__}"
-        )
-    if not (RH_MIN <= rh <= RH_MAX):
+    if not isinstance(rh, (int | float)):
+        raise TypeError(f"Relative humidity must be a number, got {type(rh).__name__}")
+    if not RH_MIN <= rh <= RH_MAX:
         raise ValueError(
             f"Relative humidity must be between {RH_MIN} [%] and {RH_MAX} [%], "
             f"got {rh} [%]"
@@ -26,21 +29,17 @@ def validate_rh(rh: RelativeHumidity) -> None:
 
 
 def validate_temp(temp: Temperature) -> None:
-    """
-    Validate that temperature is an integer or float in degee Celsius.
-    Temperature must be >= TEMP_MIN and <= TEMP_MAX.
+    """Validate that temperature is a number in degee Celsius.
 
     Args:
-        temp (int / float) in degee Celsius
+        temp (int / float): Temperature in degee Celsius, >= TEMP_MIN and <= TEMP_MAX.
 
     Raises:
-        TypeError: If 'temp' is not integer or float.
+        TypeError: If 'temp' is not a number.
         ValueError: If 'temp' < TEMP_MIN or 'temp' > TEMP_MAX
     """
-    if not isinstance(temp, (int, float)):
-        raise TypeError(
-            f"Temperature must be integer or float, got {type(temp).__name__}"
-        )
+    if not isinstance(temp, (int | float)):
+        raise TypeError(f"Temperature must be a number, got {type(temp).__name__}")
     if not (TEMP_MIN <= temp <= TEMP_MAX):
         raise ValueError(
             f"Temperature must be between {TEMP_MIN} [C] and {TEMP_MAX} [C], "
@@ -66,7 +65,7 @@ def to_celsius(x: Temperature, scale: str = "f") -> Temperature:
             valid range
         TypeError: If x is not integer or float
     """
-    if not isinstance(x, (int, float)):
+    if not isinstance(x, (int | float)):
         raise TypeError(f"Temperature must be integer or float, got {type(x)}")
     if scale == "f":
         if x < -459.67:

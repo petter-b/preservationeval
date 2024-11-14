@@ -1,5 +1,4 @@
-"""
-HTML and JavaScript templates for the test environment.
+"""HTML and JavaScript templates for the test environment.
 
 This module contains the templates needed to create the browser-based
 test environment for running the original JavaScript implementation.

@@ -1,5 +1,4 @@
-"""
-# Interactive validation
+"""# Interactive validation
 from tests.validate_core import ValidationTest
 
 # Check current implementation

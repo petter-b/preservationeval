@@ -39,7 +39,6 @@ from array import array
 # Type hints
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Tuple
 
 import numpy as np
 
@@ -88,8 +87,7 @@ class TableType(Enum):
 
 @dataclass
 class TableMetaData:
-    """
-    Store meta data for a table lookup table.
+    """Store meta data for a table lookup table.
 
     This class holds all the information about how table lookups are
     calculated, including range limits, offsets, and array dimensions.
@@ -124,11 +122,11 @@ class TableMetaData:
             if self._temp_max is not None:
                 try:
                     self._temp_range = self._temp_max - self.temp_min + 1
-                except TypeError:
+                except TypeError as e:
                     raise ValidationError(
                         f"Cannot calculate temp_size: temp_max={self._temp_max}, "
                         f"temp_min={self.temp_min}"
-                    )
+                    ) from e
             else:
                 raise ValidationError("Cannot calculate temp_size: temp_max=None!")
 
@@ -138,11 +136,11 @@ class TableMetaData:
             if self._rh_max is not None:
                 try:
                     self._rh_min = self._rh_max - self.rh_range + 1
-                except TypeError:
+                except TypeError as e:
                     raise ValidationError(
                         f"Cannot calculate rh_min: rh_max={self._rh_max}, "
                         f"rh_size={self.rh_range}"
-                    )
+                    ) from e
             elif self.rh_range == 101:
                 self._rh_min = 0
                 self._rh_max = 100
@@ -196,8 +194,8 @@ class TableMetaData:
         """Return total number of elements in the table."""
         try:
             return self.temp_range * self.rh_range
-        except TypeError:
-            raise ValueError("temp_size or rh_size has not been initialized")
+        except TypeError as e:
+            raise ValueError("temp_size or rh_size has not been initialized") from e
 
 
 # Initialize module logger
@@ -205,15 +203,12 @@ logger = setup_logging(__name__)
 
 
 def to_int(value: str) -> int:
-    """
-    Convert string to int, removing whitespace in case of negative numbers
-    """
+    """Convert string to int, removing whitespace in case of negative numbers."""
     return int(value.replace(" ", ""))
 
 
-def extract_array_sizes(js_content: str) -> Tuple[int, int]:
-    """
-    Extract the size of the pitable and emctable arrays from JavaScript code.
+def extract_array_sizes(js_content: str) -> tuple[int, int]:
+    """Extract the size of the pitable and emctable arrays from JavaScript code.
 
     The size of the arrays is extracted by matching the pattern defined in the
     'pi_array_size' and 'emc_array_size' regular expressions. The extracted
@@ -258,8 +253,7 @@ def extract_array_sizes(js_content: str) -> Tuple[int, int]:
 
 
 def extract_pi_meta_data(js_content: str) -> TableMetaData:
-    """
-    Extract PI table ranges from JavaScript code.
+    """Extract PI table ranges from JavaScript code.
 
     PI ranges are extracted by matching the pattern defined in the
     'pi_ranges' regular expression. The extracted data is then used to
@@ -297,8 +291,7 @@ def extract_pi_meta_data(js_content: str) -> TableMetaData:
 
 
 def extract_emc_meta_data(js_content: str) -> TableMetaData:
-    """
-    Extract EMC table ranges from JavaScript code.
+    """Extract EMC table ranges from JavaScript code.
 
     EMC ranges are extracted by matching the pattern defined in the
     'emc_ranges' regular expression. The extracted data is then used to
@@ -333,7 +326,14 @@ def extract_emc_meta_data(js_content: str) -> TableMetaData:
 
 
 def extract_mold_meta_data(js_content: str) -> TableMetaData:
+    """Extracts metadata for mold risk factor calculations.
 
+    Args:
+        js_content (str): The JavaScript code to extract metadata from.
+
+    Returns:
+        # Add return type and description as needed
+    """
     logger.debug("Attempting to match Mold ranges pattern")
     try:
         mold_match = COMPILED_PATTERNS["mold_ranges"].search(js_content)
@@ -363,20 +363,20 @@ def extract_mold_meta_data(js_content: str) -> TableMetaData:
 
 
 def cross_check_meta_data(
-    meta_data: Dict[TableType, TableMetaData], pi_array_size: int, emc_array_size: int
+    meta_data: dict[TableType, TableMetaData], pi_array_size: int, emc_array_size: int
 ) -> None:
-    """
-    Cross-check meta data with array sizes as follows:
-     - PI temp_size * rh_size + MOLD temp_size * rh_size == pi_array_size
-     - PI temp_size * rh_size == MOLD array_offset
-     - EMC temp_size * rh_size == emc_array_size
-    """
+    """Validate table metadata against array sizes.
 
+    The following checks are performed:
+    - PI table size + Mold table size == pi_array_size
+    - PI table size == Mold table array offset
+    - EMC table size == emc_array_size
+    """
     try:
         # - PI temp_size * rh_size + MOLD temp_size * rh_size == pi_array_size
 
         if (
-            meta_data[TableType.PI].size * meta_data[TableType.MOLD].size
+            meta_data[TableType.PI].size + meta_data[TableType.MOLD].size
             != pi_array_size
         ):
             raise ValidationError("PI and Mold table sizes mismatch with pi_array_size")
@@ -393,8 +393,15 @@ def cross_check_meta_data(
         raise
 
 
-def extract_table_meta_data(js_content: str) -> Dict[TableType, TableMetaData]:
+def extract_table_meta_data(js_content: str) -> dict[TableType, TableMetaData]:
+    """Extracts table metadata from the given JavaScript source code.
 
+    The function extracts the PI, EMC, and Mold table metadata, and stores them
+    in a dictionary. The dictionary is then returned.
+
+    :param js_content: The JavaScript source code to extract metadata from
+    :return: A dictionary containing the extracted table metadata
+    """
     logger.debug("Starting to extract table ranges from JavaScript")
     meta_data = {}
 
@@ -423,8 +430,8 @@ def extract_table_meta_data(js_content: str) -> Dict[TableType, TableMetaData]:
 
 
 def extract_raw_arrays(
-    js_content: str, meta_data: Dict[TableType, TableMetaData]
-) -> Tuple[array[int], array[float]]:
+    js_content: str, meta_data: dict[TableType, TableMetaData]
+) -> tuple[array[int], array[float]]:
     """Extract raw arrays from JavaScript content.
 
     Returns:
@@ -463,7 +470,7 @@ def extract_raw_arrays(
 
 def fetch_and_validate_tables(
     url: str,
-) -> Tuple[PITable, EMCTable, MoldTable]:
+) -> tuple[PITable, EMCTable, MoldTable]:
     """Fetch and process all tables.
 
     Args:

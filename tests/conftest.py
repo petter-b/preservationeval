@@ -1,5 +1,19 @@
+"""This module contains fixtures and configuration settings for pytest tests.
+
+Fixtures:
+    validation: Provides a configured ValidationTest instance for JavaScript validation.
+
+Functions:
+    pytest_addoption: Adds custom command line options to pytest.
+    pytest_configure: Configures pytest with custom markers.
+    _verify_test_data_dir: Ensures the test data directory exists.
+
+This module sets up the necessary configuration and fixtures for running pytest tests.
+"""
+
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Generator, Union
+from typing import Any
 
 import pytest
 from _pytest.config import Config, Notset
@@ -32,7 +46,7 @@ def validation(request: pytest.FixtureRequest) -> ValidationTest:
     Returns:
         ValidationTest: Configured instance for JavaScript validation
     """
-    option: Union[bool, Any, Notset] = request.config.getoption("--force-update")
+    option: bool | Any | Notset = request.config.getoption("--force-update")
     force_update: bool = bool(option) if option is not Notset else False
     return ValidationTest(force_update=force_update)
 

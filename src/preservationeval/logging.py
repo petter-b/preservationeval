@@ -1,6 +1,4 @@
-"""
-This module contains functions and classes to configure and use structured
-logging in the preservationeval package.
+"""Classes to configure and use structured logging in the preservationeval package.
 
 The main function is `setup_logging`, which sets up a structured logger with
 the name 'preservationeval'. This logger logs to the console and optionally
@@ -24,7 +22,7 @@ import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 __all__ = [
     "setup_logging",
@@ -45,8 +43,7 @@ class LogLevel(str, Enum):
     CRITICAL = "CRITICAL"
 
     def to_level(self) -> int:
-        """
-        Convert the LogLevel instance to a numeric logging level.
+        """Convert the LogLevel instance to a numeric logging level.
 
         Returns:
             int: The numeric logging level corresponding to this LogLevel.
@@ -71,14 +68,14 @@ class LogConfig:
     # Output settings
     console_output: bool = True
     file_output: bool = False
-    log_dir: Optional[Path] = None
+    log_dir: Path | None = None
     file_name: str = "preservationeval.log"
 
     # Behavior settings
     propagate: bool = False
     capture_warnings: bool = True
 
-    def get_log_file_path(self) -> Optional[Path]:
+    def get_log_file_path(self) -> Path | None:
         """Get the full path for the log file if file output is enabled."""
         if not self.file_output or not self.log_dir:
             return None
@@ -92,7 +89,7 @@ class StructuredLogger(logging.Logger):
         self,
         level: int,
         msg: str,
-        extra: Optional[Dict[str, Any]] = None,
+        extra: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         """Log a message with structured data."""
@@ -108,8 +105,8 @@ class StructuredLogger(logging.Logger):
 
 
 def setup_logging(
-    name: Optional[str] = None,
-    config: Optional[LogConfig] = None,
+    name: str | None = None,
+    config: LogConfig | None = None,
     env: str = "development",
 ) -> logging.Logger:
     """Configure and return a logger with given configuration.

@@ -1,8 +1,35 @@
+"""Lookup tables and functions for preservation environment calculations.
+
+This module provides lookup tables and functions for calculating preservation
+indices, equilibrium moisture content, and mold risk factors based on
+temperature and relative humidity.
+
+The lookup tables are generated from JavaScript code used in the dpcalc.org
+preservation calculator.
+
+Classes:
+    LookupTable: A class representing a lookup table for preservation
+        environment calculations.
+
+Functions:
+    extract_table_meta_data: Extracts metadata from a lookup table.
+    extract_mold_meta_data: Extracts metadata for mold risk factor calculations.
+    pi: Calculates the preservation index (PI) value.
+    emc: Calculates the equilibrium moisture content (EMC) value.
+    mold: Calculates the mold risk factor value.
+
+Variables:
+    TABLE_DATA: A dictionary of lookup tables for preservation environment
+        calculations.
+"""
+
+from collections.abc import Callable
 from enum import Flag, auto
 from math import floor
-from typing import Callable, Final, Generic, TypeVar, Union, cast
+from typing import Any, Final, Generic, TypeVar, cast
 
 import numpy as np
+import numpy.typing as npt
 
 from .const import EMCTABLE, PITABLE
 from .logging import setup_logging
@@ -23,7 +50,7 @@ from .utils import validate_rh, validate_temp
 T = TypeVar("T", int, float)
 
 # Type alias for table coordinates
-TableIndex = tuple[Union[int, float], Union[int, float]]  # (temp, rh)
+TableIndex = tuple[int | float, int | float]  # (temp, rh)
 
 
 class BoundaryBehavior(Flag):
@@ -37,27 +64,33 @@ class BoundaryBehavior(Flag):
 
 
 class LookupTable(Generic[T]):
-    """
-    Array with shifted index ranges, backed by numpy.array.
+    """Array with shifted index ranges, backed by numpy.array.
+
+    Args:
+        data: 2D numpy array
+        temp_min: Minimum temperature
+        rh_min: Minimum relative humidity
+        boundary: How to handle out-of-bounds indices
+        rounding_func: Function used to round float indices to integers. Defaults
+            to round_half_up to get same behavior as math.round() in JS code.
+
+    Attributes:
+        data: 2D numpy array
+        temp_min: Minimum temperature
+        rh_min: Minimum relative humidity
+        boundary_behavior: How to handle out-of-bounds indices
+        rounding_func: Function used to round float indices to integers
     """
 
     def __init__(
         self,
-        data: np.ndarray,
+        data: npt.NDArray[np.floating[Any] | np.integer[Any]],
         temp_min: int,
         rh_min: int,
         boundary_behavior: BoundaryBehavior = BoundaryBehavior.RAISE,
         rounding_func: Callable[[float], int] | None = None,
     ) -> None:
-        """
-        Args:
-            data: 2D numpy array
-            temp_min: Minimum temperature
-            rh_min: Minimum relative humidity
-            boundary: How to handle out-of-bounds indices
-            rounding_func: Function used to round float indices to integers. Defaults
-                to round_half_up to get same behavior as math.round() in JS code.
-        """
+        """Initialize LookupTable with 2D numpy array and shifted index ranges."""
         self._logger = setup_logging(self.__class__.__name__)
 
         if not isinstance(data, np.ndarray):
@@ -65,7 +98,7 @@ class LookupTable(Generic[T]):
         if data.ndim != 2:
             raise ValueError(f"Data must be 2D, got {data.ndim}D")
 
-        self.data: Final[np.ndarray] = data
+        self.data: Final[npt.NDArray[np.floating[Any] | np.integer[Any]]] = data
         self.temp_min: Final[int] = temp_min
         self.rh_min: Final[int] = rh_min
         self.boundary_behavior = boundary_behavior
@@ -73,21 +106,23 @@ class LookupTable(Generic[T]):
 
     @property
     def temp_max(self) -> int:
+        """Maximum temperature value for the table, based on the data shape."""
         return int(self.temp_min + self.data.shape[0] - 1)
 
     @property
     def rh_max(self) -> int:
+        """Maximum relative humidity value for the table, based on the data shape."""
         return int(self.rh_min + self.data.shape[1] - 1)
 
     def set_rounding_func(self, rounding_func: Callable[[float], int]) -> None:
+        """Set rounding function for float indices."""
         self.rounding_func = rounding_func
 
     def __getitem__(
         self,
         indices: TableIndex,
     ) -> T:
-        """
-        Get value using original indices.
+        """Get value using original indices.
 
         Args:
             indices: Tuple of (temp, rh).
@@ -162,6 +197,7 @@ class LookupTable(Generic[T]):
         return cast(T, self.data[temp_idx, rh_idx])
 
     def __str__(self) -> str:
+        """Return a string representation of the LookupTable."""
         return (
             f"LookupTable {self.data.shape} {self.data.dtype}\n"
             f"  Temp range: {self.temp_min}..{self.temp_max}\n"
@@ -170,9 +206,7 @@ class LookupTable(Generic[T]):
 
     @staticmethod
     def _round_half_up(n: float) -> int:
-        """
-        Round a number to the nearest integer. Ties are rounded towards positive
-        infinity.
+        """Round a number to the nearest integer with ties towards positive infinity.
 
         Args:
             n (float): The number to round.
@@ -213,10 +247,10 @@ emc_table: Final[EMCTable] = LookupTable(
 
 
 def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
-    """
-    Calculate Preservation Index (PI) value. PI represents the overall rate of
-    chemical decay in organic materials based on a constant T and RH. A higher
-    number indicates a slower the rate of chemical decay.
+    """Calculate Preservation Index (PI) value.
+
+    PI represents the overall rate of chemical decay in organic materials based on a
+    constant T and RH. A higher number indicates a slower the rate of chemical decay.
 
     Args:
         t: Temperature in Celsius

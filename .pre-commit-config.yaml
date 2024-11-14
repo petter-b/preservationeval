@@ -1,54 +1,88 @@
+exclude: |
+    (?x)(
+        # Virtual environments
+        ^\.venv/|
+        ^\.env/|
+
+        # Build and distribution
+        ^build/|
+        ^dist/|
+        ^\.eggs/|
+        ^\.tox/|
+
+        # Cache directories
+        ^\.pytest_cache/|
+        ^\.mypy_cache/|
+        ^\.ruff_cache/|
+        ^\.git/|
+
+        # Project-specific directories
+        ^tests/data/|
+        ^docs/generated/|
+        ^tests/wip/|
+        ^wip/.*|                # All files in root wip directory
+        ^.*/wip/.*|            # All files in any wip directory
+
+        # Temporary and binary files
+        \.pyc$|
+        \.pyi$|
+        \.ipynb$|
+
+        # Minified files
+        \.min\.js$|
+        \.min\.css$|
+
+        # Binary and generated files
+        \.pb\.go$|
+        \.so$|
+        \.dylib$|
+        \.dll$|
+
+        # Specific files
+        ^version\.py|
+        ^tests/.*/(__init__)\.py$
+    )
+
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-    -   id: check-yaml
-    -   id: check-toml
-    -   id: debug-statements
-    -   id: check-ast
-    -   id: check-added-large-files
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v5.0.0
+      hooks:
+          - id: trailing-whitespace
+          - id: end-of-file-fixer
+          - id: check-yaml
+          - id: check-toml
+          - id: check-json
+          - id: debug-statements
+          - id: check-ast
+          - id: check-added-large-files
+          - id: check-case-conflict
+          - id: check-merge-conflict
+          - id: check-docstring-first
+          - id: check-symlinks
+          - id: detect-private-key
+          - id: requirements-txt-fixer
+            #id:no-commit-to-branch
+            args: [--branch, main]
 
--   repo: https://github.com/psf/black
-    rev: 23.11.0
-    hooks:
-    -   id: black
-        language_version: python3.11
-        args: ["--target-version", "py311"]
+    - repo: https://github.com/astral-sh/ruff-pre-commit
+      rev: v0.7.3
+      hooks:
+          - id: ruff
+            types_or: [python, pyi]
+            args: ["--fix"] # Other configs in pyproject.toml
+          - id: ruff-format
+            types_or: [python, pyi]
 
--   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.5
-    hooks:
-    -   id: ruff
-        args: [
-            "--fix",
-            "--target-version", "py311",
-            "--select", "D,E,F,B,I,N,UP,S,C4",
-            "--ignore", "D203,D213",
-            "--line-length", "88"
-        ]
+    - repo: https://github.com/psf/black
+      rev: 24.10.0
+      hooks:
+          - id: black
+            types: [python] # All configs in pyproject.toml
 
--   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.0
-    hooks:
-    -   id: mypy
-        additional_dependencies: [
-            "types-requests",
-            "numpy>=1.24.0",
-        ]
-        args: [
-            "--python-version", "3.11",
-            "--warn-return-any",
-            "--warn-unused-configs",
-            "--disallow-untyped-defs",
-            "--disallow-incomplete-defs",
-            "--check-untyped-defs",
-            "--disallow-untyped-decorators",
-            "--no-implicit-optional",
-            "--warn-redundant-casts",
-            "--warn-unused-ignores",
-            "--warn-no-return",
-            "--warn-unreachable",
-            "--strict-equality"
-        ]
+    - repo: https://github.com/pre-commit/mirrors-mypy
+      rev: v1.13.0
+      hooks:
+          - id: mypy
+            types_or: [python, pyi]
+            additional_dependencies:
+                ["types-requests>=2.31.0", "numpy>=1.24.0", "types-setuptools"]

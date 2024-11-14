@@ -1,5 +1,4 @@
-"""
-Validation tests comparing Python implementation against JavaScript reference.
+"""Validation tests comparing Python implementation against JavaScript reference.
 
 This module provides two types of validation tests:
 1. test_against_javascript: Runs random test cases through both implementations
@@ -20,15 +19,14 @@ Requirements:
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from preservationeval import emc, mold, pi
 from tests.validate_core import ValidationTest
 
 
 def test_against_javascript(validation: ValidationTest) -> None:
-    """
-    Test Python implementation against JavaScript.
+    """Test Python implementation against JavaScript.
 
     Args:
         validation: ValidationTest fixture providing configured test instance
@@ -41,8 +39,7 @@ def test_against_javascript(validation: ValidationTest) -> None:
 
 
 def test_specific_cases(test_data_dir: Path) -> None:
-    """
-    Test specific known cases.
+    """Test specific known cases.
 
     Args:
         test_data_dir: Path fixture providing test data directory
@@ -51,12 +48,12 @@ def test_specific_cases(test_data_dir: Path) -> None:
     assert test_data_path.exists(), f"Test data file not found at {test_data_path}"
 
     with open(test_data_path) as f:
-        data: Dict[str, Any] = json.load(f)
+        data: dict[str, Any] = json.load(f)
 
-    cases: List[List[float]] = data["cases"]
-    results: List[Dict[str, float]] = data["results"]
+    cases: list[list[float]] = data["cases"]
+    results: list[dict[str, float]] = data["results"]
 
-    for case, expected in zip(cases, results):
+    for case, expected in zip(cases, results, strict=False):
         t, rh = case
         assert pi(t, rh) == expected["pi"], f"PI mismatch at T={t}, RH={rh}"
         assert (

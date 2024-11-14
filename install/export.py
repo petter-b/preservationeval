@@ -1,5 +1,4 @@
-"""
-Module for exporting lookup tables for preservation calculations.
+"""Module for exporting lookup tables for preservation calculations.
 
 This module provides functions to export lookup tables for preservation calculations
 as Python modules. The tables include Preservation Index (PI), Mold Risk Factor (MRF),
@@ -32,8 +31,7 @@ def generate_tables_module(
     module_name: str = "lookup_tables",
     output_path: Path | None = None,
 ) -> None:
-    """
-    Generate a Python module for the lookup tables.
+    """Generate a Python module for the lookup tables.
 
     Args:
         pi_table: LookupTable for Preservation Index (PI)

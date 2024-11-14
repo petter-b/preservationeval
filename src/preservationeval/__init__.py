@@ -1,5 +1,4 @@
-"""
-preservationeval - Preservation Environment Calculator
+"""preservationeval - Preservation Environment Calculator.
 
 A Python implementation of the dpcalc.org preservation calculator.
 Evaluates preservation environments based on temperature and relative humidity.

@@ -1,4 +1,25 @@
-# Standard library imports
+"""Regular expression patterns for parsing and extracting data.
+
+This module provides regular expression patterns used for parsing and
+extracting data from various sources, such as JavaScript code and text files.
+
+The patterns are designed to be reusable and flexible, allowing for easy
+modification and extension to accommodate different data formats and sources.
+
+Patterns:
+    MOLD_RANGES_PATTERN: A regular expression pattern for extracting mold
+        ranges from JavaScript code.
+    PI_RANGES_PATTERN: A regular expression pattern for extracting PI
+        ranges from JavaScript code.
+    EMC_RANGES_PATTERN: A regular expression pattern for extracting EMC
+        ranges from JavaScript code.
+    # Add more patterns as needed
+
+Functions:
+    renderText: Renders a webpage based on input text.
+    # Add more functions as needed
+"""
+
 import re
 
 # Types
