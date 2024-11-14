@@ -15,8 +15,8 @@ tests/data/test_data.json
 src/preservationeval/lookup_tables.py
 src/preservationeval/tables.py
 
-# Workflows
-.github/workflows
+# GitHub files
+.github/
 
 # Python
 __pycache__/

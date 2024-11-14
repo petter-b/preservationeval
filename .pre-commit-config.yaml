@@ -4,6 +4,9 @@ exclude: |
         ^\.venv/|
         ^\.env/|
 
+        # GitHub files
+        ^\.github/|
+
         # Build and distribution
         ^build/|
         ^dist/|
