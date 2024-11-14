@@ -1,5 +1,5 @@
 # Project specific
-dp.js   # In case dp.js is downloaded from the internet
+dp.js
 data/
 data/dp.js
 data/dp.js.hash
@@ -15,9 +15,6 @@ tests/data/test_data.json
 src/preservationeval/lookup_tables.py
 src/preservationeval/tables.py
 
-# GitHub files
-.github/
-
 # Python
 __pycache__/
 *.py[cod]
@@ -31,7 +28,7 @@ build/
 __pypackages__/
 
 # Poetry
-poetry.lock    # Comment this line if you want to commit the lock file
+poetry.lock
 .python-version
 
 # Testing and coverage
@@ -54,14 +51,15 @@ coverage.xml
 .dmypy.json
 dmypy.json
 .pytype/
-.ruff_cache/    # If you ever use Ruff
+.ruff_cache/
 
 # IDEs and editors
 .idea/
 .vscode/*
-!.vscode/settings.json    # Keep project-specific VS Code settings
-!.vscode/launch.json      # Keep debug configurations
-!.vscode/tasks.json       # Keep task configurations
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
 *.swp
 *.swo
 .DS_Store*
