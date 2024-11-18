@@ -7,5 +7,8 @@ include setup.py
 recursive-include src *.py
 recursive-include tests *.py
 
+include src/preservationeval/main/tables.py
+
 recursive-exclude * __pycache__
 recursive-exclude * *.py[cod]
+recursive-exclude * wip
