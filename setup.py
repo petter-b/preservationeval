@@ -21,7 +21,7 @@ class CustomBuildPy(build_py):
 
         logger = setup_logging(__name__)
 
-        logger.info("Installing tables...")
+        logger.info("\033[94m" "Installing tables..." "\033[0m")
 
         install_tables()
 

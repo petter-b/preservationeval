@@ -4,7 +4,7 @@ import sys
 from importlib import import_module, reload
 from pathlib import Path
 
-from preservationeval.pyutils.logging import setup_logging
+from preservationeval.pyutils.logging import Environment, setup_logging
 from preservationeval.pyutils.safepath import create_safe_path
 from preservationeval.table_types import EMCTable, MoldTable, PITable
 
@@ -18,7 +18,7 @@ from .const import (
 from .export import generate_tables_module
 from .parse import fetch_and_validate_tables
 
-logger = setup_logging(__name__)
+logger = setup_logging(__name__, env=Environment.INSTALL)
 
 
 def find_package_root() -> Path:
@@ -84,6 +84,8 @@ def verify_tables() -> bool:
         if not getattr(tables_module, "_INITIALIZED", False):
             raise RuntimeError("Tables generated but not initialized")
 
+        logger.info(f"Verified import of {module_path}.")
+
         return True
 
     except Exception as e:
@@ -101,7 +103,7 @@ def generate_tables() -> tuple[PITable, EMCTable, MoldTable]:
         ConnectionError: If unable to fetch JavaScript source
         ValueError: If table validation fails
     """
-    logger.info("Fetching and validating tables from %s", DP_JS_URL)
+    logger.info(f"Fetching and validating tables from {DP_JS_URL}")
     return fetch_and_validate_tables(DP_JS_URL)
 
 
@@ -121,7 +123,6 @@ def generate_all_tables() -> None:
         # 2. Find output path
         root_path = find_package_root()
         output_path = get_module_path(root_path)
-        logger.info("Writing tables to %s", output_path)
 
         # 3. Generate the module
         generate_tables_module(
@@ -133,8 +134,7 @@ def generate_all_tables() -> None:
         )
 
         # 4. Verify generated tables
-        if verify_tables():
-            logger.info("Successfully generated and verified lookup tables")
+        verify_tables()
 
     except Exception as e:
         logger.error("Failed to generate tables: %s", e)

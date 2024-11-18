@@ -19,9 +19,12 @@ modules with the following variables:
 from pathlib import Path
 from textwrap import dedent
 
+from preservationeval.pyutils.logging import Environment, setup_logging
 from preservationeval.table_types import EMCTable, MoldTable, PITable
 
 from .const import DP_JS_URL, NUM_EMC_DECIMALS
+
+logger = setup_logging(__name__, env=Environment.INSTALL)
 
 
 def generate_tables_module(
@@ -106,5 +109,7 @@ def generate_tables_module(
     try:
         with output_file.open("w", encoding="utf-8") as f:
             f.write(code)
+        logger.info("Lookup tables for preservationevlal generated.")
+        logger.info(f"Creating {output_file!s}")
     except OSError as e:
         raise OSError(f"Error writing to file {output_file!s}: {e.strerror}") from e

@@ -39,7 +39,7 @@ from array import array
 # Type hints
 from dataclasses import dataclass
 from enum import Enum
-from typing import Final
+from typing import Any, Final
 
 import numpy as np
 import requests
@@ -432,7 +432,7 @@ def extract_table_meta_data(js_content: str) -> dict[TableType, TableMetaData]:
 
 def extract_raw_arrays(
     js_content: str, meta_data: dict[TableType, TableMetaData]
-) -> tuple[array[int], array[float]]:
+) -> tuple[array[Any], array[Any]]:
     """Extract raw arrays from JavaScript content.
 
     Returns:

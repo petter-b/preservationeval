@@ -2,11 +2,9 @@
 
 from pathlib import Path
 
-from preservationeval.pyutils.logging import setup_logging
+from preservationeval.pyutils.logging import Environment, setup_logging
 
-from .generate_tables import generate_all_tables
-
-logger = setup_logging(__name__)
+logger = setup_logging(__name__, env=Environment.INSTALL)
 
 
 def install_tables(package_path: Path | None = None) -> None:
@@ -22,8 +20,12 @@ def install_tables(package_path: Path | None = None) -> None:
         OSError: If unable to write generated module
         RuntimeError: If table verification fails
     """
+    logger.info("Starting table generation...")
     try:
+        from .generate_tables import generate_all_tables
+
         generate_all_tables()
-    except Exception as e:
-        logger.error("Failed to install tables: %s", e)
+        logger.info("\033[92m" "Tables generated successfully" "\033[0m")
+    except Exception:
+        logger.error("Failed to install tables: {e}")
         raise
