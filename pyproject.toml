@@ -91,6 +91,10 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+strict = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
 files = ["src/**/*.py", "tests/**/*.py"]
 exclude = [
     "tables\\.py",

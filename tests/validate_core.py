@@ -240,7 +240,7 @@ class ValidationTest:
 
         return [[float(t), float(rh)] for t, rh in zip(temps, rhs, strict=False)]
 
-    def _save_test_data(self, cases: list[list[float]], results: list[dict]) -> None:
+    def _save_test_data(self, cases: list[list[float]], results: list[dict]) -> None:  # type: ignore
         """Save test data for future use."""
         data = {
             "generated": datetime.now().isoformat(),
@@ -251,7 +251,7 @@ class ValidationTest:
         path = create_safe_path(TEST_DATA_DIR, "test_data.json")
         path.write_text(json.dumps(data, indent=2))
 
-    def load_test_data(self) -> tuple[list[list[float]], list[dict]]:
+    def load_test_data(self) -> tuple[list[list[float]], list[dict]]:  # type: ignore
         """Load saved test cases and verify dp.js hash."""
         test_data_path = create_safe_path(TEST_DATA_DIR, "test_data.json")
         if not test_data_path.exists():
