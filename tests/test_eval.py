@@ -8,7 +8,7 @@ preservationeval.eval module, covering various scenarios and edge cases.
 
 import pytest
 
-from preservationeval.eval import (
+from preservationeval.main.eval import (
     EnvironmentalRating,
     rate_mechanical_damage,
     rate_metal_corrosion,

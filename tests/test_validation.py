@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from preservationeval import emc, mold, pi
+from tests.config import ComparisonConfig
 from tests.validate_core import ValidationTest
 
 
@@ -47,7 +48,7 @@ def test_specific_cases(test_data_dir: Path) -> None:
     test_data_path = test_data_dir / "test_data.json"
     assert test_data_path.exists(), f"Test data file not found at {test_data_path}"
 
-    with open(test_data_path) as f:
+    with Path.open(test_data_path) as f:
         data: dict[str, Any] = json.load(f)
 
     cases: list[list[float]] = data["cases"]
@@ -57,6 +58,6 @@ def test_specific_cases(test_data_dir: Path) -> None:
         t, rh = case
         assert pi(t, rh) == expected["pi"], f"PI mismatch at T={t}, RH={rh}"
         assert (
-            abs(emc(t, rh) - expected["emc"]) < 1e-6
+            abs(emc(t, rh) - expected["emc"]) < ComparisonConfig.emc_tolerance
         ), f"EMC mismatch at T={t}, RH={rh}"
         assert mold(t, rh) == expected["mold"], f"Mold mismatch at T={t}, RH={rh}"

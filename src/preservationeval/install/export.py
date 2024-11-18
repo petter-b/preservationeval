@@ -19,9 +19,9 @@ modules with the following variables:
 from pathlib import Path
 from textwrap import dedent
 
-from preservationeval.lookup import EMCTable, MoldTable, PITable
+from preservationeval.table_types import EMCTable, MoldTable, PITable
 
-NUM_EMC_DECIMALS: int = 1
+from .const import DP_JS_URL, NUM_EMC_DECIMALS
 
 
 def generate_tables_module(
@@ -50,13 +50,17 @@ def generate_tables_module(
         f'''
         """Generated lookup tables for preservation calculations.
 
-        This module is auto-generated during package installation.
+        This module is auto-generated during package installation and it will be
+        overwritten if / when the package is updated or re-installed.
+
+        DO NOT EDIT MANUALLY!
         """
+
         from typing import Final
 
         import numpy as np
 
-        from preservationeval.lookup import (
+        from preservationeval.table_types import (
             BoundaryBehavior,
             EMCTable,
             LookupTable,
@@ -64,13 +68,11 @@ def generate_tables_module(
             PITable,
         )
 
-        # ------------------------------------------------------------------------------
-        # ---------------------->  DO NOT EDIT MANUALLY BELOW THIS <--------------------
-        # ------------------------------------------------------------------------------
+        DP_JS_URL: Final[str] = "{DP_JS_URL}"
 
         # PI table data ({pi_table.data.shape})
         pi_table: Final[PITable] = LookupTable(
-            np.array({repr(pi_table.data.tolist())}, dtype=np.int16),  # noqa: E501
+            np.array({pi_table.data.tolist()!r}, dtype=np.int16),  # noqa: E501
             {pi_table.temp_min},
             {pi_table.rh_min},
             BoundaryBehavior.CLAMP
@@ -78,7 +80,7 @@ def generate_tables_module(
 
         # Mold table data ({mold_table.data.shape})
         mold_table: Final[MoldTable] = LookupTable(
-            np.array({repr(mold_table.data.tolist())}, dtype=np.int16),  # noqa: E501
+            np.array({mold_table.data.tolist()!r}, dtype=np.int16),  # noqa: E501
             {mold_table.temp_min},
             {mold_table.rh_min},
             BoundaryBehavior.RAISE
@@ -86,7 +88,7 @@ def generate_tables_module(
 
         # EMC table data ({emc_table.data.shape})
         emc_table: Final[EMCTable] = LookupTable(
-            np.array({repr(emc_data_rounded)}, dtype=np.float16),  # noqa: E501
+            np.array({emc_data_rounded!r}, dtype=np.float16),  # noqa: E501
             {emc_table.temp_min},
             {emc_table.rh_min},
             BoundaryBehavior.CLAMP

@@ -24,11 +24,12 @@ import numpy as np
 import requests
 
 from preservationeval import emc, mold, pi
-from preservationeval.const import DP_JS_URL
-from preservationeval.logging import setup_logging
-from tests.config import JS_CONFIG, ComparisonConfig, TestConfig
-from tests.safepath import create_safe_path
-from tests.templates import HTML_TEMPLATE, NODE_SCRIPT_TEMPLATE
+from preservationeval.main.const import DP_JS_URL
+from preservationeval.pyutils.logging import setup_logging
+from preservationeval.pyutils.safepath import create_safe_path
+
+from .config import JS_CONFIG, ComparisonConfig, TestConfig
+from .templates import HTML_TEMPLATE, NODE_SCRIPT_TEMPLATE
 
 # Setup logging
 logger = setup_logging(__name__)
@@ -256,7 +257,7 @@ class ValidationTest:
         if not test_data_path.exists():
             raise FileNotFoundError("Test data file not found")
 
-        with open(test_data_path) as f:
+        with Path.open(test_data_path) as f:
             test_data = json.load(f)
 
         # Verify dp.js hash matches

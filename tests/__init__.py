@@ -1,3 +1,8 @@
-"""Test package initialization."""
+"""Test suite for preservationeal package.
 
-# This file is required for pytest to treat the directory as a package
+This package contains tests for the preservationeval package, including:
+    - Unit tests for individual components
+    - Integration tests for component interactions
+    - Validation tests against reference implementation
+    - Performance benchmarks
+"""

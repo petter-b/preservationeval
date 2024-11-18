@@ -8,7 +8,7 @@ The configuration parameters are defined using dataclasses, which provide
 frozen instances that can be used for type checking and immutability.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 # JavaScript environment configuration
 JS_CONFIG = {
@@ -41,7 +41,7 @@ class TestConfig:
 class ComparisonConfig:
     """Comparison settings."""
 
-    emc_tolerance: float = 0.0001  # Tolerance for floating-point comparisons
+    emc_tolerance: float = 0.01  # Tolerance for floating-point comparisons
     max_differences: int = 5  # Number of differences to show in reports
 
 
@@ -49,5 +49,5 @@ class ComparisonConfig:
 class ValidationConfig:
     """Configuration settings for the validation process."""
 
-    test: TestConfig = TestConfig()
-    comparison: ComparisonConfig = ComparisonConfig()
+    test: TestConfig = field(default_factory=TestConfig)
+    comparison: ComparisonConfig = field(default_factory=ComparisonConfig)

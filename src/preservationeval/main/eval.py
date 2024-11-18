@@ -9,6 +9,7 @@ indicating the level of risk associated with the given conditions.
 """
 
 from enum import Enum
+from typing import Final
 
 from .types import MoistureContent, MoldRisk, PreservationIndex
 
@@ -50,13 +51,15 @@ def rate_natural_aging(pi: PreservationIndex) -> EnvironmentalRating:
             - OK: If PI is between 45 and 75, indicating moderate risk
             - RISK: If PI is <45, indicating high risk
     """
+    good_min: Final[int] = 75
+    risk_min: Final[int] = 45
     if not isinstance(pi, (int | float)):
         raise TypeError(f"Preservation Index must be numeric, got {type(pi).__name__}")
-    if pi < 0:
+    if pi < 0:  # Preserve Index must be non-negative
         raise ValueError(f"Preservation Index must be non-negative, got {pi}")
-    if pi >= 75:
+    if pi >= good_min:
         return EnvironmentalRating.GOOD
-    elif pi < 45:
+    elif pi < risk_min:
         return EnvironmentalRating.RISK
     else:
         return EnvironmentalRating.OK
@@ -73,11 +76,13 @@ def rate_mechanical_damage(emc: MoistureContent) -> EnvironmentalRating:
             - OK: If EMC is between 5 and 12.5
             - RISK: If EMC is outside the range 5-12.5
     """
+    ok_max: Final[float] = 12.5
+    ok_min: Final[float] = 5
     if not isinstance(emc, (int | float)):
         raise TypeError(f"Moisture Content must be numeric, got {type(emc).__name__}")
     if emc < 0:
         raise ValueError(f"Moisture Content must be non-negative, got {emc}")
-    if 5 <= emc <= 12.5:
+    if ok_min <= emc <= ok_max:
         return EnvironmentalRating.OK
     else:
         return EnvironmentalRating.RISK
@@ -116,13 +121,15 @@ def rate_metal_corrosion(emc: MoistureContent) -> EnvironmentalRating:
             - OK: If EMC is between 7.0 and 10.5
             - RISK: If EMC is ≥10.5
     """
+    good_max: Final[float] = 7.0
+    ok_max: Final[float] = 10.5
     if not isinstance(emc, (int | float)):
         raise TypeError(f"Moisture Content must be numeric, got {type(emc).__name__}")
     if emc < 0:
         raise ValueError(f"Moisture Content must be non-negative, got {emc}")
-    if emc < 7.0:
+    if emc < good_max:
         return EnvironmentalRating.GOOD
-    elif emc < 10.5:
+    elif emc < ok_max:
         return EnvironmentalRating.OK
     else:
         return EnvironmentalRating.RISK

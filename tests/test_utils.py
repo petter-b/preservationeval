@@ -12,7 +12,8 @@ functioning correctly.
 
 import pytest
 
-from preservationeval.utils import to_celsius, validate_rh, validate_temp
+from preservationeval.main.const import TEMP_MAX
+from preservationeval.main.utils import to_celsius, validate_rh, validate_temp
 
 
 @pytest.mark.unit
@@ -49,15 +50,15 @@ def test_validate_temp() -> None:
 def test_to_celsius() -> None:
     # Test conversion from Fahrenheit to Celsius
     assert to_celsius(32, "f") == 0  # Should return 0
-    assert to_celsius(212, "f") == 100  # Should return 100
+    assert to_celsius(212, "f") == TEMP_MAX  # Should return 100
 
     # Test conversion from Celsius to Celsius
     assert to_celsius(0, "c") == 0  # Should return 0
-    assert to_celsius(100, "c") == 100  # Should return 100
+    assert to_celsius(100, "c") == TEMP_MAX  # Should return 100
 
     # Test conversion from Kelvin to Celsius
     assert to_celsius(273.15, "k") == 0  # Should return 0
-    assert to_celsius(373.15, "k") == 100  # Should return 100
+    assert to_celsius(373.15, "k") == TEMP_MAX  # Should return 100
 
     # Test invalid temperature values
     with pytest.raises(TypeError):

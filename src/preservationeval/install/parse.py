@@ -39,15 +39,13 @@ from array import array
 # Type hints
 from dataclasses import dataclass
 from enum import Enum
+from typing import Final
 
 import numpy as np
-
-# 3rd party imports
 import requests
 
-# Local imports
-from preservationeval.logging import setup_logging
-from preservationeval.lookup import (
+from preservationeval.pyutils.logging import setup_logging
+from preservationeval.table_types import (
     BoundaryBehavior,
     EMCTable,
     LookupTable,
@@ -102,6 +100,9 @@ class TableMetaData:
     _rh_max: int | None = None
     _rh_offset: int | None = None
     array_offset: int = 0
+    _MIN_RH_MIN: Final[int] = 0
+    _MAX_RH_MAX: Final[int] = 100
+    _MAX_RH_RANGE: Final[int] = 101
 
     def __post_init__(self) -> None:
         """Validate and calculate values after initialization."""
@@ -109,12 +110,12 @@ class TableMetaData:
             self._initialize_temp_range()
             self._initialize_rh_min()
         except Exception as e:
-            raise ValidationError(f"Initialization failed: {str(e)}") from e
+            raise ValidationError(f"Initialization failed: {e!s}") from e
         try:
             self._validate_temp_offset()
             self._validate_rh_offset()
         except Exception as e:
-            raise ValidationError(f"Validation failed: {str(e)}") from e
+            raise ValidationError(f"Validation failed: {e!s}") from e
 
     def _initialize_temp_range(self) -> None:
         """Initialize temperature size if not provided."""
@@ -141,9 +142,9 @@ class TableMetaData:
                         f"Cannot calculate rh_min: rh_max={self._rh_max}, "
                         f"rh_size={self.rh_range}"
                     ) from e
-            elif self.rh_range == 101:
-                self._rh_min = 0
-                self._rh_max = 100
+            elif self.rh_range == self._MAX_RH_RANGE:
+                self._rh_min = self._MIN_RH_MIN
+                self._rh_max = self._MAX_RH_MAX
             else:
                 raise ValidationError("Cannot calculate rh_min: rh_max=None!")
 

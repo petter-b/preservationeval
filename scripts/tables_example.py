@@ -4,6 +4,7 @@
 
 # Package imports
 from install.parse import fetch_and_validate_tables
+
 from preservationeval.logging import LogConfig, LogLevel, setup_logging
 from preservationeval.types import IndexRangeError
 

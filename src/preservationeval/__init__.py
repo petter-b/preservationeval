@@ -1,7 +1,10 @@
-"""preservationeval - Preservation Environment Calculator.
+"""Preservation environment calculation and evaluation.
 
-A Python implementation of the dpcalc.org preservation calculator.
-Evaluates preservation environments based on temperature and relative humidity.
+This package provides tools to calculate and evaluate indoor climate conditions
+for preservation of materials and objects. It also provides tools for
+evaluating the risk of various types of damage to materials, such as mold,
+mechanical damage, and metal corrosion, based on temperature and relative
+humidity.
 
 Main functions:
     pi(): Calculate Preservation Index
@@ -10,36 +13,27 @@ Main functions:
     rate_*(): Evaluate environmental ratings
 """
 
-# Version management
-try:
-    from importlib.metadata import version
+from importlib.metadata import version
 
-    __version__ = version("preservationeval")
-except ImportError:  # pragma: no cover
-    __version__ = "unknown"
-
-# Public API - evaluation functions
-from .eval import (
+from .main.core import emc, mold, pi
+from .main.eval import (
     EnvironmentalRating,
     rate_mechanical_damage,
     rate_metal_corrosion,
     rate_mold_growth,
     rate_natural_aging,
 )
-
-# Public API - core calculation functions
-from .lookup import emc, mold, pi
-
-# Public API - types for type hints
-from .types import (
-    HumidityError,
-    IndexRangeError,
+from .main.types import (
     MoistureContent,
     MoldRisk,
-    PreservationError,
     PreservationIndex,
     RelativeHumidity,
     Temperature,
+)
+from .table_types import (
+    HumidityError,
+    IndexRangeError,
+    PreservationError,
     TemperatureError,
 )
 
@@ -68,3 +62,5 @@ __all__ = [
     "TemperatureError",
     "HumidityError",
 ]
+
+__version__ = version("preservationeval")

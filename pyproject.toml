@@ -1,10 +1,13 @@
 [project]
 name = "preservationeval"
 version = "0.1.0"
+#dynamic = ["version"]
 authors = [{ name = "Petter Blomberg", email = "petter.blomberg@gmail.com" }]
-description = "A Python module to mimic the calculations done by the Dew Point Calculator from Image Permanence Institute (IPI)."
+maintainers = [
+    { name = "Petter Blomberg", email = "petter.blomberg@gmail.com" },
+]
+description = "A Python implenentation of the calculations and evualations done by the Dew Point Calculator found at https://www.dpcalc.org/."
 requires-python = ">=3.11"
-license = { text = "MIT" }
 keywords = ["preservation", "climate", "numpy"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -15,8 +18,14 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
 ]
-dependencies = ["numpy>=1.24.0", "requests>=2.31.0"]
+dependencies = ["numpy>=1.26.0,<2.0.0", "requests>=2.31.0,<3.0.0"]
 readme = "README.md"
+
+[project.urls]
+Homepage = "https://github.com/petter-b/preservationeval"
+Documentation = "https://github.com/petter-b/preservationeval#readme"
+Repository = "https://github.com/petter-b/preservationeval.git"
+Issues = "https://github.com/petter-b/preservationeval/issues"
 
 [project.optional-dependencies]
 # Testing tools
@@ -28,36 +37,32 @@ test = [
 ]
 # Code quality tools
 lint = [
-    "mypy>=1.13.0",      # Match your pre-commit hook version
-    "black>=24.10.0",    # Match your pre-commit hook version
-    "ruff>=0.7.3",       # Match your pre-commit hook version
-    "pre-commit>=3.6.0", # Current version
+    "mypy>=1.13.0",             # Match your pre-commit hook version
+    "black>=24.10.0",           # Match your pre-commit hook version
+    "ruff>=0.7.3",              # Match your pre-commit hook version
+    "pre-commit>=3.6.0",        # Current version
+    "types-setuptools>=69.0.0", # Needed for mypy
 ]
 # Performance tools
 profile = ["memory_profiler>=0.61.0"]
 # Full development environment (includes all above)
 dev = ["preservationeval[test,lint,profile]"]
 
-[project.scripts]
-preservationeval = "preservationeval.__main__:main"
-
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = [
     "setuptools>=45",
     "wheel",
-    "numpy>=1.24.0",    # Needed during build
-    "requests>=2.31.0", # Needed for downloading
+    "numpy>=1.26.0",            # Needed during build
+    "requests>=2.31.0",         # Needed for downloading
+    "types-setuptools>=69.0.0",
 ]
 
-[tool.setuptools]
-package-data = { preservationeval = [".pre-commit-config.yaml"] }
+#[tool.setuptools.dynamic]
+#version = { attr = "preservationeval.__version__" } # any module attribute compatible with ast.literal_eval
 
-[project.urls]
-Homepage = "https://github.com/petter-b/preservationeval"
-Documentation = "https://github.com/petter-b/preservationeval#readme"
-Repository = "https://github.com/petter-b/preservationeval.git"
-Issues = "https://github.com/petter-b/preservationeval/issues"
+#[tool.setuptools.packages.find]
+#where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -87,6 +92,14 @@ warn_no_return = true
 warn_unreachable = true
 strict_equality = true
 files = ["src/**/*.py", "tests/**/*.py"]
+exclude = [
+    "tables\\.py",
+    "version\\.py",
+    "generated/.*",
+    "tests/wip/.*",
+    "build/.*",
+    "dist/.*",
+]
 
 [[tool.mypy.overrides]]
 module = ["numpy.*", "requests.*"]
@@ -99,24 +112,39 @@ disable_error_code = ["misc"]
 [tool.pyright]
 include = ["src"]
 exclude = [
-    "**/node_modules",
-    "**/__pycache__",
-    ".venv",
-    "build",
-    "dist",
-    "tests/data",
-    "docs/generated",
+    "tables\\.py",
+    "version\\.py",
+    "generated/.*",
+    "tests/wip/.*",
+    "build/.*",
+    "dist/.*",
 ]
 typeCheckingMode = "basic"
 reportMissingTypeStubs = false
 pythonVersion = "3.11"
 pythonPlatform = "All"
+strictListInference = true
+strictDictionaryInference = true
+strictParameterNoneValue = true
+strictSetInference = true
 
 [tool.black]
 line-length = 88
 target-version = ['py311']
 include = '\.pyi?$'
-extend-exclude = "tests/data/.*"
+extend-exclude = '''
+(
+    # Generated files
+    tables\.py
+    | version\.py
+    | generated/.*
+
+    # Test/build artifacts
+    | tests/wip/.*
+    | build/.*
+    | dist/.*
+)
+'''
 
 [tool.coverage.run]
 source = ["src"]
@@ -138,20 +166,33 @@ exclude_lines = [
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+extend-exclude = [
+    "tables.py",
+    "version.py",
+    "generated/**",
+    "tests/wip/**",
+    "build/**",
+    "dist/**",
+]
 
 [tool.ruff.lint]
 select = [
-    "D",  # pydocstyle
-    "E",  # pycodestyle
-    "F",  # pyflakes
-    "B",  # flake8-bugbear
-    "I",  # isort
-    "N",  # pep8-naming
-    "UP", # pyupgrade
-    "S",  # flake8-bandit
-    "C4", # flake8-comprehensions
+    "D",   # pydocstyle
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "B",   # flake8-bugbear
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "S",   # flake8-bandit
+    "C4",  # flake8-comprehensions
+    "PL",  # Pylint
+    "RUF", # Ruff-specific
+    "PTH", # Path handling
+    "ERA", # Error handling
 ]
 ignore = ["D203", "D213"]
+explicit-preview-rules = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
