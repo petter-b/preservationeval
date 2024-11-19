@@ -1,9 +1,20 @@
 """Table installation package for preservationeval.
 
-This package is used during installation to generate lookup tables
-and is designed to be removed after successful installation.
+This package handles the generation of lookup tables during package installation.
+It downloads source data from IPI's Dew Point Calculator, parses the JavaScript
+code, and generates Python lookup tables for:
+- Preservation Index (PI)
+- Equilibrium Moisture Content (EMC)
+- Mold Risk
+
+Note:
+    While this package is primarily used during installation, it remains
+    available for table regeneration if needed.
 """
+
+from importlib.metadata import version
 
 from .installer import install_tables
 
-__all__ = ["install_tables"]
+__version__ = version("preservationeval")
+__all__ = ["install_tables", "__version__"]
