@@ -14,7 +14,7 @@
 - [ ] Add hash to tables.py
 - [ ] Add caching for dp.js file
 - [ ] Add validation of tables.py during installation
-- [ ] Move configuration for installation from install.const to pyproject.toml.
+- [ ] Move configuration for installation from install.const to pyproject.toml and maybe rename remaining const.py to config.py.
 
 ## Documentation
 - [ ] Revise README
