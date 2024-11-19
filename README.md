@@ -6,7 +6,7 @@
 [![Coverage](https://img.shields.io/codecov/c/github/petter-b/preservationeval?style=flat&color=brightgreen&label=coverage&logo=codecov)](https://codecov.io/gh/petter-b/preservationeval)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat&logo=opensourceinitiative&logoColor=white)](https://opensource.org/licenses/MIT)
 
-A Python implenentation of the calculations and evualations done by the Dew Point Calculator found at https://www.dpcalc.org/.
+A Python implenentation of the calculations and evaluations done by the Dew Point Calculator found at https://www.dpcalc.org/.
 
 ## Details
 The preservation evaluation code was taken from the [Dew point calulator](http://www.dpcalc.org) created by the Image Permanence Institute. For details of the calculations see:
