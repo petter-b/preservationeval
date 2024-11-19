@@ -3,6 +3,7 @@
 ## High Priority
 - [ ] Code review
 - [ ] Consistent use of logging
+- [ ] Consider using secripts/generate_tables() for installation for tables.py.
 - [ ] Add proper SOURCES.txt handling
 - [ ] Robustness against errors during installation
 - [ ] Security wrt execution of JS code
