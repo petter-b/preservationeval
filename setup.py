@@ -8,32 +8,53 @@ from setuptools.command.build_py import build_py
 
 
 class CustomBuildPy(build_py):
-    """Custom build command that generates tables during build."""
+    """Custom build command that generates lookup tables during build.
+
+    This command performs the following steps:
+    1. Adds src directory to Python path
+    2. Generates preservation lookup tables (PI, EMC, Mold)
+    3. Removes src from path
+    4. Runs standard build process
+    """
 
     def run(self) -> None:
-        """Run the build command with table generation."""
+        """Run the build command with table generation.
+
+        Raises:
+            ImportError: If required modules cannot be imported
+            TableGenerationError: If table generation fails
+        """
         # Add src to Python path temporarily
         src_path = Path(__file__).parent / "src"
         sys.path.insert(0, str(src_path))
 
-        from preservationeval.install.installer import install_tables
-        from preservationeval.pyutils.logging import setup_logging
+        try:
+            from preservationeval.install.generate_tables import generate_tables
+            from preservationeval.pyutils.logging import Environment, setup_logging
 
-        logger = setup_logging(__name__)
+            logger = setup_logging(__name__, env=Environment.INSTALL)
 
-        logger.info("\033[94m" "Installing tables..." "\033[0m")
+            logger.info("\033[94m" "Generating preservation lookup tables..." "\033[0m")
+            generate_tables()
+            logger.info("\033[92m" "Table generation completed successfully" "\033[0m")
 
-        install_tables()
+        except Exception as e:
+            logger.error(f"Failed to generate tables: {e}")
+            raise
 
-        # Remove src from path
-        sys.path.pop(0)
+        finally:
+            # Remove src from path
+            sys.path.pop(0)
 
-        # Then do the regular build
+        # Run standard build
         super().run()
 
 
+cmdclass_dict: dict[str, type[build_py]] = {
+    "build_py": CustomBuildPy,
+}
+
 setup(
-    cmdclass={
-        "build_py": CustomBuildPy,
-    },
+    cmdclass=cmdclass_dict,
+    # Other setup parameters should be moved to pyproject.toml
 )

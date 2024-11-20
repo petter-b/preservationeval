@@ -36,6 +36,19 @@ def generate_tables_module(
 ) -> None:
     """Generate a Python module for the lookup tables.
 
+    This function generates a Python module with the lookup tables for
+    preservation calculations. The tables include:
+
+    - `PI_DATA`: NumPy array representing the PI table data
+    - `EMC_DATA`: NumPy array representing the EMC table data
+    - `MOLD_DATA`: NumPy array representing the Mold table data
+    - `PI_TEMP_MIN`: Minimum temperature value for the PI table
+    - `PI_RH_MIN`: Minimum relative humidity value for the PI table
+    - `EMC_TEMP_MIN`: Minimum temperature value for the EMC table
+    - `EMC_RH_MIN`: Minimum relative humidity value for the EMC table
+    - `MOLD_TEMP_MIN`: Minimum temperature value for the Mold table
+    - `MOLD_RH_MIN`: Minimum relative humidity value for the Mold table
+
     Args:
         pi_table: LookupTable for Preservation Index (PI)
         emc_table: LookupTable for Equilibrium Moisture Content (EMC)

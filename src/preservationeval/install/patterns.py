@@ -1,29 +1,45 @@
-"""Regular expression patterns for parsing and extracting data.
+"""Regular expression patterns for parsing IPI Calculator data.
 
-This module provides regular expression patterns used for parsing and
-extracting data from various sources, such as JavaScript code and text files.
+This module provides compiled regular expression patterns for extracting
+data from the IPI Dew Point Calculator JavaScript code. The patterns
+extract three types of information:
 
-The patterns are designed to be reusable and flexible, allowing for easy
-modification and extension to accommodate different data formats and sources.
+1. Array Sizes:
+   - PI table total size (including mold risk section)
+   - EMC table size
 
-Patterns:
-    MOLD_RANGES_PATTERN: A regular expression pattern for extracting mold
-        ranges from JavaScript code.
-    PI_RANGES_PATTERN: A regular expression pattern for extracting PI
-        ranges from JavaScript code.
-    EMC_RANGES_PATTERN: A regular expression pattern for extracting EMC
-        ranges from JavaScript code.
-    # Add more patterns as needed
+2. Range Information:
+   - Temperature ranges (min/max)
+   - Relative humidity ranges (min/max)
+   - Array offsets and scaling
 
-Functions:
-    renderText: Renders a webpage based on input text.
-    # Add more functions as needed
+3. Data Arrays:
+   - PI values (including mold risk)
+   - EMC values
+
+Note:
+    All patterns use verbose mode (re.VERBOSE) for readability and
+    include detailed comments explaining the matching logic.
 """
 
 import re
+from re import Pattern
 
 # Types
 from typing import Final
+
+from preservationeval.pyutils.logging import setup_logging
+
+logger = setup_logging(__name__)
+
+
+class PatternError(Exception):
+    """Error in regex pattern compilation or matching."""
+
+    def __init__(self, pattern_name: str, message: str) -> None:
+        """Initialize with pattern name and error message."""
+        super().__init__(f"Pattern '{pattern_name}': {message}")
+
 
 # Regular expression patterns for extracting table information
 _REGEX_PATTERNS: Final[dict[str, str]] = {
@@ -112,7 +128,32 @@ _REGEX_PATTERNS: Final[dict[str, str]] = {
     """,
 }
 
-# Compile patterns with verbose flag for readability
-COMPILED_PATTERNS: dict[str, re.Pattern[str]] = {
-    name: re.compile(pattern, re.VERBOSE) for name, pattern in _REGEX_PATTERNS.items()
-}
+
+def _compile_pattern(name: str, pattern: str) -> Pattern[str]:
+    """Compile regex pattern with error handling.
+
+    Args:
+        name: Pattern name for error reporting
+        pattern: Regular expression pattern
+
+    Returns:
+        Compiled regular expression pattern
+
+    Raises:
+        PatternError: If pattern compilation fails
+    """
+    try:
+        return re.compile(pattern, re.VERBOSE)
+    except re.error as e:
+        raise PatternError(name, f"Invalid pattern: {e}") from e
+
+
+# Compile patterns with validation
+try:
+    JS_PATTERNS: Final[dict[str, Pattern[str]]] = {
+        name: _compile_pattern(name, pattern)
+        for name, pattern in _REGEX_PATTERNS.items()
+    }
+except PatternError as e:
+    logger.error(f"Failed to compile patterns: {e}")
+    raise

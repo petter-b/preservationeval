@@ -14,7 +14,7 @@ Note:
 
 from importlib.metadata import version
 
-from .installer import install_tables
+from .generate_tables import generate_tables
 
 __version__ = version("preservationeval")
-__all__ = ["install_tables", "__version__"]
+__all__ = ["generate_tables", "__version__"]

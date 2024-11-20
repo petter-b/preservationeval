@@ -53,14 +53,23 @@ from preservationeval.table_types import (
     PITable,
 )
 
-from .patterns import COMPILED_PATTERNS
+from .patterns import JS_PATTERNS
 
 
 # Custom exeptions
 class TableMetadataError(Exception):
-    """Base exception for TableMetadata errors."""
+    """Base exception for table metadata errors."""
 
-    ...
+    def __init__(self, message: str, original_error: Exception | None = None) -> None:
+        """Initialize metadata error with message and original cause.
+
+        Args:
+            message: Human-readable error description
+            original_error: The underlying exception that caused this error.
+                Defaults to None if this is the root cause.
+        """
+        super().__init__(message)
+        self.original_error = original_error
 
 
 class ExtractionError(TableMetadataError):
@@ -204,70 +213,84 @@ logger = setup_logging(__name__)
 
 
 def to_int(value: str) -> int:
-    """Convert string to int, removing whitespace in case of negative numbers."""
-    return int(value.replace(" ", ""))
+    """Convert string to integer, handling negative numbers with whitespace.
+
+    Args:
+        value: String representation of an integer, possibly with whitespace
+            between minus sign and digits (e.g., "- 45" or "-45")
+
+    Returns:
+        Integer value
+
+    Raises:
+        ValueError: If the string cannot be converted to an integer
+    """
+    try:
+        return int(value.replace(" ", ""))
+    except ValueError as e:
+        raise ValueError(f"Cannot convert '{value}' to integer") from e
 
 
 def extract_array_sizes(js_content: str) -> tuple[int, int]:
-    """Extract the size of the pitable and emctable arrays from JavaScript code.
+    """Extract the size of the pitable and emctable arrays.
 
-    The size of the arrays is extracted by matching the pattern defined in the
-    'pi_array_size' and 'emc_array_size' regular expressions. The extracted
-    data is then returned as a tuple of integers.
+    Args:
+        js_content: JavaScript source code containing array initializations
 
-    :param js_content: JavaScript source code to be parsed
-    :return: A tuple containing the size of the pitable and emctable arrays
+    Returns:
+        Tuple containing:
+            - Size of the pitable array (including mold risk section)
+            - Size of the emctable array
+
+    Raises:
+        ExtractionError: If array sizes cannot be extracted
+        ValidationError: If extracted sizes are invalid
     """
-    logger.debug("Starting to extract array sizes from JavaScript")
+    logger.debug("Starting array size extraction")
+
     try:
         # Extract pitable array size
-        pi_size_match = COMPILED_PATTERNS["pi_array_size"].search(js_content)
-        if pi_size_match:
-            groups = pi_size_match.groupdict()
-            pi_array_size = int(groups["size"])
-            if type(pi_array_size) is int and pi_array_size > 0:
-                logger.debug(f"pitable array size: {pi_array_size}")
-            else:
-                raise ExtractionError("Failed to extract pitable array size")
-        else:
-            raise ExtractionError(
-                "Failed to extract pitable array size, no pi_size_match"
-            )
+        pi_size_match = JS_PATTERNS["pi_array_size"].search(js_content)
+        if not pi_size_match:
+            raise ExtractionError("PI array size pattern not found")
+
+        pi_array_size = int(pi_size_match.group("size"))
+        if pi_array_size <= 0:
+            raise ValidationError(f"Invalid PI array size: {pi_array_size}")
+        logger.debug(f"Extracted PI array size: {pi_array_size}")
 
         # Extract emctable array size
-        emc_size_match = COMPILED_PATTERNS["emc_array_size"].search(js_content)
-        if emc_size_match:
-            groups = emc_size_match.groupdict()
-            emc_array_size = int(groups["size"])
-            if type(emc_array_size) is int and emc_array_size > 0:
-                logger.debug(f"emc array size: {emc_array_size}")
-            else:
-                raise ExtractionError("Failed to extract emc array size")
-        else:
-            raise ExtractionError("Failed to extract emc array size, no emc_size_match")
+        emc_size_match = JS_PATTERNS["emc_array_size"].search(js_content)
+        if not emc_size_match:
+            raise ExtractionError("EMC array size pattern not found")
 
-    except Exception as e:
-        logger.exception(e)
-        raise
+        emc_array_size = int(emc_size_match.group("size"))
+        if emc_array_size <= 0:
+            raise ValidationError(f"Invalid EMC array size: {emc_array_size}")
+        logger.debug(f"Extracted EMC array size: {emc_array_size}")
 
-    return pi_array_size, emc_array_size
+        return pi_array_size, emc_array_size
+
+    except (ValueError, AttributeError) as e:
+        raise ExtractionError("Failed to parse array sizes") from e
 
 
 def extract_pi_meta_data(js_content: str) -> TableMetaData:
-    """Extract PI table ranges from JavaScript code.
+    """Extracts metadata for Preservation Index (PI) calculations.
 
-    PI ranges are extracted by matching the pattern defined in the
-    'pi_ranges' regular expression. The extracted data is then used to
-    create a `_TableMetaData` object.
+    Args:
+        js_content: JavaScript source code to extract metadata from.
 
-    :param js_content: JavaScript source code to be parsed
-    :return: A `_TableMetaData` object containing the PI table ranges
+    Returns:
+        A `TableMetaData` object containing the PI table ranges.
+
+    Raises:
+        ExtractionError: If metadata cannot be extracted from the JavaScript code.
     """
     logger.debug("Attempting to match PI ranges pattern")
     try:
-        pi_match = COMPILED_PATTERNS["pi_ranges"].search(js_content)
+        pi_match = JS_PATTERNS["pi_ranges"].search(js_content)
         if pi_match:
-            # Extract values from matched groups
             groups = pi_match.groupdict()
             logger.debug(f"Found PI ranges match: {groups}")
 
@@ -282,7 +305,6 @@ def extract_pi_meta_data(js_content: str) -> TableMetaData:
             )
             logger.debug(f"Extracted PI meta data: {pi_data}")
         else:
-            # Raise error if no match is found
             raise ExtractionError("Failed to extract PI meta data, no pi_match")
     except Exception as e:
         logger.exception(e)
@@ -296,16 +318,21 @@ def extract_emc_meta_data(js_content: str) -> TableMetaData:
 
     EMC ranges are extracted by matching the pattern defined in the
     'emc_ranges' regular expression. The extracted data is then used to
-    create a `_TableMetaData` object.
+    create a `TableMetaData` object.
 
-    :param js_content: JavaScript source code to be parsed
-    :return: A `_TableMetaData` object containing the EMC table ranges
+    Args:
+        js_content (str): JavaScript source code to be parsed.
+
+    Returns:
+        TableMetaData: An object containing the EMC table ranges.
+
+    Raises:
+        ExtractionError: If no match for EMC ranges is found.
     """
     logger.debug("Attempting to match EMC ranges pattern")
     try:
-        emc_match = COMPILED_PATTERNS["emc_ranges"].search(js_content)
+        emc_match = JS_PATTERNS["emc_ranges"].search(js_content)
         if emc_match:
-            # Extract values from matched groups
             groups = emc_match.groupdict()
             logger.debug(f"Found EMC ranges match: {groups}")
 
@@ -317,7 +344,6 @@ def extract_emc_meta_data(js_content: str) -> TableMetaData:
             )
             logger.debug(f"Extracted EMC meta data: {emc_data}")
         else:
-            # Raise error if no match is found
             raise ExtractionError("Failed to extract EMC meta data, no emc_match")
     except Exception as e:
         logger.exception(e)
@@ -337,7 +363,7 @@ def extract_mold_meta_data(js_content: str) -> TableMetaData:
     """
     logger.debug("Attempting to match Mold ranges pattern")
     try:
-        mold_match = COMPILED_PATTERNS["mold_ranges"].search(js_content)
+        mold_match = JS_PATTERNS["mold_ranges"].search(js_content)
         if mold_match:
             # Extract values from matched groups
             groups = mold_match.groupdict()
@@ -366,27 +392,38 @@ def extract_mold_meta_data(js_content: str) -> TableMetaData:
 def cross_check_meta_data(
     meta_data: dict[TableType, TableMetaData], pi_array_size: int, emc_array_size: int
 ) -> None:
-    """Validate table metadata against array sizes.
+    """Validate the consistency of table metadata with array sizes.
 
-    The following checks are performed:
-    - PI table size + Mold table size == pi_array_size
-    - PI table size == Mold table array offset
-    - EMC table size == emc_array_size
+    Performs the following validation checks:
+
+    1. Ensures that the sum of the Preservation Index (PI) table size
+       and the Mold table size matches the expected `pi_array_size`.
+    2. Confirms that the PI table size aligns with the Mold table's
+       array offset.
+    3. Verifies that the Equilibrium Moisture Content (EMC) table size
+       equals the given `emc_array_size`.
+
+    Args:
+        meta_data (dict[TableType, TableMetaData]): A dictionary containing
+            metadata for each table type.
+        pi_array_size (int): The expected total size for the PI and Mold
+            tables combined.
+        emc_array_size (int): The expected size for the EMC table.
+
+    Raises:
+        ValidationError: If any of the checks fail, indicating a mismatch
+            between the metadata and the actual array sizes.
     """
     try:
-        # - PI temp_size * rh_size + MOLD temp_size * rh_size == pi_array_size
-
         if (
             meta_data[TableType.PI].size + meta_data[TableType.MOLD].size
             != pi_array_size
         ):
             raise ValidationError("PI and Mold table sizes mismatch with pi_array_size")
 
-        # - PI temp_size * rh_size == MOLD array_offset
         if meta_data[TableType.PI].size != meta_data[TableType.MOLD].array_offset:
             raise ValidationError("PI table size mismatch with MOLD array offset")
 
-        # - EMC temp_size * rh_size == emc_array_size
         if meta_data[TableType.EMC].size != emc_array_size:
             raise ValidationError("EMC table size mismatch with emc_array_size")
     except Exception as e:
@@ -395,116 +432,162 @@ def cross_check_meta_data(
 
 
 def extract_table_meta_data(js_content: str) -> dict[TableType, TableMetaData]:
-    """Extracts table metadata from the given JavaScript source code.
+    """Extract table metadata from JavaScript source code.
 
-    The function extracts the PI, EMC, and Mold table metadata, and stores them
-    in a dictionary. The dictionary is then returned.
+    Args:
+        js_content: JavaScript source code containing table definitions
 
-    :param js_content: The JavaScript source code to extract metadata from
-    :return: A dictionary containing the extracted table metadata
+    Returns:
+        Dictionary mapping TableType to corresponding TableMetaData
+
+    Raises:
+        ExtractionError: If metadata extraction fails
+        ValidationError: If extracted metadata is invalid
     """
-    logger.debug("Starting to extract table ranges from JavaScript")
+    logger.debug("Starting to extract table metadata")
     meta_data = {}
 
     try:
-        # Extract PI and EMC array sizes for validation purposes
+        # Extract array sizes first for validation
         pi_array_size, emc_array_size = extract_array_sizes(js_content)
+        logger.debug(f"Array sizes - PI: {pi_array_size}, EMC: {emc_array_size}")
 
-        # Extract PI ranges
+        # Extract metadata for each table type
         meta_data[TableType.PI] = extract_pi_meta_data(js_content)
-
-        # Extract EMC ranges
         meta_data[TableType.EMC] = extract_emc_meta_data(js_content)
-
-        # Extract Mold ranges
         meta_data[TableType.MOLD] = extract_mold_meta_data(js_content)
 
-        # Cross-check extracted meta data
-        # TODO: Add function to validate extracted data
+        # Validate extracted metadata
+        cross_check_meta_data(meta_data, pi_array_size, emc_array_size)
+        logger.debug("Metadata validation successful")
 
+        return meta_data
+
+    except (ExtractionError, ValidationError) as e:
+        logger.error(f"Failed to extract table metadata: {e}")
+        raise
     except Exception as e:
-        # Handle exceptions and log them
-        logger.exception(e)
-        raise e
-
-    return meta_data
+        error_msg = "Unexpected error during metadata extraction"
+        logger.error(f"{error_msg}: {e}")
+        raise ExtractionError(error_msg) from e
 
 
-def extract_raw_arrays(
-    js_content: str, meta_data: dict[TableType, TableMetaData]
-) -> tuple[array, array]:  # type: ignore
-    """Extract raw arrays from JavaScript content.
+def _validate_array_sizes(
+    pi_array: array,  # type: ignore
+    emc_array: array,  # type: ignore
+    meta_data: dict[TableType, TableMetaData],
+) -> None:
+    """Validate that extracted arrays match expected sizes.
 
-    Returns:
-        Tuple of (pi_array, emc_array) as array.array objects
+    Args:
+        pi_array: Array containing PI and mold risk data
+        emc_array: Array containing EMC data
+        meta_data: Dictionary of metadata for each table type
+
+    Raises:
+        ValidationError: If array sizes don't match metadata
     """
-    # Extract PI data
-    pi_match = COMPILED_PATTERNS["pi_data"].search(js_content)
-    if not pi_match:
-        raise ExtractionError("Could not find PI table data in JavaScript")
-    pi_values = [int(x.strip()) for x in pi_match.group(1).split(",")]
-    pi_array = array("i", pi_values)  # 'i' for signed int
-    logger.info(f"Extracted {len(pi_array)} PI values")
-
-    # Extract EMC data
-    emc_match = COMPILED_PATTERNS["emc_data"].search(js_content)
-    if not emc_match:
-        raise ExtractionError("Could not find EMC table data in JavaScript")
-    emc_values = [float(x.strip()) for x in emc_match.group(1).split(",")]
-    emc_array = array("d", emc_values)  # 'd' for double
-    logger.info(f"Extracted {len(emc_array)} EMC values")
-
-    # Validate array sizes
     pi_array_size = meta_data[TableType.PI].size + meta_data[TableType.MOLD].size
     if pi_array_size != len(pi_array):
         raise ValidationError(
-            f"PI array size mismatch: {pi_array_size} != {len(pi_array)}"
+            f"PI array size mismatch: expected {pi_array_size}, got {len(pi_array)}"
         )
+
     emc_array_size = meta_data[TableType.EMC].size
     if emc_array_size != len(emc_array):
         raise ValidationError(
-            f"EMC array size mismatch: {emc_array_size} != {len(emc_array)}"
+            f"EMC array size mismatch: expected {emc_array_size}, got {len(emc_array)}"
         )
 
-    return pi_array, emc_array
+
+def extract_raw_arrays(
+    js_content: str,
+    meta_data: dict[TableType, TableMetaData],
+) -> tuple[array, array]:  # type: ignore
+    """Extract raw arrays from JavaScript content.
+
+    Args:
+        js_content: JavaScript source code containing table data.
+        meta_data: Dictionary of metadata for each table type.
+
+    Returns:
+        Tuple of (pi_array, emc_array), where:
+            - pi_array: array.array of integers representing preservation index data.
+            - emc_array: array.array of floats representing equilibrium moisture content
+                data.
+
+    Raises:
+        ExtractionError: If table data cannot be found or parsed.
+        ValidationError: If array sizes don't match metadata.
+    """
+    try:
+        # Extract PI data
+        pi_match = JS_PATTERNS["pi_data"].search(js_content)
+        if not pi_match:
+            raise ExtractionError("Could not find PI table data in JavaScript")
+        pi_values = [int(x.strip()) for x in pi_match.group(1).split(",")]
+        pi_array = array("i", pi_values)  # 'i' for signed int
+        logger.info(f"Extracted {len(pi_array)} PI values")
+
+        # Extract EMC data
+        emc_match = JS_PATTERNS["emc_data"].search(js_content)
+        if not emc_match:
+            raise ExtractionError("Could not find EMC table data in JavaScript")
+        emc_values = [float(x.strip()) for x in emc_match.group(1).split(",")]
+        emc_array = array("d", emc_values)  # 'd' for double
+        logger.info(f"Extracted {len(emc_array)} EMC values")
+
+        # Validate array sizes
+        _validate_array_sizes(pi_array, emc_array, meta_data)
+
+        return pi_array, emc_array
+
+    except (ValueError, TypeError) as e:
+        raise ExtractionError(f"Failed to parse array values: {e}") from e
 
 
 def fetch_and_validate_tables(
     url: str,
 ) -> tuple[PITable, EMCTable, MoldTable]:
-    """Fetch and process all tables.
+    """Fetch and process preservation lookup tables.
 
     Args:
         url: URL to fetch the JavaScript file containing table data
 
     Returns:
-        Tuple of (pi_table, emc_table, mold_table) as ShiftedArrays
+        Tuple containing:
+            - PITable: Preservation Index lookup table
+            - EMCTable: Equilibrium Moisture Content lookup table
+            - MoldTable: Mold risk lookup table
 
     Raises:
         requests.RequestException: If table download fails
-        ValueError: If table data is invalid or missing
+        ExtractionError: If table data cannot be extracted
+        ValidationError: If table data is invalid
+        TableMetadataError: If table metadata is invalid
     """
     try:
         # Fetch JavaScript content
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         js_content = response.text
-        logger.debug(f"Content length: {len(js_content)} characters")
+        logger.debug(f"Downloaded JavaScript source ({len(js_content)} bytes)")
 
         # Extract table information and data
         table_info = extract_table_meta_data(js_content)
-        logger.debug(f"Extracted table info: {table_info}")
+        logger.debug("Successfully extracted table metadata")
 
-        # Log table dimensions
+        # Log table dimensions for debugging
         for table_type, info in table_info.items():
             logger.debug(
-                f"{table_type.value} dimensions:" f"{info.temp_range}x{info.rh_range}"
+                f"{table_type.value}: {info.temp_range}x{info.rh_range} elements"
             )
 
-        # Extract raw arrays
+        # Extract and validate raw arrays
         pi_array, emc_array = extract_raw_arrays(js_content, table_info)
+        logger.debug("Successfully extracted and validated raw arrays")
 
-        # Initialize ShiftedArrays
+        # Initialize lookup tables
         pi_info = table_info[TableType.PI]
         pi_table: PITable = LookupTable(
             np.array(pi_array[: pi_info.size], dtype=np.int16).reshape(
@@ -535,14 +618,16 @@ def fetch_and_validate_tables(
             BoundaryBehavior.CLAMP,
         )
 
+        logger.info("Successfully created all lookup tables")
         return pi_table, emc_table, mold_table
 
     except requests.RequestException as e:
-        logger.error(f"Failed to download tables: {e}")
+        logger.error(f"Failed to download JavaScript source: {e}")
         raise
-    except KeyError as e:
-        logger.error(f"Missing table information for {e}")
+    except (ExtractionError, ValidationError, TableMetadataError) as e:
+        logger.error(f"Failed to process table data: {e}")
         raise
     except Exception as e:
-        logger.error(f"Unexpected error while processing tables: {e}")
-        raise
+        error_msg = "Unexpected error while processing tables"
+        logger.error(f"{error_msg}: {e}")
+        raise ExtractionError(error_msg) from e

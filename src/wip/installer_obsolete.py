@@ -9,7 +9,6 @@ The installer can be run during package installation or manually if
 tables need to be regenerated.
 """
 
-import logging
 from pathlib import Path
 from typing import NoReturn
 
@@ -17,26 +16,29 @@ from preservationeval.pyutils.logging import setup_logging
 
 logger = setup_logging(__name__)
 
+
 class InstallError(Exception):
     """Base exception for installation errors."""
-    
+
     def __init__(self, message: str, original_error: Exception | None = None) -> None:
         """Initialize with message and optional original error."""
         super().__init__(message)
         self.original_error = original_error
 
+
 def _handle_install_error(e: Exception) -> NoReturn:
     """Handle installation errors with proper logging and re-raising.
-    
+
     Args:
         e: The caught exception
-        
+
     Raises:
         InstallError: Wrapped installation error
     """
     error_msg = f"Table installation failed: {e}"
     logger.error(error_msg)
     raise InstallError(error_msg, e)
+
 
 def install_tables(package_path: Path | None = None) -> None:
     """Install lookup tables for preservationeval.
@@ -59,8 +61,9 @@ def install_tables(package_path: Path | None = None) -> None:
     """
     logger.info("Starting table generation...")
     try:
-        from .generate_tables import generate_all_tables
-        generate_all_tables(package_path)
+        from .generate_tables_old import generate_all_tables
+
+        generate_all_tables()
         logger.info("\033[92mTables generated successfully\033[0m")
     except Exception as e:
         _handle_install_error(e)
