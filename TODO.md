@@ -8,7 +8,7 @@
 - [ ] Robustness against errors during installation
 - [ ] Security wrt execution of JS code
 - [ ] Restructuring
-  - [ ] Move all types into table_types package and rename to types
+  - [X] Move all types into table_types package and rename to types
   - [ ] Try to move all of main package up one level.
 
 ## Features

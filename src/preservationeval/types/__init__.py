@@ -4,6 +4,15 @@ This package provides the core LookupTable implementation and related types
 used for preservation calculations.
 """
 
+from importlib.metadata import version
+
+from .domain_specific import (
+    MoistureContent,
+    MoldRisk,
+    PreservationIndex,
+    RelativeHumidity,
+    Temperature,
+)
 from .exceptions import (
     HumidityError,
     IndexRangeError,
@@ -33,4 +42,12 @@ __all__ = [
     "IndexRangeError",
     "TemperatureError",
     "HumidityError",
+    # Domain specific types
+    "Temperature",
+    "RelativeHumidity",
+    "PreservationIndex",
+    "MoldRisk",
+    "MoistureContent",
 ]
+
+__version__ = version("preservationeval")

@@ -7,11 +7,12 @@ import pytest
 from numpy import floating, integer
 from numpy.typing import NDArray
 
-from preservationeval.table_types.exceptions import HumidityError, TemperatureError
-from preservationeval.table_types.lookuptable import (
+from preservationeval.types import (
     BoundaryBehavior,
+    HumidityError,
     LookupTable,
     TableIndex,
+    TemperatureError,
 )
 
 # Test Constants

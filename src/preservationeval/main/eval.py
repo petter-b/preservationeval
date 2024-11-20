@@ -11,7 +11,11 @@ indicating the level of risk associated with the given conditions.
 from enum import Enum
 from typing import Final
 
-from .types import MoistureContent, MoldRisk, PreservationIndex
+from preservationeval.types import (
+    MoistureContent,
+    MoldRisk,
+    PreservationIndex,
+)
 
 __all__ = [
     "EnvironmentalRating",

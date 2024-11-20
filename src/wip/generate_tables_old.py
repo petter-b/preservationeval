@@ -6,7 +6,7 @@ from pathlib import Path
 
 from preservationeval.pyutils.logging import Environment, setup_logging
 from preservationeval.pyutils.safepath import create_safe_path
-from preservationeval.table_types import EMCTable, MoldTable, PITable
+from preservationeval.types import EMCTable, MoldTable, PITable
 
 from .const import (
     DP_JS_URL,

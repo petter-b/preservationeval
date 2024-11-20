@@ -20,7 +20,7 @@ from pathlib import Path
 from textwrap import dedent
 
 from preservationeval.pyutils.logging import Environment, setup_logging
-from preservationeval.table_types import EMCTable, MoldTable, PITable
+from preservationeval.types import EMCTable, MoldTable, PITable
 
 from .const import DP_JS_URL, NUM_EMC_DECIMALS
 
@@ -76,7 +76,7 @@ def generate_tables_module(
 
         import numpy as np
 
-        from preservationeval.table_types import (
+        from preservationeval.types import (
             BoundaryBehavior,
             EMCTable,
             LookupTable,

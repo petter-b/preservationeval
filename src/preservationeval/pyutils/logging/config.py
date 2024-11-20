@@ -131,6 +131,7 @@ def get_default_config(env: str | Environment | None = None) -> LogConfig:
             level=LogLevel.INFO,
             console_output=True,
             file_output=True,
+            format="%(asctime)s - %(name)s: %(message)s",
         ),
     }
 

@@ -15,7 +15,7 @@ Functions:
 """
 
 from preservationeval.pyutils.logging import setup_logging
-from preservationeval.table_types import (
+from preservationeval.types import (
     HumidityError,
     IndexRangeError,
     PreservationError,
@@ -27,7 +27,7 @@ try:
 except ImportError:
     ...
 
-from .types import (
+from ..types.domain_specific import (
     MoistureContent,
     MoldRisk,
     PreservationIndex,

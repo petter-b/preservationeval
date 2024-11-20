@@ -16,7 +16,7 @@ from preservationeval.install.parse import (
     extract_table_meta_data,
     fetch_and_validate_tables,
 )
-from preservationeval.table_types import LookupTable
+from preservationeval.types import LookupTable
 
 # Constants from dp.js for validation
 PI_ARRAY_SIZE: Final[int] = 9594

@@ -16,5 +16,6 @@ from importlib.metadata import version
 
 from .generate_tables import generate_tables
 
-__version__ = version("preservationeval")
 __all__ = ["generate_tables", "__version__"]
+
+__version__ = version("preservationeval")

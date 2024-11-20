@@ -23,18 +23,18 @@ from .main.eval import (
     rate_mold_growth,
     rate_natural_aging,
 )
-from .main.types import (
+from .types import (
+    HumidityError,
+    IndexRangeError,
+    PreservationError,
+    TemperatureError,
+)
+from .types.domain_specific import (
     MoistureContent,
     MoldRisk,
     PreservationIndex,
     RelativeHumidity,
     Temperature,
-)
-from .table_types import (
-    HumidityError,
-    IndexRangeError,
-    PreservationError,
-    TemperatureError,
 )
 
 __all__ = [

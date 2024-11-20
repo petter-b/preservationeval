@@ -28,9 +28,9 @@ from re import Pattern
 # Types
 from typing import Final
 
-from preservationeval.pyutils.logging import setup_logging
+from preservationeval.pyutils.logging import Environment, setup_logging
 
-logger = setup_logging(__name__)
+logger = setup_logging(__name__, env=Environment.INSTALL)
 
 
 class PatternError(Exception):

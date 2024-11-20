@@ -62,8 +62,9 @@ requires = [
 #[tool.setuptools.dynamic]
 #version = { attr = "preservationeval.__version__" } # any module attribute compatible with ast.literal_eval
 
-#[tool.setuptools.packages.find]
-#where = ["src"]
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["wip", "wip/*", "*/wip", "*/wip/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

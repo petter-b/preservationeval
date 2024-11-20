@@ -44,8 +44,8 @@ from typing import Final
 import numpy as np
 import requests
 
-from preservationeval.pyutils.logging import setup_logging
-from preservationeval.table_types import (
+from preservationeval.pyutils.logging import Environment, setup_logging
+from preservationeval.types import (
     BoundaryBehavior,
     EMCTable,
     LookupTable,
@@ -209,7 +209,7 @@ class TableMetaData:
 
 
 # Initialize module logger
-logger = setup_logging(__name__)
+logger = setup_logging(__name__, env=Environment.INSTALL)
 
 
 def to_int(value: str) -> int:
@@ -275,118 +275,64 @@ def extract_array_sizes(js_content: str) -> tuple[int, int]:
         raise ExtractionError("Failed to parse array sizes") from e
 
 
-def extract_pi_meta_data(js_content: str) -> TableMetaData:
-    """Extracts metadata for Preservation Index (PI) calculations.
+def extract_xxx_meta_data(js_content: str, table_type: TableType) -> TableMetaData:
+    """Extract table metadata from JavaScript code.
 
     Args:
-        js_content: JavaScript source code to extract metadata from.
+        js_content: JavaScript source code to parse
+        table_type: Type of table to extract metadata for
 
     Returns:
-        A `TableMetaData` object containing the PI table ranges.
+        TableMetaData object containing the extracted information
 
     Raises:
-        ExtractionError: If metadata cannot be extracted from the JavaScript code.
+        ExtractionError: If metadata cannot be extracted
     """
-    logger.debug("Attempting to match PI ranges pattern")
-    try:
-        pi_match = JS_PATTERNS["pi_ranges"].search(js_content)
-        if pi_match:
-            groups = pi_match.groupdict()
-            logger.debug(f"Found PI ranges match: {groups}")
+    pattern_map = {
+        TableType.PI: "pi_ranges",
+        TableType.EMC: "emc_ranges",
+        TableType.MOLD: "mold_ranges",
+    }
 
-            pi_data = TableMetaData(
-                temp_min=to_int(groups["temp_min"]),
-                _temp_max=to_int(groups["temp_max"]),
-                _temp_offset=to_int(groups["temp_offset"]),
-                rh_range=int(groups["rh_size"]),
-                _rh_min=int(groups["rh_min"]),
-                _rh_max=int(groups["rh_max"]),
-                _rh_offset=to_int(groups["rh_offset"]),
+    logger.debug(f"Attempting to match {table_type.value} ranges pattern")
+    try:
+        match = JS_PATTERNS[pattern_map[table_type]].search(js_content)
+        if not match:
+            raise ExtractionError(f"Failed to extract {table_type.value} metadata")
+
+        groups = match.groupdict()
+        logger.debug(f"Found {table_type.value} ranges match: {groups}")
+
+        # Common metadata parameters
+        metadata_args = {
+            "temp_min": to_int(groups["temp_min"]),
+            "_temp_max": to_int(groups["temp_max"]),
+            "rh_range": int(groups["rh_size"]),
+        }
+
+        # Type-specific parameters
+        if table_type in (TableType.PI, TableType.MOLD):
+            metadata_args.update(
+                {
+                    "_rh_min": int(groups["rh_min"]),
+                    "_rh_offset": to_int(groups["rh_offset"]),
+                }
             )
-            logger.debug(f"Extracted PI meta data: {pi_data}")
-        else:
-            raise ExtractionError("Failed to extract PI meta data, no pi_match")
+
+        if table_type == TableType.MOLD:
+            metadata_args["array_offset"] = int(groups["offset"])
+
+        if table_type != TableType.MOLD:
+            metadata_args["_temp_offset"] = to_int(groups["temp_offset"])
+
+        if table_type == TableType.PI:
+            metadata_args["_rh_max"] = int(groups["rh_max"])
+
+        return TableMetaData(**metadata_args)
+
     except Exception as e:
         logger.exception(e)
         raise
-
-    return pi_data
-
-
-def extract_emc_meta_data(js_content: str) -> TableMetaData:
-    """Extract EMC table ranges from JavaScript code.
-
-    EMC ranges are extracted by matching the pattern defined in the
-    'emc_ranges' regular expression. The extracted data is then used to
-    create a `TableMetaData` object.
-
-    Args:
-        js_content (str): JavaScript source code to be parsed.
-
-    Returns:
-        TableMetaData: An object containing the EMC table ranges.
-
-    Raises:
-        ExtractionError: If no match for EMC ranges is found.
-    """
-    logger.debug("Attempting to match EMC ranges pattern")
-    try:
-        emc_match = JS_PATTERNS["emc_ranges"].search(js_content)
-        if emc_match:
-            groups = emc_match.groupdict()
-            logger.debug(f"Found EMC ranges match: {groups}")
-
-            emc_data = TableMetaData(
-                temp_min=to_int(groups["temp_min"]),
-                _temp_max=to_int(groups["temp_max"]),
-                _temp_offset=to_int(groups["temp_offset"]),
-                rh_range=int(groups["rh_size"]),
-            )
-            logger.debug(f"Extracted EMC meta data: {emc_data}")
-        else:
-            raise ExtractionError("Failed to extract EMC meta data, no emc_match")
-    except Exception as e:
-        logger.exception(e)
-        raise
-
-    return emc_data
-
-
-def extract_mold_meta_data(js_content: str) -> TableMetaData:
-    """Extracts metadata for mold risk factor calculations.
-
-    Args:
-        js_content (str): The JavaScript code to extract metadata from.
-
-    Returns:
-        # Add return type and description as needed
-    """
-    logger.debug("Attempting to match Mold ranges pattern")
-    try:
-        mold_match = JS_PATTERNS["mold_ranges"].search(js_content)
-        if mold_match:
-            # Extract values from matched groups
-            groups = mold_match.groupdict()
-            logger.debug(f"Found Mold ranges match: {groups}")
-
-            mold_data = TableMetaData(
-                _temp_max=to_int(groups["temp_max"]),
-                temp_min=to_int(groups["temp_min"]),
-                _rh_min=int(groups["rh_min"]),
-                array_offset=int(groups["offset"]),
-                rh_range=int(groups["rh_size"]),
-                _rh_offset=to_int(groups["rh_offset"]),
-            )
-
-            logger.debug(f"Extracted Mold meta data: {mold_data}")
-        else:
-            # Raise error if no match is found
-            raise ExtractionError("Failed to extract Mold meta data, no mold_match")
-    except Exception as e:
-        logger.exception(e)
-        raise
-
-    return mold_data
 
 
 def cross_check_meta_data(
@@ -453,9 +399,7 @@ def extract_table_meta_data(js_content: str) -> dict[TableType, TableMetaData]:
         logger.debug(f"Array sizes - PI: {pi_array_size}, EMC: {emc_array_size}")
 
         # Extract metadata for each table type
-        meta_data[TableType.PI] = extract_pi_meta_data(js_content)
-        meta_data[TableType.EMC] = extract_emc_meta_data(js_content)
-        meta_data[TableType.MOLD] = extract_mold_meta_data(js_content)
+        meta_data = {t: extract_xxx_meta_data(js_content, t) for t in TableType}
 
         # Validate extracted metadata
         cross_check_meta_data(meta_data, pi_array_size, emc_array_size)
@@ -527,7 +471,7 @@ def extract_raw_arrays(
             raise ExtractionError("Could not find PI table data in JavaScript")
         pi_values = [int(x.strip()) for x in pi_match.group(1).split(",")]
         pi_array = array("i", pi_values)  # 'i' for signed int
-        logger.info(f"Extracted {len(pi_array)} PI values")
+        logger.debug(f"Extracted {len(pi_array)} PI values")
 
         # Extract EMC data
         emc_match = JS_PATTERNS["emc_data"].search(js_content)
@@ -535,7 +479,7 @@ def extract_raw_arrays(
             raise ExtractionError("Could not find EMC table data in JavaScript")
         emc_values = [float(x.strip()) for x in emc_match.group(1).split(",")]
         emc_array = array("d", emc_values)  # 'd' for double
-        logger.info(f"Extracted {len(emc_array)} EMC values")
+        logger.debug(f"Extracted {len(emc_array)} EMC values")
 
         # Validate array sizes
         _validate_array_sizes(pi_array, emc_array, meta_data)
@@ -618,7 +562,7 @@ def fetch_and_validate_tables(
             BoundaryBehavior.CLAMP,
         )
 
-        logger.info("Successfully created all lookup tables")
+        logger.debug("Successfully created all lookup tables")
         return pi_table, emc_table, mold_table
 
     except requests.RequestException as e:

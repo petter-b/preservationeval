@@ -1,4 +1,5 @@
-"""Update test data from JavaScript source."""
+#!/usr/bin/env python3
+"""Update test data from online JavaScript source."""
 
 from tests.validate_core import ValidationTest
 
@@ -6,8 +7,7 @@ from tests.validate_core import ValidationTest
 def main() -> None:
     """Update test data from JavaScript source."""
     validation = ValidationTest(force_update=True)
-    validation.run_tests(num_cases=1000)
-    print("Test data updated")
+    validation.run_tests()
 
 
 if __name__ == "__main__":
