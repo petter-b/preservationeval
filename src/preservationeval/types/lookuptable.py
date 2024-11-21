@@ -12,7 +12,7 @@ from typing import Any, Final, Generic, TypeVar, cast
 import numpy as np
 import numpy.typing as npt
 
-from preservationeval.pyutils.logging import setup_logging
+from preservationeval.utils.logging import setup_logging
 
 from .exceptions import HumidityError, TemperatureError
 

@@ -14,7 +14,7 @@ DP_JS_URL: Final[str] = "http://www.dpcalc.org/dp.js"
 NUM_EMC_DECIMALS: Final[int] = 1  # Number of decimal places for EMC values (0.0-30.0)
 
 # Package structure configuration
-MODULE_NAME: Final[str] = "preservationeval.main"  # Target module for tables
+MODULE_NAME: Final[str] = "preservationeval"  # Target module for tables
 SOURCE_DIR: Final[str] = "src"  # Source directory relative to package root
 TABLES_MODULE_NAME: Final[str] = "tables"  # Generated module name
 

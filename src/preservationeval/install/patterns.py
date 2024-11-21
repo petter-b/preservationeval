@@ -28,7 +28,7 @@ from re import Pattern
 # Types
 from typing import Final
 
-from preservationeval.pyutils.logging import Environment, setup_logging
+from preservationeval.utils.logging import Environment, setup_logging
 
 logger = setup_logging(__name__, env=Environment.INSTALL)
 

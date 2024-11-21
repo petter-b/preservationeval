@@ -11,7 +11,7 @@ indicating the level of risk associated with the given conditions.
 from enum import Enum
 from typing import Final
 
-from preservationeval.types import (
+from .types import (
     MoistureContent,
     MoldRisk,
     PreservationIndex,

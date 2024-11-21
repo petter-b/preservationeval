@@ -44,7 +44,6 @@ from typing import Final
 import numpy as np
 import requests
 
-from preservationeval.pyutils.logging import Environment, setup_logging
 from preservationeval.types import (
     BoundaryBehavior,
     EMCTable,
@@ -52,6 +51,7 @@ from preservationeval.types import (
     MoldTable,
     PITable,
 )
+from preservationeval.utils.logging import Environment, setup_logging
 
 from .patterns import JS_PATTERNS
 

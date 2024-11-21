@@ -19,8 +19,8 @@ modules with the following variables:
 from pathlib import Path
 from textwrap import dedent
 
-from preservationeval.pyutils.logging import Environment, setup_logging
 from preservationeval.types import EMCTable, MoldTable, PITable
+from preservationeval.utils.logging import Environment, setup_logging
 
 from .const import DP_JS_URL, NUM_EMC_DECIMALS
 
@@ -76,7 +76,7 @@ def generate_tables_module(
 
         import numpy as np
 
-        from preservationeval.types import (
+        from .types import (
             BoundaryBehavior,
             EMCTable,
             LookupTable,

@@ -1,0 +1,13 @@
+include LICENSE
+include README.md
+include CHANGELOG.md
+include pyproject.toml
+include setup.py
+
+recursive-include src *.py
+include src/preservationeval/tables.py
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[cod]
+recursive-exclude * wip
+recursive-exclude tests *.py

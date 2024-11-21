@@ -22,6 +22,7 @@ Design Principles:
     - Comprehensive testing
 """
 
-from importlib.metadata import version
-
-__version__ = version("preservationeval")
+try:
+    from preservationeval._version import version as __version__
+except ImportError:
+    __version__ = "unknown"

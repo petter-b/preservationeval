@@ -14,27 +14,26 @@ Functions:
     mold: Calculates the mold risk factor value.
 """
 
-from preservationeval.pyutils.logging import setup_logging
-from preservationeval.types import (
+from .types import (
     HumidityError,
     IndexRangeError,
+    MoistureContent,
+    MoldRisk,
     PreservationError,
+    PreservationIndex,
+    RelativeHumidity,
+    Temperature,
     TemperatureError,
 )
+from .utils.logging import setup_logging
 
 try:
     from .tables import emc_table, mold_table, pi_table
 except ImportError:
     ...
 
-from ..types.domain_specific import (
-    MoistureContent,
-    MoldRisk,
-    PreservationIndex,
-    RelativeHumidity,
-    Temperature,
-)
-from .utils import validate_rh, validate_temp
+
+from .util_functions import validate_rh, validate_temp
 
 # Initialize module logger
 logger = setup_logging(__name__)

@@ -1,7 +1,6 @@
 [project]
 name = "preservationeval"
-version = "0.1.0"
-#dynamic = ["version"]
+dynamic = ["version"]
 authors = [{ name = "Petter Blomberg", email = "petter.blomberg@gmail.com" }]
 maintainers = [
     { name = "Petter Blomberg", email = "petter.blomberg@gmail.com" },
@@ -59,12 +58,18 @@ requires = [
     "types-setuptools>=69.0.0",
 ]
 
-#[tool.setuptools.dynamic]
-#version = { attr = "preservationeval.__version__" } # any module attribute compatible with ast.literal_eval
+[tool.setuptools.dynamic]
+version = { attr = "preservationeval.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
 exclude = ["wip", "wip/*", "*/wip", "*/wip/*"]
+
+[tool.preservationeval]
+package_dir = "src/preservationeval"
+tables_module = "tables"
+tables_url = "http://www.dpcalc.org/dp.js"
+emc_decimals = 1
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

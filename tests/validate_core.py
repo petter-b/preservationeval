@@ -24,9 +24,9 @@ import numpy as np
 import requests
 
 from preservationeval import emc, mold, pi
-from preservationeval.main.const import DP_JS_URL
-from preservationeval.pyutils.logging import setup_logging
-from preservationeval.pyutils.safepath import create_safe_path
+from preservationeval.const import DP_JS_URL
+from preservationeval.utils.logging import setup_logging
+from preservationeval.utils.safepath import create_safe_path
 
 from .config import JS_CONFIG, ComparisonConfig, TestConfig
 from .templates import HTML_TEMPLATE, NODE_SCRIPT_TEMPLATE

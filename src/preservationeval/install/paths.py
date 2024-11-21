@@ -8,7 +8,7 @@ creating safe paths within the package structure.
 from collections.abc import Sequence
 from pathlib import Path
 
-from preservationeval.pyutils.logging import Environment, setup_logging
+from preservationeval.utils.logging import Environment, setup_logging
 
 logger = setup_logging(__name__, env=Environment.INSTALL)
 

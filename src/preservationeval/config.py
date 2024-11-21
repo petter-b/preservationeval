@@ -7,8 +7,8 @@ logging, cache directories, and other settings.
 
 from pathlib import Path
 
-from preservationeval.pyutils.logging import LogConfig, get_default_config
-from preservationeval.pyutils.safepath import create_safe_path
+from .utils.logging import LogConfig, get_default_config
+from .utils.safepath import create_safe_path
 
 
 def get_preservationeval_log_config(env: str = "development") -> LogConfig:

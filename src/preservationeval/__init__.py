@@ -13,10 +13,8 @@ Main functions:
     rate_*(): Evaluate environmental ratings
 """
 
-from importlib.metadata import version
-
-from .main.core import emc, mold, pi
-from .main.eval import (
+from .core_functions import emc, mold, pi
+from .eval_functions import (
     EnvironmentalRating,
     rate_mechanical_damage,
     rate_metal_corrosion,
@@ -26,15 +24,13 @@ from .main.eval import (
 from .types import (
     HumidityError,
     IndexRangeError,
-    PreservationError,
-    TemperatureError,
-)
-from .types.domain_specific import (
     MoistureContent,
     MoldRisk,
+    PreservationError,
     PreservationIndex,
     RelativeHumidity,
     Temperature,
+    TemperatureError,
 )
 
 __all__ = [
@@ -63,4 +59,7 @@ __all__ = [
     "HumidityError",
 ]
 
-__version__ = version("preservationeval")
+try:
+    from ._version import version as __version__
+except ImportError:
+    __version__ = "unknown"

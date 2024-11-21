@@ -5,9 +5,8 @@ temperature, relative humidity, and dew point values, as well as calculating
 derived quantities such as equilibrium moisture content.
 """
 
-from preservationeval.types import RelativeHumidity, Temperature
-
 from .const import RH_MAX, RH_MIN, TEMP_MAX, TEMP_MIN
+from .types import RelativeHumidity, Temperature
 
 
 def validate_rh(rh: RelativeHumidity) -> None:

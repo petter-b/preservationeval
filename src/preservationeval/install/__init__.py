@@ -12,10 +12,11 @@ Note:
     available for table regeneration if needed.
 """
 
-from importlib.metadata import version
-
 from .generate_tables import generate_tables
 
 __all__ = ["generate_tables", "__version__"]
 
-__version__ = version("preservationeval")
+try:
+    from preservationeval._version import version as __version__
+except ImportError:
+    __version__ = "unknown"

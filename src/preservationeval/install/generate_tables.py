@@ -10,7 +10,7 @@ This module handles the complete table generation and installation process:
 from importlib import import_module, reload
 from pathlib import Path
 
-from preservationeval.pyutils.logging import Environment, setup_logging
+from preservationeval.utils.logging import Environment, setup_logging
 
 from .const import (
     DP_JS_URL,

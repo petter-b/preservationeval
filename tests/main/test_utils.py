@@ -12,8 +12,8 @@ functioning correctly.
 
 import pytest
 
-from preservationeval.main.const import TEMP_MAX
-from preservationeval.main.utils import to_celsius, validate_rh, validate_temp
+from preservationeval.const import TEMP_MAX
+from preservationeval.util_functions import to_celsius, validate_rh, validate_temp
 
 
 @pytest.mark.unit

@@ -4,9 +4,9 @@ import sys
 from importlib import import_module, reload
 from pathlib import Path
 
-from preservationeval.pyutils.logging import Environment, setup_logging
-from preservationeval.pyutils.safepath import create_safe_path
 from preservationeval.types import EMCTable, MoldTable, PITable
+from preservationeval.utils.logging import Environment, setup_logging
+from preservationeval.utils.safepath import create_safe_path
 
 from .const import (
     DP_JS_URL,

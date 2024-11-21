@@ -12,7 +12,7 @@ tables need to be regenerated.
 from pathlib import Path
 from typing import NoReturn
 
-from preservationeval.pyutils.logging import setup_logging
+from preservationeval.utils.logging import setup_logging
 
 logger = setup_logging(__name__)
 

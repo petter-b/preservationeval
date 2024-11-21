@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-from preservationeval.pyutils.safepath import create_safe_path
+from preservationeval.utils.safepath import create_safe_path
 
 
 class LogLevel(str, Enum):
