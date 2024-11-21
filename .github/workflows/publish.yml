@@ -5,7 +5,7 @@ on:
     types: [published]
 
 jobs:
-  build-and-publish:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -23,8 +23,30 @@ jobs:
     - name: Build package
       run: python -m build
 
+    - name: Verify package
+      run: twine check dist/*
+
+    - name: Create test environment
+      run: python -m venv test_env
+
+    - name: Test built package
+      run: |
+        source test_env/bin/activate
+        pip install "dist/*.whl[test]"
+        pytest tests/ -v
+
     - name: Publish to PyPI
+      if: success()
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       run: twine upload dist/*
+
+    - name: Verify PyPI package
+      if: success()
+      run: |
+        sleep 60  # Wait for PyPI to process the upload
+        source test_env/bin/activate
+        pip uninstall -y preservationeval  # Adjust this to your package name
+        pip install --no-cache-dir "preservationeval[test]"  # Adjust this to your package name
+        pytest tests/ -v
