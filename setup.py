@@ -15,22 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 class CustomBuildPy(build_py):
-    """Custom build command that generates lookup tables during build.
+    """Custom build command that generates lookup tables during build."""
 
-    This command performs the following steps:
-    1. Adds src directory to Python path
-    2. Generates preservation lookup tables (PI, EMC, Mold)
-    3. Removes src from path
-    4. Runs standard build process
-    """
-
-    def run(self) -> None:
-        """Run the build command with table generation.
-
-        Raises:
-            ImportError: If required modules cannot be imported
-            TableGenerationError: If table generation fails
-        """
+    def _generate_tables(self) -> None:
+        """Generate lookup tables for preservationeval."""
         # Add src to Python path temporarily
         src_path = Path(__file__).parent / "src"
         sys.path.insert(0, str(src_path))
@@ -39,24 +27,28 @@ class CustomBuildPy(build_py):
             if not self.dry_run:
                 from preservationeval.install.generate_tables import generate_tables
 
-                logger.debug(
-                    "\033[94m" "Generating preservation lookup tables..." "\033[0m"
-                )
                 generate_tables()
-                logger.debug(
-                    "\033[92m" "Table generation completed successfully" "\033[0m"
-                )
-            build_py.run(self)
         except Exception as e:
-            logger.error(f"Error during build: {e}")
+            logger.error(f"Error generating preservationeval.tables: {e}")
             raise  # This will cause the build to fail
 
         finally:
             # Remove src from path
             sys.path.pop(0)
 
-        # Run standard build
-        super().run()
+    def run(self) -> None:
+        """Run the build command with table generation.
+
+        This command performs the following steps:
+        1. Generates preservation lookup tables (PI, EMC, Mold)
+        2. Runs standard build process
+        """
+        self.execute(
+            self._generate_tables,
+            (),
+            msg="\033[94Generating preservationeval.tables module.\033[0m",
+        )
+        build_py.run(self)
 
 
 class CustomInstall(install):

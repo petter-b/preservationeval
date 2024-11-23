@@ -1,0 +1,59 @@
+from setuptools import find_packages, setup
+from setuptools.command.develop import develop
+from setuptools.command.egg_info import egg_info
+from setuptools.command.install import install
+
+
+class CustomInstallCommand(install):
+    def run(self):
+        install.run(self)
+        self.execute(
+            self._post_install, (), msg="\033[94mRunning post install task \033[0m"
+        )
+
+    def _post_install(self):
+        from preservationeval.install.generate_tables import generate_tables
+
+        generate_tables()
+
+
+class CustomDevelopCommand(develop):
+    def run(self):
+        develop.run(self)
+        self.execute(
+            self._post_install, (), msg="\033[94mRunning post develop task \033[0m"
+        )
+
+    def _post_install(self):
+        from preservationeval.install.generate_tables import generate_tables
+
+        generate_tables()
+
+
+class CustomEggInfoCommand(egg_info):
+    def run(self):
+        egg_info.run(self)
+        self.execute(
+            self._post_egg_info, (), msg="\033[94mRunning post egg_info task \033[0m"
+        )
+
+    def _post_egg_info(self):
+        from preservationeval.install.generate_tables import generate_tables
+
+        generate_tables()
+
+
+setup(
+    name="preservationeval",
+    version="0.1.0",
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    cmdclass={
+        "install": CustomInstallCommand,
+        "develop": CustomDevelopCommand,
+        "egg_info": CustomEggInfoCommand,
+    },
+    exclude_package_data={
+        "preservationeval": ["tables.py"],
+    },
+)

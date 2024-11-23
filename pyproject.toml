@@ -63,7 +63,7 @@ version = { attr = "preservationeval.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
-exclude = ["wip", "wip/*", "*/wip", "*/wip/*"]
+exclude = ["wip", "wip/*", "*/wip", "*/wip/*", "*tables.py", "*test*"]
 
 [tool.preservationeval]
 package_dir = "src/preservationeval"

@@ -4,12 +4,12 @@
 - [ ] Code review
 - [ ] Consistent use of logging
 - [ ] Consider using secripts/generate_tables() for installation for tables.py.
-- [ ] Add proper SOURCES.txt handling
-- [ ] Robustness against errors during installation
+- [?] Add proper SOURCES.txt handling
+- [?] Robustness against errors during installation
 - [ ] Security wrt execution of JS code
-- [ ] Restructuring
+- [X] Restructuring
   - [X] Move all types into table_types package and rename to types
-  - [ ] Try to move all of main package up one level.
+  - [X] Try to move all of main package up one level.
 
 ## Features
 - [ ] Add hash to tables.py

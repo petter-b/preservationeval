@@ -1,0 +1,2 @@
+global-exclude *tables.py
+exclude src/preservationeval/tables.py
