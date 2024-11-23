@@ -9,7 +9,7 @@ description = "A Python implenentation of the calculations and evaluations done 
 requires-python = ">=3.11"
 keywords = ["preservation", "climate", "numpy"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
