@@ -35,7 +35,7 @@ jobs:
     - name: Test built package
       run: |
         source test_env/bin/activate
-        python -c "import glob; print(glob.glob('dist/*.whl')[0])" | xargs pip install
+        python -c "import glob; print(glob.glob('dist/*.whl')[0]+'[test]')" | xargs pip install
         pip install pytest  # Ensure pytest is installed
         pytest tests/ -v
 
