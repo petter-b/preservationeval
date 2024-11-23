@@ -34,8 +34,8 @@ jobs:
         echo "Directory contents: $(ls -la)"
         echo "Python path: $PYTHONPATH"
         python -m pip install -e ".[test]" -v
-        echo "Post-install .main contents:"
-        ls -R src/preservationeval/main/
+        echo "Post-install contents:"
+        ls -R src/preservationeval/
         python -m pip install pre-commit
 
     - name: Cache pre-commit hooks
