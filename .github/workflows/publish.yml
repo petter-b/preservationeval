@@ -29,10 +29,14 @@ jobs:
     - name: Create test environment
       run: python -m venv test_env
 
+    - name: Get package name
+      run: echo "PACKAGE_NAME=$(python setup.py --name)" >> $GITHUB_ENV
+
     - name: Test built package
       run: |
         source test_env/bin/activate
-        pip install "dist/*.whl[test]"
+        python -c "import glob; print(glob.glob('dist/*.whl')[0])" | xargs pip install
+        pip install pytest  # Ensure pytest is installed
         pytest tests/ -v
 
     - name: Publish to PyPI
@@ -47,6 +51,6 @@ jobs:
       run: |
         sleep 60  # Wait for PyPI to process the upload
         source test_env/bin/activate
-        pip uninstall -y preservationeval  # Adjust this to your package name
-        pip install --no-cache-dir "preservationeval[test]"  # Adjust this to your package name
+        pip uninstall -y ${{ env.PACKAGE_NAME }}
+        pip install --no-cache-dir "${{ env.PACKAGE_NAME }}[test]"
         pytest tests/ -v
