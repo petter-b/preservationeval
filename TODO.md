@@ -10,6 +10,7 @@
 - [X] Restructuring
   - [X] Move all types into table_types package and rename to types
   - [X] Try to move all of main package up one level.
+- [ ] Improve test coverage
 
 ## Features
 - [ ] Add hash to tables.py

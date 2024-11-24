@@ -24,12 +24,12 @@ class CustomDistribution(Distribution):
     def __init__(self, attrs: dict[str, str] | None = None) -> None:
         """Initialize the distribution with version information."""
         attrs = attrs or {}
-        logger.info("Initializing distribution")
-        logger.info(f"version: {attrs.get('version', '')!s}")
+        logger.debug("Initializing distribution")
+        logger.debug(f"version: {attrs.get('version', '')!s}")
         self._write_version_file()
         if attrs.get("version", "unknown") == "unknown":
             attrs["version"] = self._get_version()
-        logger.info(f"version: {attrs['version']!s}")
+        logger.debug(f"version: {attrs['version']!s}")
         super().__init__(attrs)
 
     def _get_git_version(self) -> str | None:
