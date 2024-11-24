@@ -6,9 +6,7 @@ tests/data/
 test_data.json
 
 # Generated Python files
-src/preservationeval/lookup_tables.py
 src/preservationeval/tables.py
-src/preservationeval/main/tables.py
 src/preservationeval/_version.py
 
 # Python
