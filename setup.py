@@ -48,7 +48,7 @@ class CustomDistribution(Distribution):
                 .decode("utf-8")
                 .split("-")
             )
-            return output[0] if int(output[1]) == 0 else f"{output[0]}.{output[1]}"
+            return output[0] if int(output[1]) == 0 else f"{output[0]}-{output[1]}"
         except subprocess.CalledProcessError:
             logger.warning("Failed to get version from Git tags")
             return None
