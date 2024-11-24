@@ -1,7 +1,6 @@
 """Setup script for preservationeval."""
 
 import logging
-import subprocess
 import sys
 from pathlib import Path
 
@@ -17,48 +16,6 @@ logger = logging.getLogger(__name__)
 
 class CustomBuildPy(build_py):
     """Custom build command that generates lookup tables during build."""
-
-    def _get_version(self) -> str:
-        """Get the current version of the package from Git tags.
-
-        This function executes the ``git describe --tags`` command to get the
-        current version of the package. If the command fails (for example, if
-        the package is installed from a source distribution rather than a Git
-        repository), the function returns the string "unknown".
-
-        Returns:
-            str: The version of the package.
-        """
-        try:
-            version = str(
-                subprocess.check_output(["git", "describe", "--tags"])
-                .strip()
-                .decode("utf-8")
-            )
-        except subprocess.CalledProcessError:
-            version = "unknown"
-        return version
-
-    def _write_version_file(self) -> None:
-        """Write version string to src/preservationeval/__version.py.
-
-        This function is called during the build process and writes the current
-        version string to the __version.py file. This allows the version to be
-        accessed by other code without having to parse the version string from
-        the package metadata.
-        """
-        if not self.dry_run:
-            try:
-                import preservationeval._version
-
-                pass  # File already exists, do nothing.
-            except ImportError:
-                version_file = (
-                    Path(__file__).parent / "src" / "preservationeval" / "__version.py"
-                )
-                version = self._get_version()
-                with version_file.open("w") as f:
-                    f.write(f'__version__ = "{version}"\n')
 
     def _generate_tables(self) -> None:
         """Generate lookup tables for preservationeval."""
@@ -86,11 +43,6 @@ class CustomBuildPy(build_py):
         1. Generates preservation lookup tables (PI, EMC, Mold)
         2. Runs standard build process
         """
-        self.execute(
-            self._generate_tables,
-            (),
-            msg="\033[94Generating preservationeval.tables module.\033[0m",
-        )
         self.execute(
             self._generate_tables,
             (),

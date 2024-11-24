@@ -34,32 +34,32 @@ from .types import (
 )
 
 __all__ = [
-    # Version
-    "__version__",
-    # Core functions
-    "pi",
-    "emc",
-    "mold",
     # Evaluation functions
     "EnvironmentalRating",
+    "HumidityError",
+    "IndexRangeError",
+    "MoistureContent",
+    "MoldRisk",
+    # Exceptions
+    "PreservationError",
+    "PreservationIndex",
+    "RelativeHumidity",
+    # Types
+    "Temperature",
+    "TemperatureError",
+    # Version
+    "__version__",
+    "emc",
+    "mold",
+    # Core functions
+    "pi",
     "rate_mechanical_damage",
     "rate_metal_corrosion",
     "rate_mold_growth",
     "rate_natural_aging",
-    # Types
-    "Temperature",
-    "RelativeHumidity",
-    "PreservationIndex",
-    "MoldRisk",
-    "MoistureContent",
-    # Exceptions
-    "PreservationError",
-    "IndexRangeError",
-    "TemperatureError",
-    "HumidityError",
 ]
 
 try:
     from ._version import version as __version__
 except ImportError:
-    __version__ = "unknown"
+    __version__ = "0.0.0"

@@ -9,7 +9,7 @@ test_data.json
 src/preservationeval/lookup_tables.py
 src/preservationeval/tables.py
 src/preservationeval/main/tables.py
-#src/preservationeval/_version.py
+src/preservationeval/_version.py
 
 # Python
 __pycache__/
