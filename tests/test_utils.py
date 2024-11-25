@@ -13,7 +13,13 @@ functioning correctly.
 import pytest
 
 from preservationeval.const import TEMP_MAX
-from preservationeval.util_functions import to_celsius, validate_rh, validate_temp
+from preservationeval.util_functions import (
+    MAGNUS_ACCURACY,
+    calculate_dew_point,
+    to_celsius,
+    validate_rh,
+    validate_temp,
+)
 
 
 @pytest.mark.unit
@@ -71,3 +77,47 @@ def test_to_celsius() -> None:
     # Test invalid scale values
     with pytest.raises(ValueError):
         to_celsius(20, "x")  # Should raise a ValueError
+
+
+@pytest.mark.parametrize(
+    "temp,humidity,expected",
+    [
+        # Common cases
+        (20.0, 50.0, 9.28),  # Room temperature, moderate humidity
+        (25.0, 80.0, 21.31),  # Warm and humid
+        (0.0, 70.0, -4.81),  # Freezing temperature
+        # Edge cases
+        (-40.0, 100.0, -40.0),  # Lower temperature limit
+        (50.0, 100.0, 50.0),  # Upper temperature limit
+        (20.0, 1.0, -38.0),  # Minimum humidity
+        (20.0, 100.0, 20.0),  # Maximum humidity
+        # Common meteorological conditions
+        (15.0, 40.0, 1.51),  # Cool, dry day
+        (30.0, 60.0, 21.44),  # Hot, moderately humid day
+        (5.0, 90.0, 3.75),  # Cold, humid morning
+    ],
+)
+def test_dew_point_calculation(temp: float, humidity: float, expected: float) -> None:
+    """Test dew point calculations against known values.
+
+    The expected values were calculated using the August-Roche-Magnus formula
+    with constants a = 17.625 and b = 243.04.
+    """
+    assert abs(calculate_dew_point(temp, humidity) - expected) < MAGNUS_ACCURACY
+
+
+@pytest.mark.parametrize(
+    "temp,humidity",
+    [
+        (-41.0, 50.0),  # Too cold
+        (51.0, 50.0),  # Too hot
+        (20.0, 0.0),  # Humidity too low
+        (20.0, 101.0),  # Humidity too high
+        (float("nan"), 50.0),  # Invalid temperature
+        (20.0, float("nan")),  # Invalid humidity
+    ],
+)
+def test_invalid_inputs(temp: float, humidity: float) -> None:
+    """Test that invalid inputs raise appropriate exceptions."""
+    with pytest.raises(ValueError):
+        calculate_dew_point(temp, humidity)

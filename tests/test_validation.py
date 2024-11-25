@@ -32,7 +32,7 @@ def test_against_javascript(validation: ValidationTest) -> None:
     Args:
         validation: ValidationTest fixture providing configured test instance
     """
-    differences = validation.run_tests(num_cases=100)
+    differences = validation.run_tests()
 
     assert not differences["pi"], f"PI calculations differ: {differences['pi']}"
     assert not differences["emc"], f"EMC calculations differ: {differences['emc']}"

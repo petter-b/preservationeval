@@ -86,9 +86,31 @@ class LookupTable(Generic[T]):
         """Maximum relative humidity value for the table, based on the data shape."""
         return int(self.rh_min + self.data.shape[1] - 1)
 
-    def set_rounding_func(self, rounding_func: Callable[[float], int]) -> None:
-        """Set rounding function for float indices."""
-        self.rounding_func = rounding_func
+    def set_rounding_func(self, rounding_func: Callable[[float], int] | None) -> None:
+        """Set rounding function for float indices.
+
+        Args:
+            rounding_func: Function used to round float indices to integers.
+                If None, defaults to round_half_up to get same behavior as
+                math.round() in JS code.
+        """
+        if rounding_func is None:
+            self.rounding_func = self._round_half_up
+        else:
+            if not callable(rounding_func):
+                raise TypeError("Rounding function must be callable")
+            self.rounding_func = rounding_func
+
+    def set_boundary_behavior(self, boundary_behavior: BoundaryBehavior) -> None:
+        """Set how to handle out-of-bounds indices.
+
+        Args:
+            boundary_behavior: How to handle out-of-bounds indices.
+                Must be a BoundaryBehavior enum value.
+        """
+        if not isinstance(boundary_behavior, BoundaryBehavior):
+            raise TypeError("Boundary behavior must be a BoundaryBehavior enum value")
+        self.boundary_behavior = boundary_behavior
 
     def __getitem__(
         self,

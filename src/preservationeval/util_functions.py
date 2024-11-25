@@ -5,8 +5,17 @@ temperature, relative humidity, and dew point values, as well as calculating
 derived quantities such as equilibrium moisture content.
 """
 
+import math
+
 from .const import RH_MAX, RH_MIN, TEMP_MAX, TEMP_MIN
 from .types import RelativeHumidity, Temperature
+
+# Limits for Magnus formula (see calculate_dew_point)
+MAGNUS_MIN_TEMP = -40
+MAGNUS_MAX_TEMP = 50
+MAGNUS_MIN_RH = 1
+MAGNUS_MAX_RH = 100
+MAGNUS_ACCURACY = 0.3
 
 
 def validate_rh(rh: RelativeHumidity) -> None:
@@ -83,44 +92,60 @@ def to_celsius(x: Temperature, scale: str = "f") -> Temperature:
         raise ValueError(f"Unsupported scale '{scale}', must be 'f', 'c' or 'k'")
 
 
-def temp(rh: RelativeHumidity, td: Temperature) -> Temperature:
-    """Calculate temperature given relative humidity and dew point.
-
-    Args:
-        rh (float / int): Relative humidity (%)
-        td (float / int): Dew point temperature
-
-    Returns:
-        float: Calculated temperature
-    """
-    validate_rh(rh)
-    t_a: float = pow(rh / 100, 1 / 8)
-    return (td - (112 * t_a) + 112) / ((0.9 * t_a) + 0.1)
-
-
-def rh(t: Temperature, td: Temperature) -> RelativeHumidity:
-    """Calculate relative humidity given temperature and dew point.
-
-    Args:
-        t (float / int): Temperature
-        td (float / int): Dew point temperature
-
-    Returns:
-        RelativeHumidity: Calculated relative humidity (%)
-    """
-    return 100 * (pow((112 - (0.1 * t) + td) / (112 + (0.9 * t)), 8))
-
-
-def dp(t: Temperature, rh: RelativeHumidity) -> Temperature:
+def calculate_dew_point(
+    temp_celsius: Temperature, rel_humidity: RelativeHumidity
+) -> Temperature:
     """Calculate dew point given temperature and relative humidity.
 
+    Calculate dew point using August-Roche-Magnus approximation.
+
     Args:
-        t (float / int): Temperature
-        rh (float / int): Relative humidity (%)
+        temp_celsius (float): Temperature in Celsius.
+        rel_humidity (float): Relative humidity (0-100).
 
     Returns:
-        Temperature: Calculated dew point temperature
+        float: Dew point temperature in Celsius, rounded to 1 decimal place.
+
+    Accuracy:
+        Maximum error typically less than ±0.3°C within valid ranges.
+        Particularly accurate in mid-range temperatures.
+
+    Limitations:
+        Valid temperature range: -40°C to +50°C.
+        Valid relative humidity range: 1% to 100%.
+        Accuracy decreases:
+            - At temperatures below -40°C or above 50°C
+            - At very low relative humidity (<5%)
+
+    Notes:
+        Uses August-Roche-Magnus formula: Td = (b * alpha) / (a - alpha)
+        where alpha = (aT / (b + T)) + ln(RH/100)
+        with constants a = 17.625, b = 243.04
+
+        This version is recommended by the World Meteorological Organization
+        and is considered more accurate than the simple Magnus formula
+        for mid-range temperatures.
     """
-    validate_rh(rh)
-    t_a: float = pow(rh / 100, 1 / 8)
-    return ((112 + (0.9 * t)) * t_a + (0.1 * t)) - 112
+    if not MAGNUS_MIN_TEMP <= temp_celsius <= MAGNUS_MAX_TEMP:
+        raise ValueError(
+            f"Temperature must be between {MAGNUS_MIN_TEMP}°C and {MAGNUS_MAX_TEMP}°C"
+        )
+    if not MAGNUS_MIN_RH <= rel_humidity <= MAGNUS_MAX_RH:
+        raise ValueError(
+            f"Relative humidity must be between {MAGNUS_MIN_RH}% and {MAGNUS_MAX_RH}%"
+        )
+
+    # August-Roche-Magnus formula constants
+    a = 17.625
+    b = 243.04
+
+    # Convert relative humidity to decimal
+    rel_humidity = rel_humidity / 100
+
+    # Calculate alpha using Magnus formula
+    alpha = ((a * temp_celsius) / (b + temp_celsius)) + math.log(rel_humidity)
+
+    # Calculate dew point
+    dew_point = (b * alpha) / (a - alpha)
+
+    return round(dew_point, 1)

@@ -11,6 +11,8 @@ Main functions:
     emc(): Calculate Equilibrium Moisture Content
     mold(): Calculate Mold Risk Factor
     rate_*(): Evaluate environmental ratings
+
+    TODO: Improve this docstring to explain the complete content of __all__.
 """
 
 from .core_functions import emc, mold, pi
@@ -32,31 +34,31 @@ from .types import (
     Temperature,
     TemperatureError,
 )
+from .util_functions import calculate_dew_point, to_celsius, validate_rh, validate_temp
 
 __all__ = [
-    # Evaluation functions
     "EnvironmentalRating",
     "HumidityError",
     "IndexRangeError",
     "MoistureContent",
     "MoldRisk",
-    # Exceptions
     "PreservationError",
     "PreservationIndex",
     "RelativeHumidity",
-    # Types
     "Temperature",
     "TemperatureError",
-    # Version
     "__version__",
+    "calculate_dew_point",
     "emc",
     "mold",
-    # Core functions
     "pi",
     "rate_mechanical_damage",
     "rate_metal_corrosion",
     "rate_mold_growth",
     "rate_natural_aging",
+    "to_celsius",
+    "validate_rh",
+    "validate_temp",
 ]
 
 try:

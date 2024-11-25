@@ -53,28 +53,24 @@ from .lookuptable import (
 )
 
 __all__ = [
-    # Core table implementation
-    "LookupTable",
     "BoundaryBehavior",
-    "TableIndex",
-    # Specific table types
-    "PITable",
     "EMCTable",
-    "MoldTable",
-    # Exceptions
-    "PreservationError",
-    "IndexRangeError",
-    "TemperatureError",
     "HumidityError",
-    # Domain specific types
-    "Temperature",
-    "RelativeHumidity",
-    "PreservationIndex",
-    "MoldRisk",
+    "IndexRangeError",
+    "LookupTable",
     "MoistureContent",
+    "MoldRisk",
+    "MoldTable",
+    "PITable",
+    "PreservationError",
+    "PreservationIndex",
+    "RelativeHumidity",
+    "TableIndex",
+    "Temperature",
+    "TemperatureError",
 ]
 
 try:
     from preservationeval._version import version as __version__
 except ImportError:
-    __version__ = "unknown"
+    __version__ = "0.0.0"

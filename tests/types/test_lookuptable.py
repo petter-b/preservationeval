@@ -169,34 +169,67 @@ class TestBoundaryBehavior:
         expected_value = clamp_table[expected_indices]
         assert value == expected_value
 
+    @pytest.mark.parametrize(
+        "indices,expected_indices",
+        [
+            ((TEMP_MIN - 1, 50), (TEMP_MIN, 50)),  # Clamp temp below
+            ((TEMP_MAX + 1, 50), (TEMP_MAX, 50)),  # Clamp temp above
+            ((20, RH_MIN - 1), (20, RH_MIN)),  # Clamp RH below
+            ((20, RH_MAX + 1), (20, RH_MAX)),  # Clamp RH above
+        ],
+    )
+    def test_clamp_and_log_behavior(
+        self,
+        clamp_table: LookupTable[int],
+        indices: TableIndex,
+        expected_indices: TableIndex,
+    ) -> None:
+        """Test CLAMP boundary behavior."""
+        clamp_table.set_boundary_behavior(BoundaryBehavior.CLAMP | BoundaryBehavior.LOG)
+        value = clamp_table[indices]
+        expected_value = clamp_table[expected_indices]
+        assert value == expected_value
+        # TODO: Add check of log output
+
+    def test_faulty_bb_input(self, int_table: LookupTable[int]) -> None:
+        """Test faulty input to set_boundary_behavior."""
+        with pytest.raises(TypeError):
+            int_table.set_boundary_behavior("this input is not ok")  # type: ignore
+
 
 @pytest.mark.unit
 class TestRounding:
     """Test rounding behavior."""
 
     @pytest.mark.parametrize(
-        "value,expected",
+        "value,expected1,expected2",
         [
-            (1.4, 1),  # Round down
-            (1.5, 2),  # Round up at .5
-            (1.6, 2),  # Round up
-            (-1.4, -1),  # Negative round down
-            (-1.5, -1),  # Negative round up at .5
-            (-1.6, -2),  # Negative round up
+            (2.5, 3, 2),
+            (1.4, 1, 1),  # Round down
+            (1.5, 2, 2),  # Round up at .5
+            (1.6, 2, 2),  # Round up
+            (-1.4, -1, -1),  # Negative round down
+            (-1.5, -1, -2),
+            (-1.6, -2, -2),  # Negative round up
         ],
     )
-    def test_round_half_up(
-        self, int_table: LookupTable[int], value: float, expected: int
+    def test_rounding_builtin(
+        self, int_table: LookupTable[int], value: float, expected1: int, expected2: int
     ) -> None:
-        """Test round half up function."""
-        assert int_table._round_half_up(value) == expected
+        """Test rounding function."""
+        assert int_table.rounding_func(value) == expected1
+        int_table.set_rounding_func(round)
+        assert int_table.rounding_func(value) == expected2
+        int_table.set_rounding_func(None)
+        assert int_table.rounding_func(value) == expected1
 
-    def test_custom_rounding(self, int_test_data: NDArray[integer[Any]]) -> None:
+    def test_truncation_rounding(self, int_test_data: NDArray[integer[Any]]) -> None:
         """Test custom rounding function."""
-        table = LookupTable[int](
-            int_test_data,
-            TEMP_MIN,
-            RH_MIN,
-            rounding_func=lambda x: int(x),  # Simple truncation
-        )
+        table = LookupTable[int](int_test_data, TEMP_MIN, RH_MIN)
+        table.set_rounding_func(lambda x: int(x))  # Simple truncation
         assert table[(1.8, 50.0)] == table[(1.0, 50.0)]
+
+    def test_faulty_bb_input(self, int_table: LookupTable[int]) -> None:
+        """Test faulty input to set_rounding_func."""
+        with pytest.raises(TypeError):
+            int_table.set_rounding_func("this input is not ok")  # type: ignore

@@ -1,6 +1,6 @@
 # preservationeval
 
-[![PyPI](https://img.shields.io/pypi/v/preservationeval?style=flat&color=blue&label=pypi&logo=pypi&cacheSeconds=3600)](https://pypi.org/project/preservationeval/)
+[![PyPI](https://img.shields.io/pypi/v/preservationeval?style=flat&color=blue&label=pypi&logo=pypi)](https://pypi.org/project/preservationeval/)
 [![Python](https://img.shields.io/pypi/pyversions/preservationeval?style=flat&color=blue&logo=python)](https://pypi.org/project/preservationeval/)
 [![CI](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/ci.yml?style=flat&label=CI&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/codecov/c/github/petter-b/preservationeval?style=flat&color=brightgreen&label=coverage&logo=codecov)](https://codecov.io/gh/petter-b/preservationeval)
