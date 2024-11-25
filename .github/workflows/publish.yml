@@ -1,14 +1,22 @@
-name: Publish to PyPI
+name: Create Release and Publish to PyPI
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*.*.*"  # This pattern matches semantic versioning tags like v1.0.0
+
+permissions:
+  contents: write
+
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Create GitHub Release
+      uses: ghalactic/github-release-from-tag@v5
 
     - name: Set up Python
       uses: actions/setup-python@v4
