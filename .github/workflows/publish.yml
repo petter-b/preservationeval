@@ -17,6 +17,9 @@ jobs:
     
     - name: Create GitHub Release
       uses: ghalactic/github-release-from-tag@v5
+      with:
+        prerelease: false
+        draft: false
 
     - name: Set up Python
       uses: actions/setup-python@v4
