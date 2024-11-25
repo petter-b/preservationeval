@@ -5,7 +5,7 @@ authors = [{ name = "Petter Blomberg", email = "petter.blomberg@gmail.com" }]
 maintainers = [
     { name = "Petter Blomberg", email = "petter.blomberg@gmail.com" },
 ]
-description = "A Python implenentation of the calculations and evaluations done by the Dew Point Calculator found at https://www.dpcalc.org/."
+description = "A Python implementation of the calculations and evaluations done by the Dew Point Calculator found at https://www.dpcalc.org/."
 requires-python = ">=3.11"
 keywords = ["preservation", "climate", "numpy"]
 classifiers = [

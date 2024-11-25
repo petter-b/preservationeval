@@ -6,13 +6,10 @@
 [![Coverage](https://img.shields.io/codecov/c/github/petter-b/preservationeval?style=flat&color=brightgreen&label=coverage&logo=codecov)](https://codecov.io/gh/petter-b/preservationeval)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat&logo=opensourceinitiative&logoColor=white)](https://opensource.org/licenses/MIT)
 
-A Python implenentation of the calculations and evaluations done by the Dew Point Calculator found at https://www.dpcalc.org/.
+A Python implementation of the calculations and evaluations done by the Dew Point Calculator found at https://www.dpcalc.org/.
 
 ## Details
-The preservation evaluation code was taken from the [Dew point calulator](http://www.dpcalc.org) created by the Image Permanence Institute. For details of the calculations see:
- - http://www.dpcalc.org/howtouse_step2.php
- - http://www.dpcalc.org/dp.js
-
+The preservation evaluation is inspired by the [Dew point calulator](http://www.dpcalc.org) created by the Image Permanence Institute. They are publishing their code http://www.dpcalc.org/dp.js and most of the work in this project has been spent on figuring out how to install this package without redistributing the core lookup tables. These tables are downloaded from the Internet and converted into a python module during installation of the package.
 
 ## Installation
 
@@ -41,7 +38,8 @@ print(f"Mold Risk: {mold_risk}")
 
 ### Interpreting Restults
 
-TBD
+For details of how to use, see:
+ - http://www.dpcalc.org/howtouse_step2.php
 
 ## Development
 
@@ -88,7 +86,7 @@ pytest --cov
 [![CodeQL](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/codeql.yml?style=flat&label=codeql&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/codeql.yml)
 
 #### Validation Testing
-The package includes a validation framework that compares our Python implementation
+The package includes a validation framework that compares the Python implementation
 against the original JavaScript implementation from dpcalc.org.
 
 ##### Requirements
@@ -133,7 +131,7 @@ pytest tests/test_validation.py --force-update
 
 ## Development Notes
 
-This project was developed with assistance from Claude AI (Anthropic) and to some extent GitHub Copilot. All code has been validated and tested for accuracy.
+This project was developed with assistance from Claude AI (Anthropic) and to some extent Codeium and GitHub Copilot. All code has been validated and tested for accuracy.
 
 ## License
 
