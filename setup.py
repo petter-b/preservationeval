@@ -59,7 +59,7 @@ class CustomDistribution(Distribution):
         sys.path.insert(0, str(src_path))
 
         try:
-            from preservationeval._version import version as file_version # noca
+            from preservationeval._version import version as file_version  # noca
         except ImportError:
             file_version = "unknown"
 
@@ -79,7 +79,7 @@ class CustomDistribution(Distribution):
         sys.path.insert(0, str(src_path))
 
         try:
-            from preservationeval._version import version # noca
+            from preservationeval._version import version  # noca
 
             return str(version)
         except ImportError:
@@ -100,7 +100,9 @@ class CustomBuildPy(build_py):
 
         try:
             if not self.dry_run:
-                from preservationeval.install.generate_tables import generate_tables # noca
+                from preservationeval.install.generate_tables import (
+                    generate_tables,  # noca
+                )
 
                 generate_tables()
         except Exception as e:
