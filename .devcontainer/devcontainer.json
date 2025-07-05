@@ -1,11 +1,19 @@
 {
   // A more robust image for development than the bare 'ubuntu:latest'.
-  // This image includes git, sudo, a non-root user, and other essentials.
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
 
   "features": {
+    // **FIX:** Add this feature to ensure a non-root user is created correctly.
+    // This is the standard way to set up users, sudo, and basic utilities.
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installSudo": true,
+      "configureSudo": true,
+      "username": "vscode",
+      "userUid": "automatic",
+      "userGid": "automatic"
+    },
+    
     // This feature is essential for running 'act'.
-    // It installs the Docker CLI and starts the Docker daemon inside your Codespace.
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
 
@@ -13,11 +21,7 @@
   // We use it here to install curl and then use curl to install act.
   "postCreateCommand": "sudo apt-get update && sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash",
 
-  // Forward the Docker socket. This is required by the docker-in-docker feature.
-  "runArgs": ["--init"],
-  "mounts": ["source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"],
-
-  // Optional: Configure VS Code settings for the Codespace.
+  // Optional but recommended: Configure VS Code settings for the Codespace.
   "customizations": {
     "vscode": {
       "settings": {},
@@ -27,6 +31,6 @@
     }
   },
 
-  // Run as the default 'vscode' user, not root.
-  "remoteUser": "codespace"
+  // Run as the 'vscode' user, which is now guaranteed to exist by the common-utils feature.
+  "remoteUser": "vscode"
 }
