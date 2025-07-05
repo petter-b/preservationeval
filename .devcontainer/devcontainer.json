@@ -1,27 +1,31 @@
 {
-  // A more robust image for development than the bare 'ubuntu:latest'.
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
 
   "features": {
-    // **FIX:** Add this feature to ensure a non-root user is created correctly.
-    // This is the standard way to set up users, sudo, and basic utilities.
+    // --- BASE UTILITIES ---
+    // Ensures a non-root user ('vscode') is created with sudo access.
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installSudo": true,
-      "configureSudo": true,
-      "username": "vscode",
-      "userUid": "automatic",
-      "userGid": "automatic"
+      "configureSudo": true
     },
     
-    // This feature is essential for running 'act'.
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    // --- DEV-TOOLS (Match these to your CI workflow) ---
+    // Installs Python 3. Change the version to match your needs.
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    },
+    // Installs Node.js. This feature automatically includes npm.
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    },
+
+    // --- CI/CD DEBUGGING TOOLS ---
+    // Installs Docker, which is required by 'act' to run jobs.
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    // Installs 'act' using a community feature. This correctly handles the PATH.
+    "ghcr.io/devcontainers-contrib/features/act:1": {}
   },
 
-  // 'postCreateCommand' runs after the container is created.
-  // We use it here to install curl and then use curl to install act.
-  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash",
-
-  // Optional but recommended: Configure VS Code settings for the Codespace.
   "customizations": {
     "vscode": {
       "settings": {},
@@ -31,6 +35,5 @@
     }
   },
 
-  // Run as the 'vscode' user, which is now guaranteed to exist by the common-utils feature.
   "remoteUser": "vscode"
 }
