@@ -3,14 +3,11 @@
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
 
   "features": {
-    // --- BASE UTILITIES ---
-    // This correctly sets up a non-root user named 'vscode' with sudo access.
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installSudo": true,
       "configureSudo": true
     },
 
-    // --- DEV-TOOLS (Installed via reliable, official features) ---
     "ghcr.io/devcontainers/features/python:1": {
       "version": "3.13"
     },
@@ -41,9 +38,7 @@
         }
       }
     }
-  }
+  },
 
-  // --- REMOTE USER ---
-  // It's best practice to use the user created by the common-utils feature, which is 'vscode'.
   "remoteUser": "vscode"
 }
