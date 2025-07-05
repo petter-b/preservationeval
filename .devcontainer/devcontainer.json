@@ -1,0 +1,32 @@
+{
+  // A more robust image for development than the bare 'ubuntu:latest'.
+  // This image includes git, sudo, a non-root user, and other essentials.
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+
+  "features": {
+    // This feature is essential for running 'act'.
+    // It installs the Docker CLI and starts the Docker daemon inside your Codespace.
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+
+  // 'postCreateCommand' runs after the container is created.
+  // We use it here to install curl and then use curl to install act.
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y curl && curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash",
+
+  // Forward the Docker socket. This is required by the docker-in-docker feature.
+  "runArgs": ["--init"],
+  "mounts": ["source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"],
+
+  // Optional: Configure VS Code settings for the Codespace.
+  "customizations": {
+    "vscode": {
+      "settings": {},
+      "extensions": [
+        "github.vscode-github-actions"
+      ]
+    }
+  },
+
+  // Run as the default 'vscode' user, not root.
+  "remoteUser": "codespace"
+}
