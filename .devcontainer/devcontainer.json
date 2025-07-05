@@ -3,7 +3,7 @@
 
   "features": {
     // --- BASE UTILITIES ---
-    // This correctly sets up the 'vscode' user with sudo access.
+    // This correctly sets up a non-root user named 'vscode' with sudo access.
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installSudo": true,
       "configureSudo": true
@@ -15,9 +15,16 @@
     },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "20"
-    },
-
+    }
   },
 
-  "remoteUser": "codespace"
+  // --- SYSTEM DEPENDENCIES FOR VALIDATION TESTS ---
+  // This command runs after the container is built.
+  // It installs the system libraries required by the 'canvas' npm package,
+  // which is a dependency for the project's JavaScript-based validation tests.
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev",
+
+  // --- REMOTE USER ---
+  // It's best practice to use the user created by the common-utils feature, which is 'vscode'.
+  "remoteUser": "vscode"
 }
