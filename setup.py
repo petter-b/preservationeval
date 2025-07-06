@@ -41,7 +41,7 @@ class CustomDistribution(Distribution):
 
         try:
             output = (
-                subprocess.check_output(  # noqa: S603
+                subprocess.check_output(
                     ["git", "describe", "--tags", "--long"],  # noqa: S607
                     cwd=curr_path,
                 )
@@ -59,7 +59,9 @@ class CustomDistribution(Distribution):
         sys.path.insert(0, str(src_path))
 
         try:
-            from preservationeval._version import version as file_version  # noca
+            from preservationeval._version import (
+                version as file_version,
+            )
         except ImportError:
             file_version = "unknown"
 
@@ -79,7 +81,7 @@ class CustomDistribution(Distribution):
         sys.path.insert(0, str(src_path))
 
         try:
-            from preservationeval._version import version  # noca
+            from preservationeval._version import version
 
             return str(version)
         except ImportError:
@@ -101,7 +103,7 @@ class CustomBuildPy(build_py):
         try:
             if not self.dry_run:
                 from preservationeval.install.generate_tables import (
-                    generate_tables,  # noca
+                    generate_tables,
                 )
 
                 generate_tables()

@@ -15,7 +15,7 @@ JS_CONFIG = {
     "package_json": {
         "name": "dp-test",
         "version": "1.0.0",
-        "dependencies": {"puppeteer": "^19.0.0"},
+        "dependencies": {"puppeteer": "^24.0.0"},
     },
 }
 

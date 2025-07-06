@@ -35,7 +35,11 @@ NODE_SCRIPT_TEMPLATE = """
 const puppeteer = require('puppeteer');
 
 async function runTests() {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+        headless: 'shell',
+        executablePath: puppeteer.executablePath(),
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        });
     const page = await browser.newPage();
 
     await page.goto('file://' + process.argv[2]);
