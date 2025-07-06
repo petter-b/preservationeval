@@ -57,7 +57,7 @@ def test_specific_cases(test_data_dir: Path) -> None:
     for case, expected in zip(cases, results, strict=False):
         t, rh = case
         assert pi(t, rh) == expected["pi"], f"PI mismatch at T={t}, RH={rh}"
-        assert (
-            abs(emc(t, rh) - expected["emc"]) < ComparisonConfig.emc_tolerance
-        ), f"EMC mismatch at T={t}, RH={rh}"
+        assert abs(emc(t, rh) - expected["emc"]) < ComparisonConfig.emc_tolerance, (
+            f"EMC mismatch at T={t}, RH={rh}"
+        )
         assert mold(t, rh) == expected["mold"], f"Mold mismatch at T={t}, RH={rh}"

@@ -51,14 +51,14 @@ class TestValidatedCases:
 
         # Test EMC calculation (with small tolerance for floating point)
         calculated_emc = emc(temp, rh)
-        assert (
-            abs(calculated_emc - expected_emc) < ComparisonConfig.emc_tolerance
-        ), f"EMC mismatch at T={temp}, RH={rh}"
+        assert abs(calculated_emc - expected_emc) < ComparisonConfig.emc_tolerance, (
+            f"EMC mismatch at T={temp}, RH={rh}"
+        )
 
         # Test mold calculation
-        assert (
-            mold(temp, rh) == expected_mold
-        ), f"Mold risk mismatch at T={temp}, RH={rh}"
+        assert mold(temp, rh) == expected_mold, (
+            f"Mold risk mismatch at T={temp}, RH={rh}"
+        )
 
 
 @pytest.mark.unit
