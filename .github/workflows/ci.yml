@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-stable
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.13", "3.12", "3.11"]
@@ -25,7 +25,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '20'
+        node-version: '22'
 
     - name: Install package
       run: |
