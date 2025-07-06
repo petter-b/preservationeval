@@ -49,6 +49,6 @@ __all__ = [
     "LogConfig",
     "LogLevel",
     "StructuredLogger",
-    "setup_logging",
     "get_default_config",
+    "setup_logging",
 ]

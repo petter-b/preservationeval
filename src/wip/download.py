@@ -6,6 +6,7 @@ dpcalc.org, used during installation and validation testing.
 # tools/common/download.py
 from .paths import get_dp_js_path
 
+
 def download_dp_js(url: str = DP_JS_URL, force: bool = False) -> str:
     """Download and optionally cache the dpcalc JavaScript code.
     

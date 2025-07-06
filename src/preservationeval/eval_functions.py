@@ -19,10 +19,10 @@ from .types import (
 
 __all__ = [
     "EnvironmentalRating",
-    "rate_mold_growth",
-    "rate_natural_aging",
     "rate_mechanical_damage",
     "rate_metal_corrosion",
+    "rate_mold_growth",
+    "rate_natural_aging",
 ]
 
 

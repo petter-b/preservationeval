@@ -33,12 +33,11 @@ class BoundaryBehavior(Flag):
     LOG = auto()
 
 
-class LookupTable(Generic[T]):
+class LookupTable(Generic[T]):  # noqa: UP046
     """Array with shifted index ranges, backed by numpy.array.
 
-    Args:
-        data: 2D numpy array
-        temp_min: Minimum temperature
+    rray
+    dat : 2D         temp_min: Minimum temperature
         rh_min: Minimum relative humidity
         boundary: How to handle out-of-bounds indices
         rounding_func: Function used to round float indices to integers. Defaults

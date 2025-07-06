@@ -176,7 +176,7 @@ exclude_lines = [
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py313"
 extend-exclude = [
     "tables.py",
     "version.py",
@@ -205,8 +205,17 @@ select = [
 ignore = ["D203", "D213"]
 explicit-preview-rules = true
 
+# Allow autofix for all enabled rules.
+fixable = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID", "TRY", "UP", "YTT"]
+unfixable = []
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.ruff.lint.isort]
+# This section configures the integrated isort tool within Ruff.
+# It ensures import sorting is consistent.
+known-first-party = ["preservationeval"] # Tell isort your own package name
 
 # Optional: Add these sections if you need them
 [tool.ruff.format]

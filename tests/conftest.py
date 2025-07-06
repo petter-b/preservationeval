@@ -87,7 +87,7 @@ def pytest_configure(config: Config) -> None:
 
 
 @pytest.fixture(autouse=True)
-def _verify_test_data_dir(test_data_dir: Path) -> Generator[None, None, None]:
+def _verify_test_data_dir(test_data_dir: Path) -> Generator[None]:
     """Ensure test data directory exists.
 
     Args:

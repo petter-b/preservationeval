@@ -59,7 +59,7 @@ class CustomDistribution(Distribution):
         sys.path.insert(0, str(src_path))
 
         try:
-            from preservationeval._version import (
+            from preservationeval._version import (  # noqa: PLC0415
                 version as file_version,
             )
         except ImportError:
@@ -81,7 +81,7 @@ class CustomDistribution(Distribution):
         sys.path.insert(0, str(src_path))
 
         try:
-            from preservationeval._version import version
+            from preservationeval._version import version  # noqa: PLC0415
 
             return str(version)
         except ImportError:
@@ -102,7 +102,7 @@ class CustomBuildPy(build_py):
 
         try:
             if not self.dry_run:
-                from preservationeval.install.generate_tables import (
+                from preservationeval.install.generate_tables import (  # noqa: PLC0415
                     generate_tables,
                 )
 

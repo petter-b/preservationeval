@@ -6,7 +6,6 @@
     "python.testing.pytestArgs": [
         "tests"
     ],
-    "python.analysis.typeCheckingMode": "basic",
     "python.analysis.diagnosticMode": "workspace",
     "python.languageServer": "Pylance",
     "[python]": {
@@ -18,6 +17,9 @@
         "editor.codeActionsOnSave": {
             "source.fixAll": "explicit",
             "source.organizeImports": "explicit"
-        }
+        },
+    "ruff.path": [
+        "${workspaceFolder}/.venv/bin/ruff"
+    ]
     }
 }
