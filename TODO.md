@@ -12,6 +12,7 @@
   - [X] Try to move all of main package up one level.
   - [ ] Consider merging const and config modules.
 - [X] Improve test coverage.
+- Improve docstrings and update based on https://s3.cad.rit.edu/ipi-assets/publications/understanding_preservation_metrics.pdf
 
 ## Features
 - [ ] Add hash to tables.py

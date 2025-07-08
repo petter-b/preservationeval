@@ -75,7 +75,7 @@ emc_decimals = 1
 testpaths = ["tests"]
 python_files = "test_*.py"
 norecursedirs = ["__pycache__", "tests/wip"]
-addopts = "--mypy --cov=preservationeval --cov-report=xml --cov-report=html"
+addopts = "--mypy  --strict-markers --cov=preservationeval --cov-report=xml --cov-report=html"
 pythonpath = [".", "tests"]
 markers = [
     "unit: marks unit tests that test individual components in isolation",
@@ -107,10 +107,12 @@ exclude = [
     "tables\\.py",
     "version\\.py",
     "generated/.*",
-    "tests/wip/.*",
+    "src/wip",
+    "tests/wip",
     "build/.*",
     "dist/.*",
 ]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["numpy.*", "requests.*"]
@@ -127,6 +129,7 @@ exclude = [
     "version\\.py",
     "generated/.*",
     "tests/wip/.*",
+    "src/wip/.*",
     "build/.*",
     "dist/.*",
 ]
@@ -138,6 +141,9 @@ strictListInference = true
 strictDictionaryInference = true
 strictParameterNoneValue = true
 strictSetInference = true
+venvPath = "."
+venv = ".venv"
+useLibraryCodeForTypes = true
 
 [tool.black]
 line-length = 88

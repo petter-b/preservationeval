@@ -9,7 +9,7 @@
 A Python implementation of the calculations and evaluations done by the Dew Point Calculator found at https://www.dpcalc.org/.
 
 ## Details
-The preservation evaluation is inspired by the [Dew point calulator](http://www.dpcalc.org) created by the Image Permanence Institute. They are publishing their code http://www.dpcalc.org/dp.js and most of the work in this project has been spent on figuring out how to install this package without redistributing the core lookup tables. These tables are downloaded from the Internet and converted into a python module during installation of the package.
+The preservation evaluation is inspired by the [Dew point calulator](http://www.dpcalc.org) created by the Image Permanence Institute. They are publishing their code http://www.dpcalc.org/dp.js and most of the work in this project has been spent on figuring out how to install this package without redistributing the lookup tables from the original Javascript code. These tables are downloaded from the Internet and converted into a python module during installation of the package.
 
 ## Installation
 
@@ -40,6 +40,8 @@ print(f"Mold Risk: {mold_risk}")
 
 For details of how to use, see:
  - http://www.dpcalc.org/howtouse_step2.php
+ - https://www.eclimatenotebook.com/fundamentals_nl.php
+ - https://s3.cad.rit.edu/ipi-assets/publications/understanding_preservation_metrics.pdf
 
 ## Development
 

@@ -5,7 +5,7 @@ This module manages the table generation and installation process by:
 2. Triggering table generation from JavaScript source
 3. Installing generated tables into the package
 
-The installer can be run during package installation or manually if 
+The installer can be run during package installation or manually if
 tables need to be regenerated.
 """
 
