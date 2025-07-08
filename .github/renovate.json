@@ -1,9 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base",
+    "config:recommended",
     ":dependencyDashboard",
-    ":semanticCommits"
+    ":semanticCommits",
+    ":separateMajorReleases",
+    "docker:enableMajor"
   ],
   "packageRules": [
     {
@@ -29,12 +31,30 @@
     {
       "description": "Group lint dependencies",
       "matchPackagePatterns": [
-        "^black",
         "^ruff",
         "^pre-commit"
       ],
       "groupName": "lint dependencies",
       "groupSlug": "lint-deps"
+    },
+    {
+      "description": "GitHub Actions - group and auto-merge patch updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "automerge": true,
+      "matchUpdateTypes": ["patch", "pin", "digest"]
+    },
+    {
+      "description": "GitHub Actions - separate major updates for review",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
+      "description": "Pre-commit hooks - auto-update",
+      "matchFileNames": [".pre-commit-config.yaml"],
+      "automerge": true,
+      "schedule": ["at any time"]
     },
     {
       "description": "Auto merge minor and patch updates",
@@ -47,13 +67,49 @@
   "prConcurrentLimit": 3,
   "labels": ["dependencies"],
   "assignees": ["petter-b"],
-  "pip_requirements": {
-    "fileMatch": [
-      "pyproject\\.toml$"
-    ]
-  },
-  "rangeStrategy": "pin",
+  "rangeStrategy": "bump",
   "commitMessagePrefix": "chore(deps):",
   "prCreation": "not-pending",
-  "dependencyDashboard": true
+  "dependencyDashboard": true,
+  "customManagers": [
+    {
+      "description": "Update Python versions in GitHub Actions matrix",
+      "customType": "regex",
+      "fileMatch": ["^\\.github/workflows/.+\\.ya?ml$"],
+      "matchStrings": [
+        "python-version:\\s*\\[(?<currentValue>[^\\]]+)\\]"
+      ],
+      "depNameTemplate": "python",
+      "datasourceTemplate": "github-releases",
+      "packageNameTemplate": "python/cpython",
+      "extractVersionTemplate": "^v(?<version>.*)$",
+      "automerge": false
+    },
+    {
+      "description": "Update Python version in devcontainer",
+      "customType": "regex",
+      "fileMatch": ["^\\.devcontainer/.+\\.json$"],
+      "matchStrings": [
+        "\"version\":\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "python",
+      "datasourceTemplate": "github-releases",
+      "packageNameTemplate": "python/cpython",
+      "extractVersionTemplate": "^v(?<version>.*)$",
+      "automerge": false
+    },
+    {
+      "description": "Update Node.js versions",
+      "customType": "regex",
+      "fileMatch": ["^\\.github/workflows/.+\\.ya?ml$", "^\\.devcontainer/.+\\.json$"],
+      "matchStrings": [
+        "node-version:\\s*['\"]?(?<currentValue>[^'\"\\s]+)['\"]?",
+        "\"version\":\\s*\"(?<currentValue>\\d+)\""
+      ],
+      "depNameTemplate": "node",
+      "datasourceTemplate": "node-version",
+      "automerge": true,
+      "matchUpdateTypes": ["patch", "minor"]
+    }
+  ]
 }
