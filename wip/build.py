@@ -12,9 +12,9 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     try:
         from preservationeval.install.generate_tables import generate_tables
 
-        logger.debug("\033[94m" "Generating preservation lookup tables..." "\033[0m")
+        logger.debug("\033[94mGenerating preservation lookup tables...\033[0m")
         generate_tables()
-        logger.debug("\033[92m" "Table generation completed successfully" "\033[0m")
+        logger.debug("\033[92mTable generation completed successfully\033[0m")
 
         # Call the original build_wheel function
         return __build_wheel(wheel_directory, config_settings, metadata_directory)

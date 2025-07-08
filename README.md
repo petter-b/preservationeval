@@ -9,6 +9,7 @@
 A Python implementation of the calculations and evaluations done by the Dew Point Calculator found at https://www.dpcalc.org/.
 
 ## Details
+
 The preservation evaluation is inspired by the [Dew point calulator](http://www.dpcalc.org) created by the Image Permanence Institute. They are publishing their code http://www.dpcalc.org/dp.js and most of the work in this project has been spent on figuring out how to install this package without redistributing the lookup tables from the original Javascript code. These tables are downloaded from the Internet and converted into a python module during installation of the package.
 
 ## Installation
@@ -20,6 +21,7 @@ pip install preservationeval
 ## Usage
 
 ### Basic Examples
+
 ```python
 from preservationeval import pi, emc, mold
 
@@ -39,9 +41,10 @@ print(f"Mold Risk: {mold_risk}")
 ### Interpreting Restults
 
 For details of how to use, see:
- - http://www.dpcalc.org/howtouse_step2.php
- - https://www.eclimatenotebook.com/fundamentals_nl.php
- - https://s3.cad.rit.edu/ipi-assets/publications/understanding_preservation_metrics.pdf
+
+- http://www.dpcalc.org/howtouse_step2.php
+- https://www.eclimatenotebook.com/fundamentals_nl.php
+- https://s3.cad.rit.edu/ipi-assets/publications/understanding_preservation_metrics.pdf
 
 ## Development
 
@@ -61,16 +64,17 @@ pip install -e ".[dev]"
 ```
 
 ### Development Tools
-- `black`: Code formatting
-- `ruff`: Linting and code quality
+
+- `ruff`: Code formatting, linting and code quality
 - `mypy`: Static type checking
 - `pytest`: Testing framework
 - `pre-commit`: Git hooks for code quality
 
 ### Common Tasks
+
 ```bash
 # Format code
-black .
+ruff format .
 
 # Run linter
 ruff check .
@@ -83,26 +87,32 @@ pytest --cov
 ```
 
 ### Testing
+
 [![CI](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/ci.yml?style=flat&label=ci&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/codecov/c/github/petter-b/preservationeval?style=flat&color=brightgreen&label=coverage&logo=codecov)](https://codecov.io/gh/petter-b/preservationeval)
 [![CodeQL](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/codeql.yml?style=flat&label=codeql&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/codeql.yml)
 
 #### Validation Testing
+
 The package includes a validation framework that compares the Python implementation
 against the original JavaScript implementation from dpcalc.org.
 
 ##### Requirements
+
 - Node.js and npm must be installed ([download](https://nodejs.org/))
 - Python test dependencies: `pip install -e ".[test]"`
 
 ##### Test Data Setup
+
 The test framework automatically:
+
 - Creates the `tests/data` directory (git-ignored)
 - Downloads the JavaScript reference implementation
 - Generates and saves test cases
 - Caches results for future test runs
 
 You can manually trigger this setup:
+
 ```bash
 # Download JavaScript reference implementation
 # This happens automatically when running tests, or manually:
@@ -122,11 +132,13 @@ pytest tests/test_validation.py --force-update
 ```
 
 ### Code Quality
-[![Black](https://img.shields.io/badge/code%20style-black-000000?style=flat&logo=python&logoColor=white)](https://github.com/psf/black)
+
+[![Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Ruff](https://img.shields.io/badge/ruff-recommended-red?style=flat&logo=ruff&logoColor=white)](https://github.com/astral-sh/ruff)
 [![Mypy](https://img.shields.io/badge/mypy-typed-blue?style=flat&logo=python&logoColor=white)](http://mypy-lang.org/)
 
 ### Automation
+
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?style=flat&logo=pre-commit&logoColor=white)](https://github.com/petter-b/preservationeval/blob/main/.pre-commit-config.yaml)
 [![Pre-commit CI](https://img.shields.io/badge/pre--commit%20ci-passing-brightgreen?style=flat&logo=pre-commit&logoColor=white)](https://results.pre-commit.ci/latest/github/petter-b/preservationeval/main)
 [![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen?style=flat&logo=renovatebot&logoColor=white)](https://renovatebot.com)

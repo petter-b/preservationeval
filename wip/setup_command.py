@@ -32,7 +32,7 @@ class GenerateTables(Command):
 
             logger = setup_logging(__name__)
 
-            logger.info("\033[94m" "Installing tables..." "\033[0m")
+            logger.info("\033[94mInstalling tables...\033[0m")
 
             install_tables()
 

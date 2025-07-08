@@ -34,11 +34,9 @@ class CustomBuildPy(build_py):
 
             logger = setup_logging(__name__, env=Environment.INSTALL)
 
-            logger.debug(
-                "\033[94m" "Generating preservation lookup tables..." "\033[0m"
-            )
+            logger.debug("\033[94mGenerating preservation lookup tables...\033[0m")
             generate_tables()
-            logger.debug("\033[92m" "Table generation completed successfully" "\033[0m")
+            logger.debug("\033[92mTable generation completed successfully\033[0m")
 
         except Exception as e:
             logger.error(f"Failed to generate tables: {e}")
