@@ -37,9 +37,8 @@ test = [
 ]
 # Code quality tools
 lint = [
-    "mypy>=1.13.0",             # Match your pre-commit hook version
-    "black>=24.10.0",           # Match your pre-commit hook version
-    "ruff>=0.7.3",              # Match your pre-commit hook version
+    "mypy>=1.16.1",             # Match your pre-commit hook version
+    "ruff>=0.12.2",              # Match your pre-commit hook version
     "pre-commit>=3.6.0",        # Current version
     "types-setuptools>=69.0.0", # Needed for mypy
 ]
@@ -145,23 +144,6 @@ venvPath = "."
 venv = ".venv"
 useLibraryCodeForTypes = true
 
-[tool.black]
-line-length = 88
-target-version = ['py311']
-include = '\.pyi?$'
-extend-exclude = '''
-(
-    # Generated files
-    tables\.py
-    | version\.py
-    | generated/.*
-
-    # Test/build artifacts
-    | tests/wip/.*
-    | build/.*
-    | dist/.*
-)
-'''
 
 [tool.coverage.run]
 source = ["src"]
@@ -182,7 +164,7 @@ exclude_lines = [
 
 [tool.ruff]
 line-length = 88
-target-version = "py313"
+target-version = "py311"
 extend-exclude = [
     "tables.py",
     "version.py",
