@@ -8,20 +8,10 @@
     ],
     "python.analysis.diagnosticMode": "workspace",
     "python.languageServer": "Pylance",
-    "python.analysis.typeCheckingMode": "basic",
     "python.analysis.autoImportCompletions": true,
-    "python.analysis.diagnosticSeverityOverrides": {
-        "reportMissingTypeStubs": "none"
-    },
     "mypy-type-checker.importStrategy": "fromEnvironment",
     "mypy-type-checker.args": [
         "--config-file=pyproject.toml"
-    ],
-    "ruff.lint.args": [
-        "--config=pyproject.toml"
-    ],
-    "ruff.format.args": [
-        "--config=pyproject.toml"
     ],
     "ruff.importStrategy": "fromEnvironment",
     "ruff.organizeImports": true,

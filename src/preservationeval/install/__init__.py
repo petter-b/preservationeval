@@ -19,4 +19,4 @@ __all__ = ["__version__", "generate_tables"]
 try:
     from preservationeval._version import version as __version__
 except ImportError:
-    __version__ = "0.0.0"
+    __version__ = "unknown"

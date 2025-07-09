@@ -33,7 +33,7 @@ class BoundaryBehavior(Flag):
     LOG = auto()
 
 
-class LookupTable(Generic[T]):
+class LookupTable(Generic[T]):  # noqa: UP046
     """Array with shifted index ranges, backed by numpy.array.
 
     rray

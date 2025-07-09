@@ -38,7 +38,7 @@ test = [
 # Code quality tools
 lint = [
     "mypy>=1.16.1",             # Match your pre-commit hook version
-    "ruff>=0.12.2",              # Match your pre-commit hook version
+    "ruff>=0.12.2",             # Match your pre-commit hook version
     "pre-commit>=3.6.0",        # Current version
     "types-setuptools>=69.0.0", # Needed for mypy
 ]
@@ -84,7 +84,8 @@ markers = [
 ]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
+namespace_packages = true
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -134,7 +135,7 @@ exclude = [
 ]
 typeCheckingMode = "basic"
 reportMissingTypeStubs = false
-pythonVersion = "3.11"
+pythonVersion = "3.13"
 pythonPlatform = "All"
 strictListInference = true
 strictDictionaryInference = true
@@ -164,7 +165,7 @@ exclude_lines = [
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py313"
 extend-exclude = [
     "tables.py",
     "version.py",
@@ -192,10 +193,6 @@ select = [
 ]
 ignore = ["D203", "D213"]
 explicit-preview-rules = true
-
-# Allow autofix for all enabled rules.
-fixable = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID", "TRY", "UP", "YTT"]
-unfixable = []
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
