@@ -35,3 +35,15 @@ def test_create_safe_path_not_exists(tmp_path: Path) -> None:
     safe_path = create_safe_path(tmp_path, "non_existent_dir")
     assert safe_path == tmp_path / "non_existent_dir"
     assert not safe_path.exists()
+
+
+@pytest.mark.unit
+def test_create_safe_path_outside_base(tmp_path: Path) -> None:
+    # Create a temporary directory
+    dir_path = tmp_path / "existing_dir"
+    dir_path.mkdir()
+    path_part = str(tmp_path) + "/other_dir"
+
+    # Try to create a safe path
+    with pytest.raises(ValueError):
+        create_safe_path(dir_path, path_part, exist_ok=True)

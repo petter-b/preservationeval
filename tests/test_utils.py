@@ -1,4 +1,4 @@
-"""Unit tests for preservationeval.utils module.
+"""Unit tests for preservationeval.util_functions module.
 
 Functions:
     test_validate_rh: Test the validate_rh function by checking that it does not raise
@@ -73,6 +73,8 @@ def test_to_celsius() -> None:
         to_celsius(-500, "f")  # Should raise a ValueError
     with pytest.raises(ValueError):
         to_celsius(-500, "k")  # Should raise a ValueError
+    with pytest.raises(ValueError):
+        to_celsius(-274, "c")  # Should raise a ValueError
 
     # Test invalid scale values
     with pytest.raises(ValueError):

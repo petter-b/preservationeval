@@ -1,5 +1,6 @@
 """Test module for preservationeval.utils.logging."""
 
+import logging
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,8 @@ from preservationeval.utils.logging import (
     Environment,
     LogConfig,
     LogLevel,
+    StructuredLogger,
+    get_default_config,
     setup_logging,
 )
 
@@ -115,3 +118,43 @@ class TestGetLogFilepath:
         assert log_config.get_log_file_path() == Path(
             "/path/to/log/dir/custom_log_file.log"
         )
+
+
+@pytest.mark.unit
+class TestStructuredLogger:
+    """Tests for the StructuredLogger class."""
+
+    def test_log_structured_valid_input(self) -> None:
+        """Test logging with valid input."""
+        logger = StructuredLogger("test_logger")
+        logger._log_structured(logging.INFO, "Test message", {"key": "value"})
+
+    def test_log_structured_extra_kwargs(self) -> None:
+        """Test logging with extra kwargs."""
+        logger = StructuredLogger("test_logger")
+        logger._log_structured(
+            logging.INFO, "Test message", {"key": "value"}, foo="bar"
+        )
+
+    def test_log_structured_with_valid_data(self) -> None:
+        """Test logging with valid data."""
+        logger = StructuredLogger("test_logger")
+        logger._log_structured(logging.INFO, "Test message", {"temp": 20, "rh": 50})
+
+
+@pytest.mark.unit
+def test_get_default_config_development() -> None:
+    default_config = get_default_config(Environment.DEVELOPMENT)
+    assert isinstance(default_config, LogConfig)
+
+
+@pytest.mark.unit
+def test_get_default_config_none() -> None:
+    default_config = get_default_config(None)
+    assert isinstance(default_config, LogConfig)
+
+
+@pytest.mark.unit
+def test_get_default_config_production() -> None:
+    default_config = get_default_config(Environment.PRODUCTION)
+    assert isinstance(default_config, LogConfig)

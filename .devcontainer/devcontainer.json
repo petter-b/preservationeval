@@ -9,42 +9,11 @@
     },
 
     "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.11"
+      "version": "3.13"
     },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "22"
     }
   },
-
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "charliermarsh.ruff",
-        "ms-python.mypy-type-checker",
-        "github.vscode-github-actions"
-      ],
-      "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "python.testing.pytestEnabled": true,
-        "python.testing.pytestArgs": ["tests"],
-        "python.analysis.typeCheckingMode": "basic",
-        "ruff.importStrategy": "fromEnvironment",
-        "ruff.organizeImports": true,
-        "ruff.fixAll": true,
-        "[python]": {
-          "editor.defaultFormatter": "charliermarsh.ruff",
-          "editor.formatOnSave": true,
-          "editor.rulers": [88],
-          "editor.codeActionsOnSave": {
-            "source.fixAll.ruff": "explicit",
-            "source.organizeImports.ruff": "explicit"
-          }
-        }
-      }
-    }
-  },
-
   "remoteUser": "vscode"
 }
