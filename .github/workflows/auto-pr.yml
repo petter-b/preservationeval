@@ -17,7 +17,7 @@ jobs:
 
       # For your pushes - create and auto-approve PR
       - name: Create Auto-approved PR (owner)
-        if: github.actor == 'petter-b'
+        if: github.actor != 'petter-b' && github.actor != 'pre-commit-ci[bot]'
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.AUTO_PR_TOKEN }}
