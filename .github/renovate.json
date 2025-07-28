@@ -1,10 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:best-practices",
-    ":semanticCommits",
-    ":separateMajorReleases",
-    "docker:enableMajor"
+    "config:best-practices"
   ],
   "packageRules": [
     {
@@ -60,55 +57,6 @@
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "automerge": true,
       "automergeType": "branch"
-    }
-  ],
-  "schedule": ["every weekend"],
-  "prConcurrentLimit": 3,
-  "labels": ["dependencies"],
-  "assignees": ["petter-b"],
-  "rangeStrategy": "bump",
-  "commitMessagePrefix": "chore(deps):",
-  "prCreation": "not-pending",
-  "dependencyDashboard": true,
-  "customManagers": [
-    {
-      "description": "Update Python versions in GitHub Actions matrix",
-      "customType": "regex",
-      "fileMatch": ["^\\.github/workflows/.+\\.ya?ml$"],
-      "matchStrings": [
-        "python-version:\\s*\\[(?<currentValue>[^\\]]+)\\]"
-      ],
-      "depNameTemplate": "python",
-      "datasourceTemplate": "github-releases",
-      "packageNameTemplate": "python/cpython",
-      "extractVersionTemplate": "^v(?<version>.*)$",
-      "automerge": false
-    },
-    {
-      "description": "Update Python version in devcontainer",
-      "customType": "regex",
-      "fileMatch": ["^\\.devcontainer/.+\\.json$"],
-      "matchStrings": [
-        "\"version\":\\s*\"(?<currentValue>[^\"]+)\""
-      ],
-      "depNameTemplate": "python",
-      "datasourceTemplate": "github-releases",
-      "packageNameTemplate": "python/cpython",
-      "extractVersionTemplate": "^v(?<version>.*)$",
-      "automerge": false
-    },
-    {
-      "description": "Update Node.js versions",
-      "customType": "regex",
-      "fileMatch": ["^\\.github/workflows/.+\\.ya?ml$", "^\\.devcontainer/.+\\.json$"],
-      "matchStrings": [
-        "node-version:\\s*['\"]?(?<currentValue>[^'\"\\s]+)['\"]?",
-        "\"version\":\\s*\"(?<currentValue>\\d+)\""
-      ],
-      "depNameTemplate": "node",
-      "datasourceTemplate": "node-version",
-      "automerge": true,
-      "matchUpdateTypes": ["patch", "minor"]
     }
   ]
 }
