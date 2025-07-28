@@ -65,7 +65,7 @@ repos:
           - id: check-symlinks
           - id: detect-private-key
           - id: requirements-txt-fixer
-            #id:no-commit-to-branch
+          - id: no-commit-to-branch
             args: [--branch, main]
 
     - repo: https://github.com/astral-sh/ruff-pre-commit
