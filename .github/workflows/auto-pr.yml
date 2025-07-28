@@ -20,7 +20,7 @@ jobs:
         if: github.actor != 'petter-b' && github.actor != 'pre-commit-ci[bot]'
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.AUTO_PR_TOKEN }}
+          token: ${{ github.token }}
           title: 'Auto PR: ${{ github.ref_name }}'
           body: |
             Automated pull request from repository owner @petter-b
@@ -38,14 +38,14 @@ jobs:
           gh pr review $PR_NUMBER --approve
           gh pr merge $PR_NUMBER --auto --merge
         env:
-          GH_TOKEN: ${{ secrets.AUTO_PR_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
 
       # For outside contributors - just create PR
       - name: Create Standard PR (contributors)
         if: github.actor != 'petter-b'
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
           title: 'PR: ${{ github.ref_name }}'
           body: |
             Pull request from contributor @${{ github.actor }}
