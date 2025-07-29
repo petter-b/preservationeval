@@ -4,56 +4,28 @@ on:
     branches-ignore:
       - main
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   auto-pr:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.1.7
         with:
           fetch-depth: 0
 
-      # For your pushes - create and auto-approve PR
-      - name: Create Auto-approved PR (owner)
-        if: github.actor != 'petter-b' && github.actor != 'pre-commit-ci[bot]'
+      - name: Create PR
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ github.token }}
-          title: 'Auto PR: ${{ github.ref_name }}'
+          title: 'Auto PR: ${{ github.ref_name }} from @${{ github.actor }}'
           body: |
-            Automated pull request from repository owner @petter-b
+            Automated pull request from ${{ github.actor }}
             Branch: ${{ github.ref_name }}
 
             Changes in this PR:
             ${{ github.event.head_commit.message }}
-          branch: ${{ github.ref_name }}
-          base: main
-
-      - name: Enable Auto-merge (owner)
-        if: github.actor == 'petter-b'
-        run: |
-          PR_NUMBER=$(gh pr list --state open --base main --head ${{ github.ref_name }} --json number -q '.[0].number')
-          gh pr review $PR_NUMBER --approve
-          gh pr merge $PR_NUMBER --auto --merge
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      # For outside contributors - just create PR
-      - name: Create Standard PR (contributors)
-        if: github.actor != 'petter-b'
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ github.token }}
-          title: 'PR: ${{ github.ref_name }}'
-          body: |
-            Pull request from contributor @${{ github.actor }}
-            Branch: ${{ github.ref_name }}
-
-            Changes in this PR:
-            ${{ github.event.head_commit.message }}
-
-            Note: This PR requires review from repository owner.
           branch: ${{ github.ref_name }}
           base: main
