@@ -7,8 +7,5 @@
     ":automergeRequireAllStatusChecks",
     ":enableVulnerabilityAlerts",
     ":ignoreUnstable"
-  ],  
-  "pre-commit": {
-    "enabled": true
-  }
+  ]  
 }
