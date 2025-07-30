@@ -1,6 +1,10 @@
 name: Update pre-commit hooks
 
 on:
+  # Every evening at 21:00 UTC
+  schedule:
+    - cron: "0 21 * * *"
+  # On demand
   workflow_dispatch:
 
 jobs:
@@ -15,6 +19,9 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
 
       - uses: browniebroke/pre-commit-autoupdate-action@665262289b7c2c6adb2705b38f710b9be6e434d5
+        env:
+          # Checked out main so need to skip no-commit-to-branch 
+          SKIP: no-commit-to-branch
 
       - uses: peter-evans/create-pull-request@07cbaebb4bfc9c5d7db426ea5a5f585df29dd0a0
         if: always()
