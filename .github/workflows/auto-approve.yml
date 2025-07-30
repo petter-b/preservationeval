@@ -1,0 +1,24 @@
+name: Auto-approve own PRs
+
+permissions:
+  contents: read  # Default to minimal permissions
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled]  # Test on every PR change + releases on label
+  workflow_dispatch: # Allows manual runs
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.login == github.repository_owner
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Auto-approve PR
+        run: gh pr review ${{ github.event.pull_request.number }} --approve
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
