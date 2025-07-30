@@ -17,7 +17,7 @@ jobs:
 
       - uses: browniebroke/pre-commit-autoupdate-action@665262289b7c2c6adb2705b38f710b9be6e434d5
 
-      - uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
+      - uses: peter-evans/create-pull-request@07cbaebb4bfc9c5d7db426ea5a5f585df29dd0a0
         if: always()
         with:
           token: ${{ github.token }}
