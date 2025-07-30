@@ -1,8 +1,5 @@
 name: Auto-approve own PRs
 
-permissions:
-  contents: read  # Default to minimal permissions
-
 on:
   pull_request:
     branches: [ main ]

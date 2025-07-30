@@ -1,9 +1,9 @@
 name: Update pre-commit hooks
 
 on:
-  # Every evening at 21:00 UTC
+  # Every Friday at 21:00 UTC
   schedule:
-    - cron: "0 21 * * *"
+    - cron: "0 21 * * 5"
   # On demand
   workflow_dispatch:
 
