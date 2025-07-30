@@ -5,7 +5,7 @@ permissions:
 
 on:
   pull_request:
-    types: [opened, synchronize, labeled]  # Test on every PR change + releases on label
+    branches: [ main ]
   workflow_dispatch: # Allows manual runs
 
 jobs:
