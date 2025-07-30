@@ -1,5 +1,8 @@
 name: CI
 
+permissions:
+  contents: read  # Default to minimal permissions
+
 on:
   push:
     branches: [ main ]
