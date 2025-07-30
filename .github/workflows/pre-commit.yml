@@ -1,7 +1,4 @@
-name: Pre-commit auto-update
-
-permissions:
-  contents: read  # Default to minimal permissions
+name: Update pre-commit hooks
 
 on:
   # Every evening
@@ -15,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+      contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
