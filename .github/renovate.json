@@ -7,5 +7,56 @@
     ":automergeRequireAllStatusChecks",
     ":enableVulnerabilityAlerts",
     ":ignoreUnstable"
-  ]  
+  ],
+  "packageRules": [
+    {
+      "description": "Real runtime/production dependencies (minor/patch) from pyproject.toml",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin"
+      ],
+      "automerge": true,
+      "labels": ["release-patch"]
+    },
+    {
+      "description": "Real runtime/production dependencies (major) from pyproject.toml",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Group other Python dependenencies",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["devDependencies", "build"],
+      "groupName": "Update Python dev dependencies",
+      "automerge": true
+    },
+    {
+      "description": "Other runtime/production dependencies (minor/patch)",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin"
+      ],
+      "automerge": true,
+      "labels": ["release-patch"]
+    },
+    {
+      "description": "Other real runtime/production dependencies (major)",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    }
+  ]
 }
