@@ -8,6 +8,7 @@
     ":enableVulnerabilityAlerts",
     ":ignoreUnstable"
   ],
+  "minimumReleaseAge": "14 days",
   "packageRules": [
     {
       "description": "Real runtime/production dependencies (minor/patch) from pyproject.toml",
