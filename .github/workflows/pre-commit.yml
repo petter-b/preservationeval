@@ -23,7 +23,7 @@ jobs:
           # Checked out main so need to skip no-commit-to-branch 
           SKIP: no-commit-to-branch
 
-      - uses: peter-evans/create-pull-request@07cbaebb4bfc9c5d7db426ea5a5f585df29dd0a0
+      - uses: peter-evans/create-pull-request@1310d7dab503600742045e6fd4b84dda64352858
         if: always()
         with:
           token: ${{ github.token }}
