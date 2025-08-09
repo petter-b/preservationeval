@@ -33,13 +33,6 @@
       "automerge": false
     },
     {
-      "description": "Group other Python dependenencies",
-      "matchManagers": ["pep621"],
-      "matchDepTypes": ["devDependencies", "build"],
-      "groupName": "Update Python dev dependencies",
-      "automerge": true
-    },
-    {
       "description": "Other runtime/production dependencies (minor/patch)",
       "matchManagers": ["npm"],
       "matchUpdateTypes": [
@@ -58,6 +51,21 @@
       ],
       "dependencyDashboardApproval": true,
       "automerge": false
+    },
+    {
+      "description": "Group other dependenencies",
+      "matchManagers": [
+        "pep621",
+        "github-actions",
+        "devcontainer"
+      ],
+      "groupName": "Update other dependencies",
+      "automerge": true,
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin"
+      ]
     }
   ]
 }
