@@ -141,9 +141,11 @@ jobs:
             exit 1
           fi
           
-          # Get current version using git describe (mimicking setup.py logic)
-          CURRENT_VERSION=$(git describe --tags --long --match="v*" | cut -d- -f1-2 | sed 's/-0$//; s/-/-/' || echo "0.0.0")
-          if [[ ! "$CURRENT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+)?$ ]]; then
+          # Get the latest tag (vX.Y.Z), strip 'v' for numeric semver checks
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null | sed 's/^v//' || echo "0.0.0")
+          
+          # Validate version looks like X.Y.Z
+          if [[ ! "$CURRENT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Error: Invalid version format from git: $CURRENT_VERSION"
             exit 1
           fi
@@ -157,18 +159,18 @@ jobs:
         id: build_rc
         if: steps.release_type.outputs.release_type == 'release-candidate'
         run: |
-          # Get the base version from git (mimicking setup.py)
-          BASE_VERSION=$(git describe --tags --long --match="v*" | cut -d- -f1 || echo "0.0.0")
+          # Get the base version from the latest tag and strip leading 'v'
+          BASE_VERSION=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null | sed 's/^v//' || echo "0.0.0")
           
-          # Create a pre-release version, e.g., 1.2.3-rc.45
+          # Create a pre-release version, e.g., 1.2.3rc45 (PEP 440)
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             # For manual dispatch, use timestamp
             TIMESTAMP=$(date +%s)
-            RC_VERSION="${BASE_VERSION}-rc.${TIMESTAMP}"
+            RC_VERSION="${BASE_VERSION}rc${TIMESTAMP}"
           else
             # For PR labels, use PR number
             PR_NUMBER=${{ github.event.pull_request.number }}
-            RC_VERSION="${BASE_VERSION}-rc.${PR_NUMBER}"
+            RC_VERSION="${BASE_VERSION}rc${PR_NUMBER}"
           fi
           
           echo "Building Release Candidate version: ${RC_VERSION}"
@@ -207,8 +209,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Get current version from git describe
-          CURRENT_VERSION=$(git describe --tags --long --match="v*" | cut -d- -f1 || echo "0.0.0")
+          # Get current version from the latest tag and strip the leading 'v'
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null | sed 's/^v//' || echo "0.0.0")
           
           # Handle first release case
           LATEST_TAG=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null || echo "")
@@ -272,41 +274,21 @@ jobs:
           fi
           
           # Create and push tag (this will set the version via setup.py)
+          # Tag push will trigger publish.yml to build, test and publish
           git tag "v${NEW_VERSION}"
+          
+          # Use a Personal Access Token if provided to ensure downstream workflow triggers
+          if [[ -n "${{ secrets.RELEASE_PAT }}" ]]; then
+            git remote set-url origin "https://x-access-token:${{ secrets.RELEASE_PAT }}@github.com/${{ github.repository }}.git"
+          fi
           git push origin "v${NEW_VERSION}"
           
-          # Build the package now that tag exists (remove tables.py)
-          rm -f src/preservationeval/tables.py
-          python -m build
-          
-          # Verify tables.py removal
-          ! tar -tvf dist/*.tar.gz | grep '/tables.py'
-          
-          # Verify package
-          twine check dist/*
-          
-          # Publish to PyPI
-          twine upload dist/* --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}
-          
-          echo "🚀 Production release ${NEW_VERSION} published to PyPI successfully"
+          echo "🚀 Tag v${NEW_VERSION} pushed. Downstream publish.yml will handle release."
           echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
 
       # =================================================================
       # == Post-release notifications and updates
       # =================================================================
-      - name: Create release notes
-        if: |
-          steps.release_type.outputs.release_type == 'release-patch' || 
-          steps.release_type.outputs.release_type == 'release-minor' ||
-          steps.release_type.outputs.release_type == 'release-major'
-        run: |
-          NEW_VERSION="${{ steps.build_prod.outputs.new_version }}"
-          
-          # Create GitHub release
-          gh release create "v${NEW_VERSION}" \
-            --title "Release v${NEW_VERSION}" \
-            --notes "Automated release of preservationeval version ${NEW_VERSION}. See CHANGELOG.md for details." \
-            --latest
 
       - name: Summary
         run: |
@@ -322,10 +304,9 @@ jobs:
             NEW_VERSION="${{ steps.build_prod.outputs.new_version }}"
             echo "- **Type**: Production Release" >> $GITHUB_STEP_SUMMARY
             echo "- **Version**: \`${NEW_VERSION}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Published to**: PyPI" >> $GITHUB_STEP_SUMMARY
+            echo "- **Action**: Tag pushed → publish.yml will build, test and publish" >> $GITHUB_STEP_SUMMARY
             echo "- **Tag**: \`v${NEW_VERSION}\`" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
-
-          echo "✅ All tests passed and release completed successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All tests passed and release tagging completed successfully!" >> $GITHUB_STEP_SUMMARY
