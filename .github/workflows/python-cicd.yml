@@ -260,10 +260,15 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.release_type.outputs.release_type == 'release-patch' || steps.release_type.outputs.release_type == 'release-minor' || steps.release_type.outputs.release_type == 'release-major'
-        uses: ghalactic/github-release-from-tag@cebdacac0ccd08933b8e7f278f4123723ad978eb # v5
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         with:
-          prerelease: false
+          tag_name: v${{ steps.build_prod.outputs.new_version }}
+          release_name: Release v${{ steps.build_prod.outputs.new_version }}
+          body: Automated release of preservationeval version ${{ steps.build_prod.outputs.new_version }}. See CHANGELOG.md for details.
           draft: false
+          prerelease: false
 
       - name: Summary
         run: |
@@ -285,4 +290,5 @@ jobs:
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
+
           echo "✅ All tests passed and release completed successfully!" >> $GITHUB_STEP_SUMMARY
