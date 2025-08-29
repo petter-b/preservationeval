@@ -1,6 +1,8 @@
 name: Python Package CI/CD
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
     types: [opened, synchronize, labeled]  # Test on every PR change + releases on label
   workflow_dispatch: # Allows manual runs
@@ -20,8 +22,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    # Run tests on ALL PRs and manual dispatches
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    # Run tests on PRs, push to main, and manual dispatch
+    if: github.event_name == 'pull_request' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         python-version: ["3.13", "3.12", "3.11"]
@@ -73,9 +75,8 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    environment: production 
-    needs: test  # Only run release if tests pass
-    # This job only runs if one of the release labels is applied OR manual dispatch with release type
+    environment: production
+    needs: test
     if: |
       contains(github.event.label.name, 'release-candidate') ||
       contains(github.event.label.name, 'release-patch') ||
@@ -83,10 +84,9 @@ jobs:
       contains(github.event.label.name, 'release-major') ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.release_type != 'none')
 
-    # Grant permissions for committing, tagging, and publishing
     permissions:
-      contents: write # To commit version bumps and create tags
-      pull-requests: write # To merge PRs
+      contents: write
+      pull-requests: write
 
     env:
       GITHUB_TOKEN: ${{ github.token }}
@@ -95,16 +95,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
-          # Fetch all history to get previous tags for versioning
           fetch-depth: 0
-          token: ${{ github.token }} 
+          token: ${{ github.token }}
 
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.13"
 
-      - name: Set up Node.js  # Required for semver and validation
+      - name: Set up Node.js  # for semver
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
@@ -129,90 +128,70 @@ jobs:
 
       - name: Validate before release
         run: |
-          # Validate semver command availability
           if ! command -v npx &> /dev/null; then
             echo "Error: npx command not found"
             exit 1
           fi
-          
-          # Check if setup.py exists (since we're using it for dynamic version)
           if [[ ! -f "./setup.py" ]]; then
             echo "Error: setup.py not found"
             exit 1
           fi
-          
-          # Get current version using git describe (mimicking setup.py logic)
-          CURRENT_VERSION=$(git describe --tags --long --match="v*" | cut -d- -f1-2 | sed 's/-0$//; s/-/-/' || echo "0.0.0")
-          if [[ ! "$CURRENT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+)?$ ]]; then
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null | sed 's/^v//' || echo "0.0.0")
+          if [[ ! "$CURRENT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Error: Invalid version format from git: $CURRENT_VERSION"
             exit 1
           fi
-          
           echo "Validation passed. Current version: $CURRENT_VERSION"
 
-      # =================================================================
-      # == Release Candidate Logic
-      # =================================================================
-      - name: Build and Publish Release Candidate to Test PyPI
+      # =========================
+      # Release Candidate (TestPyPI)
+      # =========================
+      - name: Build and (optionally) Publish Release Candidate
         id: build_rc
         if: steps.release_type.outputs.release_type == 'release-candidate'
         run: |
-          # Get the base version from git (mimicking setup.py)
-          BASE_VERSION=$(git describe --tags --long --match="v*" | cut -d- -f1 || echo "0.0.0")
-          
-          # Create a pre-release version, e.g., 1.2.3-rc.45
+          BASE_VERSION=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null | sed 's/^v//' || echo "0.0.0")
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            # For manual dispatch, use timestamp
-            TIMESTAMP=$(date +%s)
-            RC_VERSION="${BASE_VERSION}-rc.${TIMESTAMP}"
+            RC_NUMBER=$(date +%s)
+            RC_VERSION="${BASE_VERSION}rc${RC_NUMBER}"
           else
-            # For PR labels, use PR number
             PR_NUMBER=${{ github.event.pull_request.number }}
-            RC_VERSION="${BASE_VERSION}-rc.${PR_NUMBER}"
+            RC_VERSION="${BASE_VERSION}rc${PR_NUMBER}"
           fi
-          
           echo "Building Release Candidate version: ${RC_VERSION}"
-          
-          # Temporarily set version in _version.py for build (mimicking setup.py)
+
           mkdir -p src/preservationeval
           echo "version = '${RC_VERSION}'" > src/preservationeval/_version.py
-          
-          # Build the package (remove tables.py as in original workflow)
+
           rm -f src/preservationeval/tables.py
           python -m build
-          
-          # Verify tables.py removal
+
           ! tar -tvf dist/*.tar.gz | grep '/tables.py'
-          
-          # Verify package
           twine check dist/*
-          
-          # Publish to Test PyPI
-          twine upload --repository testpypi dist/* --username __token__ --password ${{ secrets.TEST_PYPI_API_TOKEN }}
-          
-          # Clean up temporary _version.py
+
+          if [[ -n "${{ secrets.TEST_PYPI_API_TOKEN }}" ]]; then
+            twine upload --repository testpypi dist/* --username __token__ --password ${{ secrets.TEST_PYPI_API_TOKEN }}
+            echo "✅ RC ${RC_VERSION} uploaded to TestPyPI"
+          else
+            echo "TEST_PYPI_API_TOKEN not set; skipping TestPyPI upload"
+          fi
+
           rm src/preservationeval/_version.py
-          
-          echo "✅ Release candidate ${RC_VERSION} published to Test PyPI successfully"
           echo "rc_version=${RC_VERSION}" >> $GITHUB_OUTPUT
 
-      # =================================================================
-      # == Production Release Logic
-      # =================================================================
-      - name: Build and Publish Production Release to PyPI
+      # =========================
+      # Production Release (PyPI)
+      # =========================
+      - name: Build, Publish Production Release to PyPI, and Create GH Release
         id: build_prod
         if: steps.release_type.outputs.release_type == 'release-patch' || steps.release_type.outputs.release_type == 'release-minor' || steps.release_type.outputs.release_type == 'release-major'
         run: |
-          # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Get current version from git describe
-          CURRENT_VERSION=$(git describe --tags --long --match="v*" | cut -d- -f1 || echo "0.0.0")
-          
-          # Handle first release case
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null | sed 's/^v//' || echo "0.0.0")
           LATEST_TAG=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null || echo "")
-          
+
           if [[ -z "$LATEST_TAG" ]] && [[ "$CURRENT_VERSION" == "0.0.0" ]]; then
             echo "🎉 First release detected"
             if [[ "${{ steps.release_type.outputs.release_type }}" == "release-minor" ]]; then
@@ -223,7 +202,6 @@ jobs:
               NEW_VERSION="0.0.1"
             fi
           else
-            # Normal semver bump from current version
             echo "📈 Bumping existing version: $CURRENT_VERSION"
             if [[ "${{ steps.release_type.outputs.release_type }}" == "release-patch" ]]; then
               NEW_VERSION=$(npx semver -i patch $CURRENT_VERSION)
@@ -233,98 +211,78 @@ jobs:
               NEW_VERSION=$(npx semver -i major $CURRENT_VERSION)
             fi
           fi
-          
+
           echo "Version: ${CURRENT_VERSION} → ${NEW_VERSION}"
-          
-          # For production release, we create a tag with the new version
-          # No need to update files since setup.py will use the tag during build
-          
-          # Commit any pending changes if this is a PR (but version is tag-based)
+
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # Make sure we're on the PR branch properly
             git checkout ${{ github.head_ref }}
-            
-            # If there are changes (e.g., from dev), commit them
             git add .
             git commit -m "chore: Prepare for release ${NEW_VERSION}" || echo "No changes to commit"
-            
-            # Push the commit to the PR branch first
             git push origin ${{ github.head_ref }}
-            
-            # Try to merge the PR
             echo "Attempting to merge PR..."
             if ! gh pr merge ${{ github.event.pull_request.number }} --squash --delete-branch; then
-                echo "❌ Auto-merge failed. This usually means:"
-                echo "1. Auto-merge is not enabled in repository settings"
-                echo "2. Branch protection rules prevent auto-merge"
-                echo "3. The PR has conflicts or failed checks"
-                echo ""
-                echo "Please either:"
-                echo "- Enable auto-merge in Settings > General > Pull Requests"
-                echo "- Manually merge PR #${{ github.event.pull_request.number }}"
-                echo "- Re-run this workflow after manual merge"
+              echo "❌ Auto-merge failed. Please merge manually and re-run."
               exit 1
             fi
-            
-            # Now switch to main and pull the merged changes
             git checkout main
             git pull origin main
           fi
-          
-          # Create and push tag (this will set the version via setup.py)
+
+          # Create and push tag (used by setup.py for version)
           git tag "v${NEW_VERSION}"
           git push origin "v${NEW_VERSION}"
-          
-          # Build the package now that tag exists (remove tables.py)
+
+          # Build package
           rm -f src/preservationeval/tables.py
           python -m build
-          
-          # Verify tables.py removal
-          ! tar -tvf dist/*.tar.gz | grep '/tables.py'
-          
-          # Verify package
-          twine check dist/*
-          
-          # Publish to PyPI
-          twine upload dist/* --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}
-          
-          echo "🚀 Production release ${NEW_VERSION} published to PyPI successfully"
-          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
 
-      # =================================================================
-      # == Post-release notifications and updates
-      # =================================================================
-      - name: Create release notes
-        if: |
-          steps.release_type.outputs.release_type == 'release-patch' || 
-          steps.release_type.outputs.release_type == 'release-minor' ||
-          steps.release_type.outputs.release_type == 'release-major'
-        run: |
-          NEW_VERSION="${{ steps.build_prod.outputs.new_version }}"
-          
-          # Create GitHub release
-          gh release create "v${NEW_VERSION}" \
-            --title "Release v${NEW_VERSION}" \
-            --notes "Automated release of preservationeval version ${NEW_VERSION}. See CHANGELOG.md for details." \
-            --latest
+          # Verify contents and metadata
+          ! tar -tvf dist/*.tar.gz | grep '/tables.py'
+          twine check dist/*
+
+          # Test built artifact before uploading
+          python -m venv test_env
+          source test_env/bin/activate
+          python -c "import glob; print(glob.glob('dist/*.gz')[0]+'[test]')" | xargs pip install -v
+          pytest -v
+
+          # Upload to PyPI
+          TWINE_USERNAME=__token__ TWINE_PASSWORD=${{ secrets.PYPI_API_TOKEN }} twine upload dist/*.gz
+
+          # Verify from PyPI
+          sleep 60
+          pip uninstall -y preservationeval
+          pip install --no-cache-dir "preservationeval[test]"
+          pytest -v
+
+          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "🚀 Production release ${NEW_VERSION} published to PyPI successfully"
+
+      - name: Create GitHub Release
+        if: steps.release_type.outputs.release_type == 'release-patch' || steps.release_type.outputs.release_type == 'release-minor' || steps.release_type.outputs.release_type == 'release-major'
+        uses: ghalactic/github-release-from-tag@cebdacac0ccd08933b8e7f278f4123723ad978eb # v5
+        with:
+          prerelease: false
+          draft: false
 
       - name: Summary
         run: |
           echo "## 🎯 Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [[ "${{ steps.release_type.outputs.release_type }}" == "release-candidate" ]]; then
             RC_VERSION="${{ steps.build_rc.outputs.rc_version }}"
-            echo "- **Type**: Release Candidate" >> $GITHUB_STEP_SUMMARY
-            echo "- **Version**: \`${RC_VERSION}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Published to**: Test PyPI" >> $GITHUB_STEP_SUMMARY
+            echo "- Type: Release Candidate" >> $GITHUB_STEP_SUMMARY
+            echo "- Version: \`${RC_VERSION}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Published to: TestPyPI (if token present)" >> $GITHUB_STEP_SUMMARY
           else
             NEW_VERSION="${{ steps.build_prod.outputs.new_version }}"
-            echo "- **Type**: Production Release" >> $GITHUB_STEP_SUMMARY
-            echo "- **Version**: \`${NEW_VERSION}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Published to**: PyPI" >> $GITHUB_STEP_SUMMARY
-            echo "- **Tag**: \`v${NEW_VERSION}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Type: Production Release" >> $GITHUB_STEP_SUMMARY
+            echo "- Version: \`${NEW_VERSION}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Tag: \`v${NEW_VERSION}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Published to: PyPI" >> $GITHUB_STEP_SUMMARY
+            echo "- GitHub Release: created" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ All tests passed and release completed successfully!" >> $GITHUB_STEP_SUMMARY
