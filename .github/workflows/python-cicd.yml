@@ -271,7 +271,7 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.release_type.outputs.release_type == 'release-patch' || steps.release_type.outputs.release_type == 'release-minor' || steps.release_type.outputs.release_type == 'release-major'
-        uses: actions/create-release@v1
+        uses: actions/create-release@0cb9c9b65d5d1901c1f53e5e66eaf4afd303e70e # v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
