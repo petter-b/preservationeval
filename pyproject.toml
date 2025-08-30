@@ -16,7 +16,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
 ]
-license = {file = "LICENSE"}
+license = "MIT"
 dependencies = ["numpy>=2.3.2,<2.4.0", "requests>=2.31.0,<3.0.0"]
 readme = "README.md"
 
@@ -63,6 +63,9 @@ version = { attr = "preservationeval.__version__" }
 [tool.setuptools.packages.find]
 where = ["src"]
 exclude = ["wip", "wip/*", "*/wip", "*/wip/*", "*tables.py", "*test*"]
+
+[tool.setuptools]
+license-files = ["LICENCE"]
 
 [tool.preservationeval]
 package_dir = "src/preservationeval"
