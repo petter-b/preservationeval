@@ -68,4 +68,3 @@ CI and releases (reference)
 
 Notes for future agents
 - Tests relying on the JS reference require network access to download dp.js and a working Node.js + npm for puppeteer execution. The standard unit/integration suite runs fine without Node.
-
