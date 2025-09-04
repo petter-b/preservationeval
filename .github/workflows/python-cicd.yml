@@ -139,10 +139,16 @@ jobs:
             exit 1
           fi
           # Get the latest tag (vX.Y.Z), strip 'v' for numeric semver checks
-          CURRENT_VERSION=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null | sed 's/^v//' || echo "0.0.0")
+          LATEST_TAG=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null || echo "")
+          if [[ -n "$LATEST_TAG" ]]; then
+            CURRENT_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
+          else
+            CURRENT_VERSION="0.0.0"
+            echo "No existing tags found, using initial version: $CURRENT_VERSION"
+          fi
           # Validate version looks like X.Y.Z
           if [[ ! "$CURRENT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Error: Invalid version format from git: $CURRENT_VERSION"
+            echo "Error: Invalid version format: $CURRENT_VERSION"
             exit 1
           fi
           echo "Validation passed. Current version: $CURRENT_VERSION"
@@ -155,7 +161,12 @@ jobs:
         if: steps.release_type.outputs.release_type == 'release-candidate'
         run: |
           # Get the base version from the latest tag and strip leading 'v'
-          BASE_VERSION=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null | sed 's/^v//' || echo "0.0.0")
+          LATEST_TAG=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null || echo "")
+          if [[ -n "$LATEST_TAG" ]]; then
+            BASE_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
+          else
+            BASE_VERSION="0.0.0"
+          fi
           # Create a pre-release version, e.g., 1.2.3rc45 (PEP 440)
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             RC_NUMBER=$(date +%s)
@@ -195,10 +206,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          CURRENT_VERSION=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null | sed 's/^v//' || echo "0.0.0")
           LATEST_TAG=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null || echo "")
+          if [[ -n "$LATEST_TAG" ]]; then
+            CURRENT_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
+          else
+            CURRENT_VERSION="0.0.0"
+          fi
 
-          if [[ -z "$LATEST_TAG" ]] && [[ "$CURRENT_VERSION" == "0.0.0" ]]; then
+          if [[ -z "$LATEST_TAG" ]]; then
             echo "🎉 First release detected"
             if [[ "${{ steps.release_type.outputs.release_type }}" == "release-minor" ]]; then
               NEW_VERSION="0.1.0"
