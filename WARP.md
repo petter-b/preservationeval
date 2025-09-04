@@ -66,5 +66,27 @@ CI and releases (reference)
   - Production Release: version bumped from latest tag, builds, uploads to PyPI, verifies install, and creates a GitHub Release
 - CodeQL and a scheduled pre-commit autoupdate workflow are present.
 
+Branch management and releases
+- Main branch is protected: all changes must go through pull requests
+- Use squash merge for feature branches (per project preference)
+- Pre-commit hooks include no-commit-to-branch protection for main
+- To merge: create PR, get approval, use `gh pr merge --squash --delete-branch`
+- Version validation workflow prevents invalid releases in CI
+
+Troubleshooting common issues
+- Pre-commit hook path issues: If hook points to wrong interpreter (e.g., devcontainer path):
+  1. Ensure .venv exists: `python3 -m venv .venv`
+  2. Install dev dependencies: `pip install -e ".[dev]"`
+  3. Reinstall hooks: `pre-commit install -f`
+  4. Verify: `head -n 6 .git/hooks/pre-commit` should show correct .venv path
+- Pre-commit failing on main branch: Use `--no-verify` only for legitimate squash merges
+- Hook validation: Run `pre-commit run --from-ref origin/main --to-ref HEAD` before PR
+
 Notes for future agents
 - Tests relying on the JS reference require network access to download dp.js and a working Node.js + npm for puppeteer execution. The standard unit/integration suite runs fine without Node.
+- When making assumptions, validate with proper tests to prove correctness
+
+Continuous learning and improvement
+Always keep this and other more specific WARP.md as well as global Rules updated. As soon as a new pattern or practice is established, it should be added to the relevant WARP.md file and/or to Rules. Note also the "Template and updates" section that is very important also for WARP.md files.
+
+When committing changes, make sure that relevant documentation (md-files) are kept updated and accurate.
