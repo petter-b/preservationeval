@@ -2,6 +2,10 @@
 
 This file provides guidance to WARP (warp.dev) when working with code in this repository.
 
+Continuous learning and improvement
+- Always keep this WARP.md (and any subdirectory WARP.md files), other Markdown files as well as Global Rules updated. As soon as a new pattern or practice is established, add it to the relevant document and/or to Rules. Review templates/ and docs/ periodically to keep guidance and templates aligned.
+- Connesouly review the documentation to make sure it does not grow out of hand. Make sure to not just add new items but also remove items which are not needed anymore and/or consolidate similar information. Make sure that the documentation is clear and easy to understand and structured to allow easy navigation.
+
 Project overview
 - A typed Python package that re-implements the Image Permanence Institute’s dew point calculator (dpcalc.org) and related preservation metrics (PI, EMC, mold risk). Lookup tables are fetched from dpcalc.org and converted to a Python module during build/install.
 
