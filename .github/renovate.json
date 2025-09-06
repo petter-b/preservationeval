@@ -9,6 +9,8 @@
     ":ignoreUnstable"
   ],
   "minimumReleaseAge": "14 days",
+  "timezone": "Europe/Stockholm",
+  "schedule": ["* 13-17 * * 5"],
   "packageRules": [
     {
       "description": "Real runtime/production dependencies (minor/patch) from pyproject.toml",
