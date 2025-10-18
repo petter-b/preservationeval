@@ -24,7 +24,7 @@ jobs:
           SKIP: no-commit-to-branch
 
 
-      - uses: peter-evans/create-pull-request@18e469570b1cf0dfc11d60ec121099f8ff3e617a
+      - uses: peter-evans/create-pull-request@46cdba753c74545733b821043d64bd6925fc4da9
         if: always()
         with:
           token: ${{ github.token }}
