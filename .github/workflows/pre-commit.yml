@@ -23,15 +23,6 @@ jobs:
           # Checked out main so need to skip no-commit-to-branch 
           SKIP: no-commit-to-branch
 
-      # Run pre-commit to apply any auto-fixable issues after updates
-      - name: Run pre-commit after update
-        run: |
-          # Apply auto-fixes if possible, but don't fail the workflow
-          # if manual fixes are needed
-          export SKIP=no-commit-to-branch
-          pre-commit run --all-files || true
-        env:
-          SKIP: no-commit-to-branch
 
       - uses: peter-evans/create-pull-request@18e469570b1cf0dfc11d60ec121099f8ff3e617a
         if: always()

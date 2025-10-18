@@ -85,6 +85,11 @@ Troubleshooting common issues
   4. Verify: `head -n 6 .git/hooks/pre-commit` should show correct .venv path
 - Pre-commit failing on main branch: Use `--no-verify` only for legitimate squash merges
 - Hook validation: Run `pre-commit run --from-ref origin/main --to-ref HEAD` before PR
+- Pre-commit auto-update workflow failures:
+  - Common cause: Hook updates introduce new linting rules that flag existing code
+  - The workflow includes a post-update step to apply auto-fixes, but manual fixes may still be needed
+  - If workflow fails: check logs for specific linting errors, fix manually, and commit
+  - To test workflow: `gh workflow run pre-commit.yml` then check with `gh run list --workflow pre-commit.yml --limit 3`
 
 Notes for future agents
 - Tests relying on the JS reference require network access to download dp.js and a working Node.js + npm for puppeteer execution. The standard unit/integration suite runs fine without Node.
