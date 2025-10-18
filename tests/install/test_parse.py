@@ -224,7 +224,7 @@ class TestValueValidation:
 @pytest.mark.slow
 def test_large_table_performance(mock_url_response: None) -> None:
     """Test performance with full-size tables."""
-    pi_table, emc_table, mold_table = fetch_and_validate_tables(
+    pi_table, emc_table, _mold_table = fetch_and_validate_tables(
         "http://www.dpcalc.org/dp.js"
     )
 
