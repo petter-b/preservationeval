@@ -20,6 +20,13 @@ pre-commit install
 
 Requires Python ≥3.11 (tested on 3.11, 3.12, 3.13).
 
+## MCP Server Configuration
+
+The `.mcp.json` file configures Model Context Protocol servers for Claude Code:
+- **context7**: Provides up-to-date library documentation and API references
+- **exa**: Web search and code search capabilities for finding relevant context
+- **serena**: IDE assistance and project context management
+
 ## Common Commands
 
 ### Lint and Format
@@ -69,11 +76,18 @@ python -m scripts.generate_tables  # Manual table regeneration
 - **domain_types.py**: Annotated types - `Temperature`, `RelativeHumidity`, `PreservationIndex`, `MoldRisk`, `MoistureContent`
 - **exceptions.py**: Hierarchy - `PreservationError` → `IndexRangeError` → `TemperatureError`/`HumidityError`
 
+### Utility Modules (`src/preservationeval/utils/`)
+- **safepath.py**: Safe path handling utilities for file operations
+- **logging/**: Structured logging configuration and utilities
+
 ### Build-Time Table Generation (`src/preservationeval/install/`)
 Pipeline: Download dp.js → parse JS arrays → construct typed LookupTables → emit `tables.py`
-- **generate_tables.py**: Main entry point
-- **parse.py**: JavaScript parsing logic with regex
-- **export.py**: Emit the tables.py module
+- **generate_tables.py**: Main entry point for table generation
+- **parse.py**: JavaScript parsing logic with regex patterns
+- **export.py**: Emit the tables.py module with formatted code
+- **paths.py**: Path handling for build process (cache, data directories)
+- **patterns.py**: Regex patterns for parsing JavaScript lookup tables
+- **const.py**: Build-time constants (URLs, file names, table metadata)
 
 ### Test Framework (`tests/`)
 - **conftest.py**: Pytest fixtures (validation data, test directories)
