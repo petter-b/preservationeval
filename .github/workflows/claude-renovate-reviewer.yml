@@ -1,0 +1,53 @@
+name: Claude Renovate PR Reviewer
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+jobs:
+  claude-renovate-review:
+    # Only run for Renovate PRs
+    if: github.event.pull_request.user.login == 'renovate[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Renovate Review
+        id: claude-review
+        uses: anthropics/claude-code-action@6337623ebba10cf8c8214b507993f8062fd4ccfb # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            You are reviewing a Renovate dependency update PR.
+
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            PR TITLE: ${{ github.event.pull_request.title }}
+
+            Please review this dependency update PR:
+
+            1. Use `gh pr diff ${{ github.event.pull_request.number }}` to see the changes
+            2. Use `gh pr view ${{ github.event.pull_request.number }}` to see the PR details
+
+            Review criteria for dependency updates:
+            - Verify the changes are only to dependency files (pyproject.toml, package.json, lock files, GitHub Actions versions, etc.)
+            - Check if there are any suspicious or unexpected changes beyond dependency versions
+            - For major version updates, note any potential breaking changes mentioned in the PR body
+
+            After your review:
+            - If the changes look safe (standard dependency updates), APPROVE the PR using:
+              `gh pr review ${{ github.event.pull_request.number }} --approve --body "Reviewed by Claude: Dependency update looks safe."`
+            - If you find any concerns, leave a comment explaining the issue instead of approving:
+              `gh pr comment ${{ github.event.pull_request.number }} --body "Your concerns here"`
+
+          claude_args: '--allowed-tools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr review:*),Bash(gh pr comment:*)"'
