@@ -1,5 +1,7 @@
 # Task Completion Checklist
 
+> See `AGENTS.md` for command reference. This checklist is for task verification.
+
 When completing a task, ensure the following steps are done:
 
 ## 1. Code Quality
