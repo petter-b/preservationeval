@@ -1,0 +1,64 @@
+name: Claude Automated PR Reviewer
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+jobs:
+  claude-bot-review:
+    # Run only for PRs created by known trusted bots
+    if: |
+      github.event.pull_request.user.login == 'renovate[bot]' ||
+      github.event.pull_request.user.login == 'dependabot[bot]' ||
+      github.event.pull_request.user.login == 'github-actions[bot]' ||
+      github.event.pull_request.user.login == 'pre-commit-ci[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: claude-bot-review-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Automated PR Review
+        id: claude-review
+        uses: anthropics/claude-code-action@6337623ebba10cf8c8214b507993f8062fd4ccfb # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            You are reviewing an automated PR created by a bot.
+
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            PR TITLE: ${{ github.event.pull_request.title }}
+            PR AUTHOR: ${{ github.event.pull_request.user.login }}
+
+            Please review this automated PR:
+
+            1. Use `gh pr diff ${{ github.event.pull_request.number }}` to see the changes
+            2. Use `gh pr view ${{ github.event.pull_request.number }}` to see the PR details
+
+            Review criteria:
+            - For dependency updates (Renovate, Dependabot): verify changes are only to dependency/lock files
+            - For GitHub Actions bot PRs: verify changes are appropriate for the automation's purpose
+            - Check for any suspicious or unexpected changes
+            - SECURITY: Reject any changes to workflow files (.github/workflows/*) or sensitive config files
+
+            After your review:
+            - For MINOR/PATCH version updates that look safe, APPROVE the PR using:
+              `gh pr review ${{ github.event.pull_request.number }} --approve --body "Reviewed by Claude: Automated changes look safe."`
+            - For MAJOR version updates with potential breaking changes, DO NOT auto-approve - leave a comment explaining the concerns instead
+            - If you find any security concerns or suspicious changes, leave a comment instead of approving:
+              `gh pr comment ${{ github.event.pull_request.number }} --body "Your concerns here"`
+
+          claude_args: '--allowed-tools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr review:*),Bash(gh pr comment:*)"'
