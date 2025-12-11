@@ -43,6 +43,9 @@ dmypy.json
 # pre-commit
 .pre-commit
 
+# Local configuration files
+*.local.*
+
 # IDEs and editors
 .idea/
 .vscode/*
