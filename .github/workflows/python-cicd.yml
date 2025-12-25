@@ -41,7 +41,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
       with:
-        node-version: '22'
+        node-version: '24'
 
     - name: Install package and dependencies
       run: |
@@ -108,7 +108,7 @@ jobs:
       - name: Set up Node.js  # for semver
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '22'
+          node-version: '24'
 
       - name: Install build dependencies
         run: |
