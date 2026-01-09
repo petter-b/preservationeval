@@ -12,7 +12,7 @@
       "version": "3.13"
     },
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "22"
+      "version": "24"
     }
   },
   "remoteUser": "vscode"
