@@ -103,7 +103,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Set up Node.js  # for semver
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
