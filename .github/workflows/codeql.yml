@@ -34,13 +34,13 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@4bdb89f48054571735e3792627da6195c57459e2 # v3
+      uses: github/codeql-action/init@b5ebac6f4c00c8ccddb7cdcd45fdb248329f808a # v3
       with:
         languages: ${{ matrix.language }}
         # Enable debug mode if requested
         debug: ${{ inputs.debug_enabled }}
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@4bdb89f48054571735e3792627da6195c57459e2 # v3
+      uses: github/codeql-action/analyze@b5ebac6f4c00c8ccddb7cdcd45fdb248329f808a # v3
       with:
         category: "/language:${{matrix.language}}"
