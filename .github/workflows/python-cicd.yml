@@ -49,9 +49,16 @@ jobs:
 
     - name: Install package and dependencies
       # --python overrides .python-version (which pins 3.13 for local dev)
-      run: uv sync --frozen --all-extras --python ${{ matrix.python-version }}
+      # Only install lint extras on 3.13 where pre-commit runs
+      run: |
+        if [[ "${{ matrix.python-version }}" == "3.13" ]]; then
+          uv sync --frozen --extra test --extra lint --python ${{ matrix.python-version }}
+        else
+          uv sync --frozen --extra test --python ${{ matrix.python-version }}
+        fi
 
     - name: Cache pre-commit hooks
+      if: matrix.python-version == '3.13'
       uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: ~/.cache/pre-commit
@@ -111,7 +118,7 @@ jobs:
           node-version: '22'
 
       - name: Install build dependencies
-        run: uv sync --frozen --all-extras
+        run: uv sync --frozen --extra test --extra release
 
       - name: Determine release type
         id: release_type

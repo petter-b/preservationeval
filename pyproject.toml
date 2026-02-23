@@ -36,8 +36,7 @@ test = [
     "pytest-benchmark>=4.0.0",
     "requests-mock>=1.11.0",   # For mocking HTTP requests in tests
     "mini-racer>=0.12.4",      # For testing V8-based table extraction
-    "hatchling>=1.18.0",       # For testing custom build hook
-    "twine>=5.0.0",            # For validating sdist metadata before upload
+    "hatchling>=1.18.0",       # test_build_hook.py imports hatch_build.py
 ]
 # Code quality tools
 lint = [
@@ -45,10 +44,14 @@ lint = [
     "ruff>=0.12.2",             # Match your pre-commit hook version
     "pre-commit>=3.6.0",        # Current version
 ]
+# Release / distribution tools (used in CI release job only)
+release = [
+    "twine>=5.0.0",            # For validating sdist metadata before upload
+]
 # Performance tools
 profile = ["memory_profiler>=0.61.0"]
 # Full development environment (includes all above)
-dev = ["preservationeval[test,lint,profile]"]
+dev = ["preservationeval[test,lint,release,profile]"]
 
 [tool.hatch.version]
 source = "vcs"

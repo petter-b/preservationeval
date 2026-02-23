@@ -47,6 +47,13 @@ KISS, YAGNI, DRY. Max: 500 lines/file, 50 lines/function, 100 lines/class.
 - Coverage regressions block CI
 - Production releases require `CHANGELOG.md` `[Unreleased]` section to have entries
 
+### Build Caveats
+
+- RC builds use `SETUPTOOLS_SCM_PRETEND_VERSION` — this works because hatch-vcs
+  delegates to setuptools-scm internally. Verify this env var still works after
+  hatch-vcs major version bumps; a silent failure would publish an RC with the
+  wrong version.
+
 ### Changelog Workflow
 
 - Add entries under `## [Unreleased]` in `CHANGELOG.md` as changes are made

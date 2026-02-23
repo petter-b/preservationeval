@@ -832,6 +832,9 @@ lint = [
 profile = [
     { name = "memory-profiler" },
 ]
+release = [
+    { name = "twine" },
+]
 test = [
     { name = "hatchling" },
     { name = "mini-racer" },
@@ -840,7 +843,6 @@ test = [
     { name = "pytest-cov" },
     { name = "pytest-mypy" },
     { name = "requests-mock" },
-    { name = "twine" },
 ]
 
 [package.metadata]
@@ -870,9 +872,9 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.2" },
     { name = "ruff", marker = "extra == 'lint'", specifier = ">=0.12.2" },
     { name = "twine", marker = "extra == 'dev'", specifier = ">=5.0.0" },
-    { name = "twine", marker = "extra == 'test'", specifier = ">=5.0.0" },
+    { name = "twine", marker = "extra == 'release'", specifier = ">=5.0.0" },
 ]
-provides-extras = ["dev", "lint", "profile", "test"]
+provides-extras = ["dev", "lint", "profile", "release", "test"]
 
 [[package]]
 name = "psutil"
