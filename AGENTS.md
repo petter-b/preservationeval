@@ -128,13 +128,12 @@ python -m scripts.generate_tables  # Manual table regeneration
 
 ### Build-Time Table Generation (`src/preservationeval/install/`)
 
-Pipeline: Download dp.js → parse JS arrays → construct typed LookupTables → emit `tables.py`
+Pipeline: Download dp.js → execute in embedded V8 (PyMiniRacer) → read global arrays → construct typed LookupTables → emit `tables.py`
 
 - **generate_tables.py**: Main entry point for table generation
-- **parse.py**: JavaScript parsing logic with regex patterns
+- **extract.py**: Execute dp.js in PyMiniRacer and extract lookup table arrays
 - **export.py**: Emit the tables.py module with formatted code
 - **paths.py**: Path handling for build process (cache, data directories)
-- **patterns.py**: Regex patterns for parsing JavaScript lookup tables
 - **const.py**: Build-time constants (URLs, file names, table metadata)
 
 ### Test Framework (`tests/`)
