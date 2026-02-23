@@ -185,12 +185,18 @@ jobs:
           echo "Building Release Candidate version: ${RC_VERSION}"
 
           rm -rf dist/
-          # hatch-vcs delegates to setuptools-scm, which reads this env var
+          # hatch-vcs delegates to setuptools-scm internally, which reads
+          # SETUPTOOLS_SCM_PRETEND_VERSION to override the detected version.
+          # This is documented by hatch-vcs but couples us to the setuptools-scm
+          # backend — if hatch-vcs changes its versioning backend, this will break.
           SETUPTOOLS_SCM_PRETEND_VERSION="${RC_VERSION}" uv build --sdist
 
           # IP protection: verify no tables.py in sdist, no wheel built
           ! tar -tvf dist/*.tar.gz | grep 'tables\.py'
           test $(ls dist/*.whl 2>/dev/null | wc -l) -eq 0
+
+          # Validate sdist metadata before upload
+          uv run twine check dist/*
 
           if [[ -n "${{ secrets.TEST_PYPI_API_TOKEN }}" ]]; then
             uv publish dist/*.tar.gz --publish-url https://test.pypi.org/legacy/ --token ${{ secrets.TEST_PYPI_API_TOKEN }}
@@ -277,6 +283,9 @@ jobs:
           uv pip install --python "$SMOKE_DIR/.venv/bin/python" "dist/preservationeval-${NEW_VERSION}.tar.gz[test]"
           "$SMOKE_DIR/.venv/bin/python" -m pytest -m "unit and not slow" -v
           rm -rf "$SMOKE_DIR"
+
+          # Validate sdist metadata before upload
+          uv run twine check dist/*
 
           # Upload to PyPI
           uv publish dist/*.tar.gz --token ${{ secrets.PYPI_API_TOKEN }}

@@ -37,6 +37,7 @@ test = [
     "requests-mock>=1.11.0",   # For mocking HTTP requests in tests
     "mini-racer>=0.12.4",      # For testing V8-based table extraction
     "hatchling>=1.18.0",       # For testing custom build hook
+    "twine>=5.0.0",            # For validating sdist metadata before upload
 ]
 # Code quality tools
 lint = [
@@ -66,7 +67,7 @@ version-file = "src/preservationeval/_version.py"
 
 [build-system]
 requires = [
-    "hatchling",
+    "hatchling>=1.18.0",
     "hatch-vcs",
     "numpy>=2.3.2",
     "requests>=2.31.0",

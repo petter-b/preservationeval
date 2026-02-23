@@ -8,8 +8,11 @@ from unittest.mock import patch
 
 import pytest
 
-# Import the actual module object (not the re-exported function from __init__.py)
-# so patch.object() can intercept the hook's late import of generate_tables()
+# Module-level import required for correct mock patching: patch.object() needs
+# the actual module object (not the re-exported function from __init__.py) to
+# intercept the hook's late import of generate_tables(). If this import fails,
+# the entire test file will fail to collect rather than individual tests being
+# skipped — this is acceptable since generate_tables is a core dependency.
 import preservationeval.install.generate_tables  # noqa: F401
 
 _gt_mod = sys.modules["preservationeval.install.generate_tables"]
