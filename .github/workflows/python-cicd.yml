@@ -153,6 +153,21 @@ jobs:
           fi
           echo "Validation passed. Current version: $CURRENT_VERSION"
 
+      - name: Validate CHANGELOG.md
+        if: steps.release_type.outputs.release_type == 'release-patch' || steps.release_type.outputs.release_type == 'release-minor' || steps.release_type.outputs.release_type == 'release-major'
+        run: |
+          if ! grep -q '## \[Unreleased\]' CHANGELOG.md; then
+            echo "::error::CHANGELOG.md is missing an [Unreleased] section"
+            exit 1
+          fi
+          # Extract lines between [Unreleased] and the next ## heading
+          CONTENT=$(sed -n '/^## \[Unreleased\]/,/^## \[/{/^## \[/!p}' CHANGELOG.md | grep -c '^\s*- ' || true)
+          if [[ "$CONTENT" -eq 0 ]]; then
+            echo "::error::CHANGELOG.md [Unreleased] section has no entries. Document your changes before releasing."
+            exit 1
+          fi
+          echo "✅ CHANGELOG.md has $CONTENT unreleased entries"
+
       # =========================
       # Release Candidate (TestPyPI)
       # =========================
