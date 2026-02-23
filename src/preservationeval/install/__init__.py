@@ -1,8 +1,8 @@
 """Table installation package for preservationeval.
 
 This package handles the generation of lookup tables during package installation.
-It downloads source data from IPI's Dew Point Calculator, parses the JavaScript
-code, and generates Python lookup tables for:
+It downloads source data from IPI's Dew Point Calculator, executes the JavaScript
+in an embedded V8 engine (PyMiniRacer), and generates Python lookup tables for:
 - Preservation Index (PI)
 - Equilibrium Moisture Content (EMC)
 - Mold Risk
