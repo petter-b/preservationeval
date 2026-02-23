@@ -6,13 +6,13 @@ set up, separate from the actual logger implementation.
 
 import logging
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 from preservationeval.utils.safepath import create_safe_path
 
 
-class LogLevel(str, Enum):
+class LogLevel(StrEnum):
     """Logging levels with string representations."""
 
     DEBUG = "DEBUG"
@@ -32,7 +32,7 @@ class LogLevel(str, Enum):
         return int(getattr(logging, self.value))
 
 
-class Environment(str, Enum):
+class Environment(StrEnum):
     """Valid logging environments."""
 
     DEVELOPMENT = "development"

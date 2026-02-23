@@ -226,7 +226,7 @@ class TestRounding:
     def test_truncation_rounding(self, int_test_data: NDArray[integer[Any]]) -> None:
         """Test custom rounding function."""
         table = LookupTable[int](int_test_data, TEMP_MIN, RH_MIN)
-        table.set_rounding_func(lambda x: int(x))  # Simple truncation
+        table.set_rounding_func(int)  # Simple truncation
         assert table[(1.8, 50.0)] == table[(1.0, 50.0)]
 
     def test_faulty_bb_input(self, int_table: LookupTable[int]) -> None:
