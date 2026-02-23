@@ -20,7 +20,7 @@ from .const import (
     TABLES_MODULE_NAME,
 )
 from .export import generate_tables_module
-from .parse import fetch_and_validate_tables
+from .extract import fetch_and_extract_tables
 from .paths import PathError, find_package_root, get_module_path
 
 logger = setup_logging(__name__, env=Environment.INSTALL)
@@ -82,7 +82,7 @@ def generate_tables(package_path: Path | None = None) -> None:
             )
 
         logger.debug("Fetching and validating tables...")
-        pi_table, emc_table, mold_table = fetch_and_validate_tables(DP_JS_URL)
+        pi_table, emc_table, mold_table = fetch_and_extract_tables(DP_JS_URL)
 
         logger.debug("Generating tables module...")
         generate_tables_module(
