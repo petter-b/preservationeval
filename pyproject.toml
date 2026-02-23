@@ -35,6 +35,7 @@ test = [
     "pytest-cov>=4.1.0",
     "pytest-benchmark>=4.0.0",
     "requests-mock>=1.11.0",   # For mocking HTTP requests in tests
+    "mini-racer>=0.12.4",      # For testing V8-based table extraction
 ]
 # Code quality tools
 lint = [
@@ -55,6 +56,7 @@ requires = [
     "wheel",
     "numpy>=1.26.0",            # Needed during build
     "requests>=2.31.0",         # Needed for downloading
+    "mini-racer>=0.12.4",       # Embedded V8 for JS table extraction
     "types-setuptools>=69.0.0",
 ]
 
