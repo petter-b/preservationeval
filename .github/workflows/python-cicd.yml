@@ -191,6 +191,9 @@ jobs:
           # backend — if hatch-vcs changes its versioning backend, this will break.
           SETUPTOOLS_SCM_PRETEND_VERSION="${RC_VERSION}" uv build --sdist
 
+          # Verify the pretend version actually made it into the sdist metadata
+          tar -xOf dist/*.tar.gz '*/PKG-INFO' | grep "^Version: ${RC_VERSION}$"
+
           # IP protection: verify no tables.py in sdist, no wheel built
           ! tar -tvf dist/*.tar.gz | grep 'tables\.py'
           test $(ls dist/*.whl 2>/dev/null | wc -l) -eq 0
@@ -277,7 +280,9 @@ jobs:
           ! tar -tvf dist/*.tar.gz | grep 'tables\.py'
           test $(ls dist/*.whl 2>/dev/null | wc -l) -eq 0
 
-          # Test built artifact before uploading
+          # Pre-upload smoke test: install from local sdist and run unit tests
+          # Skips validation (Puppeteer) tests — those require network + browser
+          # and are already covered by the test job on every PR.
           SMOKE_DIR=$(mktemp -d)
           uv venv "$SMOKE_DIR/.venv"
           uv pip install --python "$SMOKE_DIR/.venv/bin/python" "dist/preservationeval-${NEW_VERSION}.tar.gz[test]"
@@ -289,6 +294,14 @@ jobs:
 
           # Upload to PyPI
           uv publish dist/*.tar.gz --token ${{ secrets.PYPI_API_TOKEN }}
+
+          # Post-release verification: install from PyPI and smoke-test
+          sleep 30
+          VERIFY_DIR=$(mktemp -d)
+          uv venv "$VERIFY_DIR/.venv"
+          uv pip install --python "$VERIFY_DIR/.venv/bin/python" "preservationeval==${NEW_VERSION}"
+          "$VERIFY_DIR/.venv/bin/python" -c "from preservationeval import pi, emc, mold; print(f'pi={pi(20,50)} emc={emc(20,50)} mold={mold(20,50)}')"
+          rm -rf "$VERIFY_DIR"
 
           echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
           echo "🚀 Production release ${NEW_VERSION} published to PyPI successfully"

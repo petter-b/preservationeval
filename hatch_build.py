@@ -41,6 +41,13 @@ class CustomBuildHook(BuildHookInterface):  # type: ignore[misc]
             )
 
             generate_tables()
+        except Exception as exc:
+            msg = (
+                "Failed to generate lookup tables. This requires network "
+                "access to download dp.js from dpcalc.org. "
+                "See https://github.com/petter-b/preservationeval for details."
+            )
+            raise RuntimeError(msg) from exc
         finally:
             try:
                 sys.path.remove(src_path)

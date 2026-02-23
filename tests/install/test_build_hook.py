@@ -134,7 +134,7 @@ class TestCustomBuildHook:
                 new_callable=lambda: property(lambda self: str(PROJECT_ROOT)),
             ),
             patch.object(_gt_mod, "generate_tables", side_effect=RuntimeError("boom")),
-            pytest.raises(RuntimeError, match="boom"),
+            pytest.raises(RuntimeError, match="Failed to generate lookup tables"),
         ):
             hook.initialize("standard", build_data)
 
