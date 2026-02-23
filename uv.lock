@@ -225,6 +225,21 @@ wheels = [
 ]
 
 [[package]]
+name = "hatchling"
+version = "1.28.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "pathspec" },
+    { name = "pluggy" },
+    { name = "trove-classifiers" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0b/8e/e480359492affde4119a131da729dd26da742c2c9b604dff74836e47eef9/hatchling-1.28.0.tar.gz", hash = "sha256:4d50b02aece6892b8cd0b3ce6c82cb218594d3ec5836dbde75bf41a21ab004c8", size = 55365, upload-time = "2025-11-27T00:31:13.766Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0d/a5/48cb7efb8b4718b1a4c0c331e3364a3a33f614ff0d6afd2b93ee883d3c47/hatchling-1.28.0-py3-none-any.whl", hash = "sha256:dc48722b68b3f4bbfa3ff618ca07cdea6750e7d03481289ffa8be1521d18a961", size = 76075, upload-time = "2025-11-27T00:31:12.544Z" },
+]
+
+[[package]]
 name = "identify"
 version = "2.6.16"
 source = { registry = "https://pypi.org/simple" }
@@ -550,6 +565,7 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
+    { name = "hatchling" },
     { name = "memory-profiler" },
     { name = "mini-racer" },
     { name = "mypy" },
@@ -560,18 +576,17 @@ dev = [
     { name = "pytest-mypy" },
     { name = "requests-mock" },
     { name = "ruff" },
-    { name = "types-setuptools" },
 ]
 lint = [
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "ruff" },
-    { name = "types-setuptools" },
 ]
 profile = [
     { name = "memory-profiler" },
 ]
 test = [
+    { name = "hatchling" },
     { name = "mini-racer" },
     { name = "pytest" },
     { name = "pytest-benchmark" },
@@ -582,22 +597,32 @@ test = [
 
 [package.metadata]
 requires-dist = [
+    { name = "hatchling", marker = "extra == 'dev'", specifier = ">=1.18.0" },
+    { name = "hatchling", marker = "extra == 'test'", specifier = ">=1.18.0" },
+    { name = "memory-profiler", marker = "extra == 'dev'", specifier = ">=0.61.0" },
     { name = "memory-profiler", marker = "extra == 'profile'", specifier = ">=0.61.0" },
+    { name = "mini-racer", marker = "extra == 'dev'", specifier = ">=0.12.4" },
     { name = "mini-racer", marker = "extra == 'test'", specifier = ">=0.12.4" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.16.1" },
     { name = "mypy", marker = "extra == 'lint'", specifier = ">=1.16.1" },
     { name = "numpy", specifier = ">=2.4.0,<2.5.0" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.6.0" },
     { name = "pre-commit", marker = "extra == 'lint'", specifier = ">=3.6.0" },
-    { name = "preservationeval", extras = ["lint", "profile", "test"], marker = "extra == 'dev'" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4.0" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=7.4.0" },
+    { name = "pytest-benchmark", marker = "extra == 'dev'", specifier = ">=4.0.0" },
     { name = "pytest-benchmark", marker = "extra == 'test'", specifier = ">=4.0.0" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0" },
     { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=4.1.0" },
+    { name = "pytest-mypy", marker = "extra == 'dev'", specifier = ">=0.10.3" },
     { name = "pytest-mypy", marker = "extra == 'test'", specifier = ">=0.10.3" },
     { name = "requests", specifier = ">=2.31.0,<3.0.0" },
+    { name = "requests-mock", marker = "extra == 'dev'", specifier = ">=1.11.0" },
     { name = "requests-mock", marker = "extra == 'test'", specifier = ">=1.11.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.2" },
     { name = "ruff", marker = "extra == 'lint'", specifier = ">=0.12.2" },
-    { name = "types-setuptools", marker = "extra == 'lint'", specifier = ">=69.0.0" },
 ]
-provides-extras = ["test", "lint", "profile", "dev"]
+provides-extras = ["dev", "lint", "profile", "test"]
 
 [[package]]
 name = "psutil"
@@ -864,12 +889,12 @@ wheels = [
 ]
 
 [[package]]
-name = "types-setuptools"
-version = "82.0.0.20260210"
+name = "trove-classifiers"
+version = "2026.1.14.14"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4b/90/796ac8c774a7f535084aacbaa6b7053d16fff5c630eff87c3ecff7896c37/types_setuptools-82.0.0.20260210.tar.gz", hash = "sha256:d9719fbbeb185254480ade1f25327c4654f8c00efda3fec36823379cebcdee58", size = 44768, upload-time = "2026-02-10T04:22:02.107Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d8/43/7935f8ea93fcb6680bc10a6fdbf534075c198eeead59150dd5ed68449642/trove_classifiers-2026.1.14.14.tar.gz", hash = "sha256:00492545a1402b09d4858605ba190ea33243d361e2b01c9c296ce06b5c3325f3", size = 16997, upload-time = "2026-01-14T14:54:50.526Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3e/54/3489432b1d9bc713c9d8aa810296b8f5b0088403662959fb63a8acdbd4fc/types_setuptools-82.0.0.20260210-py3-none-any.whl", hash = "sha256:5124a7daf67f195c6054e0f00f1d97c69caad12fdcf9113eba33eff0bce8cd2b", size = 68433, upload-time = "2026-02-10T04:22:00.876Z" },
+    { url = "https://files.pythonhosted.org/packages/bb/4a/2e5583e544bc437d5e8e54b47db87430df9031b29b48d17f26d129fa60c0/trove_classifiers-2026.1.14.14-py3-none-any.whl", hash = "sha256:1f9553927f18d0513d8e5ff80ab8980b8202ce37ecae0e3274ed2ef11880e74d", size = 14197, upload-time = "2026-01-14T14:54:49.067Z" },
 ]
 
 [[package]]

@@ -8,7 +8,8 @@ from unittest.mock import patch
 
 import pytest
 
-# Import the module (not the re-exported function from __init__.py)
+# Import the actual module object (not the re-exported function from __init__.py)
+# so patch.object() can intercept the hook's late import of generate_tables()
 import preservationeval.install.generate_tables  # noqa: F401
 
 _gt_mod = sys.modules["preservationeval.install.generate_tables"]
