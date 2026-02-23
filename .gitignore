@@ -46,6 +46,10 @@ dmypy.json
 # Local configuration files
 *.local.*
 
+# Agent/tool-specific config
+.mcp.json
+.serena/
+
 # IDEs and editors
 .idea/
 .vscode/*
