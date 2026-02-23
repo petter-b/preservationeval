@@ -34,7 +34,7 @@ jobs:
         fetch-tags: true
 
     - name: Set up uv
-      uses: astral-sh/setup-uv@v4
+      uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
 
     - name: Set up Python ${{ matrix.python-version }}
       run: uv python install ${{ matrix.python-version }}
@@ -54,12 +54,13 @@ jobs:
         key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
 
     - name: Run pre-commit
+      if: matrix.python-version == '3.13'
       env:
         SKIP: no-commit-to-branch
-      run: uv run pre-commit run --all-files
+      run: uv run --python ${{ matrix.python-version }} pre-commit run --all-files
 
     - name: Run tests
-      run: uv run pytest --cov
+      run: uv run --python ${{ matrix.python-version }} pytest --cov
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
@@ -92,7 +93,7 @@ jobs:
           token: ${{ github.token }}
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
 
       - name: Set up Python
         run: uv python install 3.13
@@ -263,8 +264,8 @@ jobs:
           # Test built artifact before uploading
           TMPDIR=$(mktemp -d)
           uv venv "$TMPDIR/.venv"
-          uv pip install --python "$TMPDIR/.venv/bin/python" dist/*.tar.gz
-          uv run --python "$TMPDIR/.venv/bin/python" python -c "from preservationeval import pi; print(pi(20, 50))"
+          uv pip install --python "$TMPDIR/.venv/bin/python" "dist/preservationeval-${NEW_VERSION}.tar.gz[test]"
+          uv run --python "$TMPDIR/.venv/bin/python" pytest -m "unit and not slow" -v
           rm -rf "$TMPDIR"
 
           # Upload to PyPI
