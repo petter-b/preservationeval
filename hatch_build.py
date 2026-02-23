@@ -6,11 +6,14 @@ are never redistributed — they are generated on the user's machine at
 install time.
 """
 
+import logging
 import sys
 from pathlib import Path
 from typing import Any
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
+
+logger = logging.getLogger(__name__)
 
 
 class CustomBuildHook(BuildHookInterface):  # type: ignore[misc]
@@ -29,7 +32,7 @@ class CustomBuildHook(BuildHookInterface):  # type: ignore[misc]
         if self.target_name != "wheel":
             return
 
-        print("Generating preservationeval lookup tables...")
+        logger.info("Generating preservationeval lookup tables...")
         src_path = str(Path(self.root) / "src")
         sys.path.insert(0, src_path)
         try:
