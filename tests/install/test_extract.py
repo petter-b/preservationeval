@@ -212,6 +212,20 @@ class TestExtractErrorHandling:
         with pytest.raises(ExtractionError):
             extract_tables_from_js(js)
 
+    def test_pitable_size_mismatch(self) -> None:
+        """Raise ExtractionError when pitable has wrong size."""
+        js = "pitable = [1, 2, 3]; emctable = [1.0, 2.0, 3.0];"
+        with pytest.raises(ExtractionError, match="pitable size mismatch"):
+            extract_tables_from_js(js)
+
+    def test_emctable_size_mismatch(self) -> None:
+        """Raise ExtractionError when emctable has wrong size."""
+        pi_size = PI_ROWS * PI_COLS + MOLD_ROWS * MOLD_COLS
+        values = ",".join(["1"] * pi_size)
+        js = f"pitable = [{values}]; emctable = [1.0, 2.0, 3.0];"
+        with pytest.raises(ExtractionError, match="emctable size mismatch"):
+            extract_tables_from_js(js)
+
 
 @pytest.mark.unit
 class TestFetchAndExtract:
