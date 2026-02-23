@@ -106,15 +106,15 @@ def extract_tables_from_js(
         raise ExtractionError(f"Failed to read JS globals: {e}") from e
 
     expected_pi_size = _PI_DATA_SIZE + _MOLD_DATA_SIZE
-    if len(pi_raw) < expected_pi_size:
+    if len(pi_raw) != expected_pi_size:
         raise ExtractionError(
-            f"pitable too small: {len(pi_raw)}, expected >= {expected_pi_size}"
+            f"pitable size mismatch: {len(pi_raw)}, expected {expected_pi_size}"
         )
 
     expected_emc_size = _EMC_ROWS * _EMC_COLS
-    if len(emc_raw) < expected_emc_size:
+    if len(emc_raw) != expected_emc_size:
         raise ExtractionError(
-            f"emctable too small: {len(emc_raw)}, expected >= {expected_emc_size}"
+            f"emctable size mismatch: {len(emc_raw)}, expected {expected_emc_size}"
         )
 
     pi_table: PITable = LookupTable(

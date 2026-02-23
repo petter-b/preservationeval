@@ -2,7 +2,7 @@
 
 This module handles the complete table generation and installation process:
 1. Downloads source data from IPI's Dew Point Calculator
-2. Parses JavaScript code to extract table data
+2. Executes JavaScript code to extract table data
 3. Generates and validates lookup tables
 4. Installs tables as a Python module
 """
