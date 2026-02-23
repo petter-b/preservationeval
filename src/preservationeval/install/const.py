@@ -21,5 +21,4 @@ TABLES_MODULE_NAME: Final[str] = "tables"  # Generated module name
 # Package root detection
 PACKAGE_ROOT_MARKERS: Final[tuple[str, ...]] = (
     "pyproject.toml",
-    "setup.py",
 )  # Files that indicate package root
