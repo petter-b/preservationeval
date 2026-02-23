@@ -1,11 +1,17 @@
 """Tests for the hatch custom build hook."""
 
 import importlib.util
+import sys
 from pathlib import Path
 from types import ModuleType
 from unittest.mock import patch
 
 import pytest
+
+# Import the module (not the re-exported function from __init__.py)
+import preservationeval.install.generate_tables  # noqa: F401
+
+_gt_mod = sys.modules["preservationeval.install.generate_tables"]
 
 # The hook file lives at project root, not in a package.
 # We need to import it directly.
@@ -70,9 +76,7 @@ class TestCustomBuildHook:
                 "root",
                 new_callable=lambda: property(lambda self: str(PROJECT_ROOT)),
             ),
-            patch(
-                "preservationeval.install.generate_tables.generate_tables"
-            ) as mock_gen,
+            patch.object(_gt_mod, "generate_tables") as mock_gen,
         ):
             hook.initialize("standard", build_data)
 
@@ -98,9 +102,7 @@ class TestCustomBuildHook:
                 "root",
                 new_callable=lambda: property(lambda self: str(PROJECT_ROOT)),
             ),
-            patch(
-                "preservationeval.install.generate_tables.generate_tables"
-            ) as mock_gen,
+            patch.object(_gt_mod, "generate_tables") as mock_gen,
         ):
             hook.initialize("editable", build_data)
 

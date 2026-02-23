@@ -29,6 +29,7 @@ class CustomBuildHook(BuildHookInterface):  # type: ignore[misc]
         if self.target_name != "wheel":
             return
 
+        print("Generating preservationeval lookup tables...")
         src_path = str(Path(self.root) / "src")
         sys.path.insert(0, src_path)
         try:
@@ -38,7 +39,8 @@ class CustomBuildHook(BuildHookInterface):  # type: ignore[misc]
 
             generate_tables()
         finally:
-            sys.path.remove(src_path)
+            if sys.path and sys.path[0] == src_path:
+                sys.path.pop(0)
 
         # For editable installs, tables.py is already in the source tree
         if version == "editable":

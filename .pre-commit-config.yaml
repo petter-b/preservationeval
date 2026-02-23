@@ -83,4 +83,4 @@ repos:
           - id: mypy
             types_or: [python, pyi]
             additional_dependencies:
-                ["types-requests>=2.31.0", "numpy>=1.24.0", "types-setuptools"]
+                ["types-requests>=2.31.0", "numpy>=1.24.0"]

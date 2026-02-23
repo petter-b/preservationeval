@@ -35,6 +35,9 @@ jobs:
 
     - name: Set up uv
       uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
+      with:
+        version: "0.6.x"
+        enable-cache: true
 
     - name: Set up Python ${{ matrix.python-version }}
       run: uv python install ${{ matrix.python-version }}
@@ -45,7 +48,8 @@ jobs:
         node-version: '22'
 
     - name: Install package and dependencies
-      run: uv sync --all-extras --python ${{ matrix.python-version }}
+      # --python overrides .python-version (which pins 3.13 for local dev)
+      run: uv sync --frozen --all-extras --python ${{ matrix.python-version }}
 
     - name: Cache pre-commit hooks
       uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
@@ -94,6 +98,9 @@ jobs:
 
       - name: Set up uv
         uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
+        with:
+          version: "0.6.x"
+          enable-cache: true
 
       - name: Set up Python
         run: uv python install 3.13
@@ -104,7 +111,7 @@ jobs:
           node-version: '22'
 
       - name: Install build dependencies
-        run: uv sync --all-extras
+        run: uv sync --frozen --all-extras
 
       - name: Determine release type
         id: release_type
@@ -177,6 +184,7 @@ jobs:
           fi
           echo "Building Release Candidate version: ${RC_VERSION}"
 
+          rm -rf dist/
           SETUPTOOLS_SCM_PRETEND_VERSION="${RC_VERSION}" uv build --sdist
 
           # IP protection: verify no tables.py in sdist, no wheel built
@@ -184,7 +192,7 @@ jobs:
           test $(ls dist/*.whl 2>/dev/null | wc -l) -eq 0
 
           if [[ -n "${{ secrets.TEST_PYPI_API_TOKEN }}" ]]; then
-            uv publish --publish-url https://test.pypi.org/legacy/ --token ${{ secrets.TEST_PYPI_API_TOKEN }}
+            uv publish dist/*.tar.gz --publish-url https://test.pypi.org/legacy/ --token ${{ secrets.TEST_PYPI_API_TOKEN }}
             echo "✅ RC ${RC_VERSION} uploaded to TestPyPI"
           else
             echo "TEST_PYPI_API_TOKEN not set; skipping TestPyPI upload"
@@ -255,6 +263,7 @@ jobs:
           git push origin "v${NEW_VERSION}"
 
           # Build sdist only (IP protection — never publish wheels)
+          rm -rf dist/
           uv build --sdist
 
           # IP protection: verify no tables.py in sdist, no wheel built
@@ -262,14 +271,14 @@ jobs:
           test $(ls dist/*.whl 2>/dev/null | wc -l) -eq 0
 
           # Test built artifact before uploading
-          TMPDIR=$(mktemp -d)
-          uv venv "$TMPDIR/.venv"
-          uv pip install --python "$TMPDIR/.venv/bin/python" "dist/preservationeval-${NEW_VERSION}.tar.gz[test]"
-          uv run --python "$TMPDIR/.venv/bin/python" pytest -m "unit and not slow" -v
-          rm -rf "$TMPDIR"
+          SMOKE_DIR=$(mktemp -d)
+          uv venv "$SMOKE_DIR/.venv"
+          uv pip install --python "$SMOKE_DIR/.venv/bin/python" "dist/preservationeval-${NEW_VERSION}.tar.gz[test]"
+          "$SMOKE_DIR/.venv/bin/python" -m pytest -m "unit and not slow" -v
+          rm -rf "$SMOKE_DIR"
 
           # Upload to PyPI
-          uv publish --token ${{ secrets.PYPI_API_TOKEN }}
+          uv publish dist/*.tar.gz --token ${{ secrets.PYPI_API_TOKEN }}
 
           echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
           echo "🚀 Production release ${NEW_VERSION} published to PyPI successfully"
