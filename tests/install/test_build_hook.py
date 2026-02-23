@@ -109,3 +109,30 @@ class TestCustomBuildHook:
 
         mock_gen.assert_called_once()
         assert build_data["force_include"] == {}
+
+    def test_cleans_up_sys_path_on_error(self) -> None:
+        """sys.path should be restored even if generate_tables() raises."""
+        mod = _import_hook_module()
+        hook = mod.CustomBuildHook.__new__(mod.CustomBuildHook)
+
+        build_data: dict[str, dict[str, str]] = {"force_include": {}}
+        src_path = str(PROJECT_ROOT / "src")
+        path_count_before = sys.path.count(src_path)
+
+        with (
+            patch.object(
+                type(hook),
+                "target_name",
+                new_callable=lambda: property(lambda self: "wheel"),
+            ),
+            patch.object(
+                type(hook),
+                "root",
+                new_callable=lambda: property(lambda self: str(PROJECT_ROOT)),
+            ),
+            patch.object(_gt_mod, "generate_tables", side_effect=RuntimeError("boom")),
+            pytest.raises(RuntimeError, match="boom"),
+        ):
+            hook.initialize("standard", build_data)
+
+        assert sys.path.count(src_path) == path_count_before

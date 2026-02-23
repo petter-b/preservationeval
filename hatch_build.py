@@ -39,8 +39,10 @@ class CustomBuildHook(BuildHookInterface):  # type: ignore[misc]
 
             generate_tables()
         finally:
-            if sys.path and sys.path[0] == src_path:
-                sys.path.pop(0)
+            try:
+                sys.path.remove(src_path)
+            except ValueError:
+                pass
 
         # For editable installs, tables.py is already in the source tree
         if version == "editable":

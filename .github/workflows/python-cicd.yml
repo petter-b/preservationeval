@@ -185,6 +185,7 @@ jobs:
           echo "Building Release Candidate version: ${RC_VERSION}"
 
           rm -rf dist/
+          # hatch-vcs delegates to setuptools-scm, which reads this env var
           SETUPTOOLS_SCM_PRETEND_VERSION="${RC_VERSION}" uv build --sdist
 
           # IP protection: verify no tables.py in sdist, no wheel built
