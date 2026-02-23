@@ -45,3 +45,10 @@ KISS, YAGNI, DRY. Max: 500 lines/file, 50 lines/function, 100 lines/class.
 - `tables.py` is auto-generated — never edit by hand
 - Pre-commit hooks enforce quality gates (see `pyproject.toml`)
 - Coverage regressions block CI
+- Production releases require `CHANGELOG.md` `[Unreleased]` section to have entries
+
+### Changelog Workflow
+
+- Add entries under `## [Unreleased]` in `CHANGELOG.md` as changes are made
+- Use [Keep a Changelog](https://keepachangelog.com/) format: `Added`, `Changed`, `Fixed`, `Removed`
+- At release time, CI renames `[Unreleased]` to the new version — the section must not be empty
