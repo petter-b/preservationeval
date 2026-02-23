@@ -36,6 +36,7 @@ test = [
     "pytest-benchmark>=4.0.0",
     "requests-mock>=1.11.0",   # For mocking HTTP requests in tests
     "mini-racer>=0.12.4",      # For testing V8-based table extraction
+    "hatchling>=1.18.0",       # For testing custom build hook
 ]
 # Code quality tools
 lint = [
