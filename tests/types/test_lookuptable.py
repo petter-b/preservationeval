@@ -199,7 +199,10 @@ class TestBoundaryBehavior:
         """Test faulty boundary_behavior in constructor."""
         with pytest.raises(TypeError):
             LookupTable[int](
-                int_test_data, TEMP_MIN, RH_MIN, boundary_behavior="not ok"
+                int_test_data,
+                TEMP_MIN,
+                RH_MIN,
+                boundary_behavior="not ok",
             )
 
 
@@ -237,9 +240,7 @@ class TestRounding:
 
     def test_truncation_rounding(self, int_test_data: NDArray[integer[Any]]) -> None:
         """Test custom rounding function via constructor."""
-        table = LookupTable[int](
-            int_test_data, TEMP_MIN, RH_MIN, rounding_func=int
-        )
+        table = LookupTable[int](int_test_data, TEMP_MIN, RH_MIN, rounding_func=int)
         assert table[(1.8, 50.0)] == table[(1.0, 50.0)]
 
     def test_faulty_rounding_func_input(
@@ -248,5 +249,8 @@ class TestRounding:
         """Test faulty rounding_func in constructor."""
         with pytest.raises(TypeError):
             LookupTable[int](
-                int_test_data, TEMP_MIN, RH_MIN, rounding_func="not ok"
+                int_test_data,
+                TEMP_MIN,
+                RH_MIN,
+                rounding_func="not ok",
             )
