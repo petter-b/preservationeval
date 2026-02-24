@@ -49,6 +49,7 @@ dmypy.json
 # Agent/tool-specific config
 .mcp.json
 .serena/
+docs/plans/
 
 # IDEs and editors
 .idea/
