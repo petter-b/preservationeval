@@ -12,7 +12,7 @@ Main functions:
     mold(): Calculate Mold Risk Factor
     rate_*(): Evaluate environmental ratings
 
-    TODO: Improve this docstring to explain the complete content of __all__.
+
 """
 
 from .core_functions import emc, mold, pi

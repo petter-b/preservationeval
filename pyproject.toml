@@ -36,42 +36,47 @@ test = [
     "pytest-benchmark>=4.0.0",
     "requests-mock>=1.11.0",   # For mocking HTTP requests in tests
     "mini-racer>=0.12.4",      # For testing V8-based table extraction
+    "hatchling>=1.18.0",       # test_build_hook.py imports hatch_build.py
 ]
 # Code quality tools
 lint = [
     "mypy>=1.16.1",             # Match your pre-commit hook version
     "ruff>=0.12.2",             # Match your pre-commit hook version
     "pre-commit>=3.6.0",        # Current version
-    "types-setuptools>=69.0.0", # Needed for mypy
+]
+# Release / distribution tools (used in CI release job only)
+release = [
+    "twine>=5.0.0",            # For validating sdist metadata before upload
 ]
 # Performance tools
 profile = ["memory_profiler>=0.61.0"]
 # Full development environment (includes all above)
-dev = ["preservationeval[test,lint,profile]"]
+dev = ["preservationeval[test,lint,release,profile]"]
+
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.0.0"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/preservationeval"]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["src/preservationeval/tables.py"]
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/preservationeval/_version.py"
+
+[tool.hatch.build.hooks.custom]
 
 [build-system]
-build-backend = "setuptools.build_meta"
 requires = [
-    "setuptools>=45",
-    "wheel",
-    "numpy>=1.26.0",            # Needed during build
-    "requests>=2.31.0",         # Needed for downloading
-    "mini-racer>=0.12.4",       # Embedded V8 for JS table extraction
-    "types-setuptools>=69.0.0",
+    "hatchling>=1.18.0",
+    "hatch-vcs>=0.4.0",
+    "numpy>=1.26.0",
+    "requests>=2.31.0",
+    "mini-racer>=0.12.4",
 ]
-
-[tool.setuptools.dynamic]
-version = { attr = "preservationeval.__version__" }
-
-[tool.setuptools.packages.find]
-where = ["src"]
-exclude = ["wip", "wip/*", "*/wip", "*/wip/*", "*tables.py", "*test*"]
-
-[tool.preservationeval]
-package_dir = "src/preservationeval"
-tables_module = "tables"
-tables_url = "http://www.dpcalc.org/dp.js"
-emc_decimals = 1
+build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

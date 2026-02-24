@@ -50,6 +50,9 @@ dmypy.json
 .mcp.json
 .serena/
 
+# Local planning docs (agent artifacts)
+docs/plans/
+
 # IDEs and editors
 .idea/
 .vscode/*

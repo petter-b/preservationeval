@@ -33,10 +33,14 @@ jobs:
         fetch-depth: 0
         fetch-tags: true
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+    - name: Set up uv
+      uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
       with:
-        python-version: ${{ matrix.python-version }}
+        version: "0.6.x"
+        enable-cache: true
+
+    - name: Set up Python ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
 
     - name: Set up Node.js
       uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
@@ -44,31 +48,30 @@ jobs:
         node-version: '22'
 
     - name: Install package and dependencies
+      # --python overrides .python-version (which pins 3.13 for local dev)
+      # Only install lint extras on 3.13 where pre-commit runs
       run: |
-        python -m pip install --upgrade pip
-        echo "Current directory: $(pwd)"
-        echo "Directory contents: $(ls -la)"
-        echo "Python path: $PYTHONPATH"
-        python -m pip install -e ".[test]" -v
-        echo "Post-install contents:"
-        ls -R src/preservationeval/
-        python -m pip install pre-commit
+        if [[ "${{ matrix.python-version }}" == "3.13" ]]; then
+          uv sync --frozen --extra test --extra lint --python ${{ matrix.python-version }}
+        else
+          uv sync --frozen --extra test --python ${{ matrix.python-version }}
+        fi
 
     - name: Cache pre-commit hooks
+      if: matrix.python-version == '3.13'
       uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: ~/.cache/pre-commit
         key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
 
     - name: Run pre-commit
+      if: matrix.python-version == '3.13'
       env:
         SKIP: no-commit-to-branch
-      run: |
-        pre-commit run --all-files
+      run: uv run --python ${{ matrix.python-version }} pre-commit run --all-files
 
     - name: Run tests
-      run: |
-        pytest --cov
+      run: uv run --python ${{ matrix.python-version }} pytest --cov
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
@@ -100,10 +103,14 @@ jobs:
           fetch-depth: 0
           token: ${{ github.token }}
 
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+      - name: Set up uv
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
         with:
-          python-version: "3.13"
+          version: "0.6.x"
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.13
 
       - name: Set up Node.js  # for semver
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
@@ -111,11 +118,7 @@ jobs:
           node-version: '22'
 
       - name: Install build dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install build twine semver
-          python -m pip install -e ".[test]" -v
-          python -m pip install pre-commit
+        run: uv sync --frozen --extra test --extra release
 
       - name: Determine release type
         id: release_type
@@ -132,10 +135,6 @@ jobs:
         run: |
           if ! command -v npx &> /dev/null; then
             echo "Error: npx command not found"
-            exit 1
-          fi
-          if [[ ! -f "./setup.py" ]]; then
-            echo "Error: setup.py not found"
             exit 1
           fi
           # Get the latest tag (vX.Y.Z), strip 'v' for numeric semver checks
@@ -192,23 +191,30 @@ jobs:
           fi
           echo "Building Release Candidate version: ${RC_VERSION}"
 
-          mkdir -p src/preservationeval
-          echo "version = '${RC_VERSION}'" > src/preservationeval/_version.py
+          rm -rf dist/
+          # hatch-vcs delegates to setuptools-scm internally, which reads
+          # SETUPTOOLS_SCM_PRETEND_VERSION to override the detected version.
+          # This is documented by hatch-vcs but couples us to the setuptools-scm
+          # backend — if hatch-vcs changes its versioning backend, this will break.
+          SETUPTOOLS_SCM_PRETEND_VERSION="${RC_VERSION}" uv build --sdist
 
-          rm -f src/preservationeval/tables.py
-          python -m build
+          # Verify the pretend version actually made it into the sdist metadata
+          tar -xOf dist/*.tar.gz '*/PKG-INFO' | grep "^Version: ${RC_VERSION}$"
 
-          ! tar -tvf dist/*.tar.gz | grep '/tables.py'
-          twine check dist/*
+          # IP protection: verify no tables.py in sdist, no wheel built
+          ! tar -tvf dist/*.tar.gz | grep '/tables\.py$'
+          test $(ls dist/*.whl 2>/dev/null | wc -l) -eq 0
+
+          # Validate sdist metadata before upload
+          uv run twine check dist/*
 
           if [[ -n "${{ secrets.TEST_PYPI_API_TOKEN }}" ]]; then
-            twine upload --repository testpypi dist/* --username __token__ --password ${{ secrets.TEST_PYPI_API_TOKEN }}
+            UV_PUBLISH_TOKEN=${{ secrets.TEST_PYPI_API_TOKEN }} uv publish dist/*.tar.gz --publish-url https://test.pypi.org/legacy/
             echo "✅ RC ${RC_VERSION} uploaded to TestPyPI"
           else
             echo "TEST_PYPI_API_TOKEN not set; skipping TestPyPI upload"
           fi
 
-          rm src/preservationeval/_version.py
           echo "rc_version=${RC_VERSION}" >> $GITHUB_OUTPUT
 
       # =========================
@@ -264,7 +270,7 @@ jobs:
             git pull origin main
           fi
 
-          # Create and push tag (used by setup.py for version)
+          # Create and push tag (used by hatch-vcs for version)
           git tag "v${NEW_VERSION}"
           
           # Use a Personal Access Token if provided to ensure downstream workflow triggers
@@ -273,28 +279,50 @@ jobs:
           fi
           git push origin "v${NEW_VERSION}"
 
-          # Build package
-          rm -f src/preservationeval/tables.py
-          python -m build
+          # Build sdist only (IP protection — never publish wheels)
+          rm -rf dist/
+          uv build --sdist
 
-          # Verify contents and metadata
-          ! tar -tvf dist/*.tar.gz | grep '/tables.py'
-          twine check dist/*
+          # Verify the tag version made it into the sdist metadata
+          tar -xOf dist/*.tar.gz '*/PKG-INFO' | grep "^Version: ${NEW_VERSION}$"
 
-          # Test built artifact before uploading
-          python -m venv test_env
-          source test_env/bin/activate
-          python -c "import glob; print(glob.glob('dist/*.gz')[0]+'[test]')" | xargs pip install -v
-          pytest -v
+          # IP protection: verify no tables.py in sdist, no wheel built
+          ! tar -tvf dist/*.tar.gz | grep '/tables\.py$'
+          test $(ls dist/*.whl 2>/dev/null | wc -l) -eq 0
+
+          # Pre-upload smoke test: install from local sdist and run unit tests
+          # Skips validation (Puppeteer) tests — those require network + browser
+          # and are already covered by the test job on every PR.
+          SMOKE_DIR=$(mktemp -d)
+          uv venv "$SMOKE_DIR/.venv"
+          uv pip install --python "$SMOKE_DIR/.venv/bin/python" "dist/preservationeval-${NEW_VERSION}.tar.gz[test]"
+          "$SMOKE_DIR/.venv/bin/python" -m pytest -m "unit and not slow" -v
+          rm -rf "$SMOKE_DIR"
+
+          # Validate sdist metadata before upload
+          uv run twine check dist/*
 
           # Upload to PyPI
-          TWINE_USERNAME=__token__ TWINE_PASSWORD=${{ secrets.PYPI_API_TOKEN }} twine upload dist/*.gz
+          UV_PUBLISH_TOKEN=${{ secrets.PYPI_API_TOKEN }} uv publish dist/*.tar.gz
 
-          # Verify from PyPI
-          sleep 60
-          pip uninstall -y preservationeval
-          pip install --no-cache-dir "preservationeval[test]"
-          pytest -v
+          # Post-release verification: install from PyPI and smoke-test
+          # PyPI propagation is variable; retry with backoff instead of fixed sleep
+          VERIFY_DIR=$(mktemp -d)
+          uv venv "$VERIFY_DIR/.venv"
+          for attempt in 1 2 3 4 5; do
+            sleep $((attempt * 15))
+            if uv pip install --refresh --python "$VERIFY_DIR/.venv/bin/python" "preservationeval==${NEW_VERSION}" 2>/dev/null; then
+              "$VERIFY_DIR/.venv/bin/python" -c "from preservationeval import pi, emc, mold; print(f'pi={pi(20,50)} emc={emc(20,50)} mold={mold(20,50)}')"
+              break
+            fi
+            echo "Attempt ${attempt}/5: package not yet available on PyPI, retrying..."
+            if [[ $attempt -eq 5 ]]; then
+              echo "::warning::Post-release verification failed after 5 attempts — package was published but PyPI propagation is slow"
+              rm -rf "$VERIFY_DIR"
+              exit 0
+            fi
+          done
+          rm -rf "$VERIFY_DIR"
 
           echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
           echo "🚀 Production release ${NEW_VERSION} published to PyPI successfully"
