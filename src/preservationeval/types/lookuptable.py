@@ -67,12 +67,18 @@ class LookupTable(Generic[T]):  # noqa: UP046
             raise TypeError("Data must be a numpy array")
         if data.ndim != self.NDIMS_EXPECTED:
             raise ValueError(f"Data must be 2D, got {data.ndim}D")
+        if not isinstance(boundary_behavior, BoundaryBehavior):
+            raise TypeError("Boundary behavior must be a BoundaryBehavior enum value")
+        if rounding_func is not None and not callable(rounding_func):
+            raise TypeError("Rounding function must be callable")
 
         self.data: Final[npt.NDArray[np.floating[Any] | np.integer[Any]]] = data
         self.temp_min: Final[int] = temp_min
         self.rh_min: Final[int] = rh_min
-        self.boundary_behavior = boundary_behavior
-        self.rounding_func = rounding_func or self._round_half_up
+        self.boundary_behavior: Final[BoundaryBehavior] = boundary_behavior
+        self.rounding_func: Final[Callable[[float], int]] = (
+            rounding_func or self._round_half_up
+        )
 
     @property
     def temp_max(self) -> int:
