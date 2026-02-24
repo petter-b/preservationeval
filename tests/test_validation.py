@@ -21,11 +21,15 @@ import json
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from preservationeval import emc, mold, pi
 from tests.config import ComparisonConfig
 from tests.validate_core import ValidationTest
 
 
+@pytest.mark.slow
+@pytest.mark.validation
 def test_against_javascript(validation: ValidationTest) -> None:
     """Test Python implementation against JavaScript.
 
@@ -39,6 +43,7 @@ def test_against_javascript(validation: ValidationTest) -> None:
     assert not differences["mold"], f"Mold calculations differ: {differences['mold']}"
 
 
+@pytest.mark.validation
 def test_specific_cases(test_data_dir: Path) -> None:
     """Test specific known cases.
 

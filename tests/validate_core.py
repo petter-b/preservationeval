@@ -541,7 +541,7 @@ def main() -> None:
                         len(diffs),
                         ComparisonConfig.max_differences,
                     )
-                    for diff in diffs[: COMPARISON_CONFIG["max_differences_shown"]]:  # type: ignore # noqa E501
+                    for diff in diffs[: ComparisonConfig.max_differences]:
                         logger.warning(
                             "  T=%.1f, RH=%.1f: JS=%.6f, PY=%.6f",
                             diff.temp,
