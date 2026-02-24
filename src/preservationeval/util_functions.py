@@ -28,7 +28,7 @@ def validate_rh(rh: RelativeHumidity) -> None:
         TypeError: If 'rh' is not a number.
         ValueError: If 'rh' is not within the valid range.
     """
-    if not isinstance(rh, (int | float)):
+    if isinstance(rh, bool) or not isinstance(rh, (int | float)):
         raise TypeError(f"Relative humidity must be a number, got {type(rh).__name__}")
     if not RH_MIN <= rh <= RH_MAX:
         raise ValueError(
@@ -47,7 +47,7 @@ def validate_temp(temp: Temperature) -> None:
         TypeError: If 'temp' is not a number.
         ValueError: If 'temp' < TEMP_MIN or 'temp' > TEMP_MAX
     """
-    if not isinstance(temp, (int | float)):
+    if isinstance(temp, bool) or not isinstance(temp, (int | float)):
         raise TypeError(f"Temperature must be a number, got {type(temp).__name__}")
     if not (TEMP_MIN <= temp <= TEMP_MAX):
         raise ValueError(
