@@ -80,6 +80,24 @@ class TestLookupTableBasics:
         with pytest.raises(ValueError):
             LookupTable[int](np.array([1, 2, 3]), 0, 0)  # 1D array
 
+    def test_invalid_boundary_behavior_in_constructor(
+        self, int_test_data: NDArray[integer[Any]]
+    ) -> None:
+        """Constructor should reject invalid boundary_behavior."""
+        with pytest.raises(TypeError, match="BoundaryBehavior"):
+            LookupTable[int](
+                int_test_data, TEMP_MIN, RH_MIN, boundary_behavior="not valid"
+            )
+
+    def test_invalid_rounding_func_in_constructor(
+        self, int_test_data: NDArray[integer[Any]]
+    ) -> None:
+        """Constructor should reject non-callable rounding_func."""
+        with pytest.raises(TypeError, match="callable"):
+            LookupTable[int](
+                int_test_data, TEMP_MIN, RH_MIN, rounding_func="not callable"
+            )
+
     def test_str_representation(self, int_table: LookupTable[int]) -> None:
         """Test string representation."""
         str_rep = str(int_table)
