@@ -75,7 +75,7 @@ class TestLookupTableBasics:
     def test_invalid_data(self) -> None:
         """Test table creation with invalid data."""
         with pytest.raises(TypeError):
-            LookupTable[int]([1, 2, 3], 0, 0)  # type: ignore
+            LookupTable[int]([1, 2, 3], 0, 0)
 
         with pytest.raises(ValueError):
             LookupTable[int](np.array([1, 2, 3]), 0, 0)  # 1D array
@@ -194,7 +194,7 @@ class TestBoundaryBehavior:
     def test_faulty_bb_input(self, int_table: LookupTable[int]) -> None:
         """Test faulty input to set_boundary_behavior."""
         with pytest.raises(TypeError):
-            int_table.set_boundary_behavior("this input is not ok")  # type: ignore
+            int_table.set_boundary_behavior("this input is not ok")
 
 
 @pytest.mark.unit
@@ -229,7 +229,7 @@ class TestRounding:
         table.set_rounding_func(int)  # Simple truncation
         assert table[(1.8, 50.0)] == table[(1.0, 50.0)]
 
-    def test_faulty_bb_input(self, int_table: LookupTable[int]) -> None:
+    def test_faulty_rounding_func_input(self, int_table: LookupTable[int]) -> None:
         """Test faulty input to set_rounding_func."""
         with pytest.raises(TypeError):
-            int_table.set_rounding_func("this input is not ok")  # type: ignore
+            int_table.set_rounding_func("this input is not ok")
