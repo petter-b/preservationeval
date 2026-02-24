@@ -7,12 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Hatch custom build hook (`hatch_build.py`) for wheel-time table generation
+- Pre-upload metadata validation with `twine check`
+- Post-release PyPI install verification with retry and backoff
+
 ### Changed
 - Migrated build backend from setuptools to hatchling + hatch-vcs
 - Migrated all CI/CD from pip to uv (`astral-sh/setup-uv`, `uv sync`, `uv build`, `uv publish`)
-- Added hatch custom build hook (`hatch_build.py`) for wheel-time table generation
-- Added pre-upload metadata validation with `twine check`
-- Added post-release PyPI install verification
 
 ### Removed
 - Removed `setup.py` (replaced by hatchling build backend)
