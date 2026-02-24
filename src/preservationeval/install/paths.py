@@ -75,11 +75,13 @@ def get_module_path(
         resolved_path = full_path.resolve()
 
         # Safety check - make sure we didn't escape root
-        if not str(resolved_path).startswith(str(root_path.resolve())):
+        try:
+            resolved_path.relative_to(root_path.resolve())
+        except ValueError:
             raise PathError(
                 "Module path escapes package root",
                 resolved_path,
-            )
+            ) from None
 
         if not resolved_path.exists():
             raise PathError(

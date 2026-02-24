@@ -1,5 +1,7 @@
 """Test module for preservationeval.core_functions."""
 
+import importlib
+import sys
 from typing import Any
 
 import pytest
@@ -128,6 +130,30 @@ class TestErrorHandling:
         assert "Unexpected error" in str(exc_info.value)
 
 
+@pytest.mark.unit
+class TestMissingTables:
+    """Verify clear error when tables are not generated."""
+
+    def test_import_error_message_is_actionable(self) -> None:
+        """If tables are missing, ImportError should have a clear message."""
+        # Temporarily remove tables module to simulate missing tables
+        tables_key = "preservationeval.tables"
+        original = sys.modules.get(tables_key)
+        sys.modules[tables_key] = None  # type: ignore[assignment]
+        try:
+            with pytest.raises(ImportError, match="Lookup tables not found"):
+                importlib.reload(
+                    importlib.import_module("preservationeval.core_functions")
+                )
+        finally:
+            if original is not None:
+                sys.modules[tables_key] = original
+            elif tables_key in sys.modules:
+                del sys.modules[tables_key]
+            # Reload to restore normal state
+            importlib.reload(importlib.import_module("preservationeval.core_functions"))
+
+
 @pytest.mark.validation
 class TestBoundaryConditions:
     """Test behavior at boundary conditions."""
@@ -161,7 +187,7 @@ class TestSpecificErrorPaths:
     """Test specific error paths in core functions."""
 
     def test_emc_temperature_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Test EMC handling of TemperatureError."""
+        """Test EMC propagates TemperatureError from table."""
 
         class MockTable:
             def __getitem__(self, key: Any) -> Any:
@@ -169,12 +195,11 @@ class TestSpecificErrorPaths:
 
         monkeypatch.setattr("preservationeval.core_functions.emc_table", MockTable())
 
-        with pytest.raises(TemperatureError) as exc_info:
+        with pytest.raises(TemperatureError, match="Mock temperature error"):
             emc(20.0, 50.0)
-        assert "Temperature out of bounds" in str(exc_info.value)
 
     def test_emc_humidity_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Test EMC handling of HumidityError."""
+        """Test EMC propagates HumidityError from table."""
 
         class MockTable:
             def __getitem__(self, key: Any) -> Any:
@@ -182,9 +207,8 @@ class TestSpecificErrorPaths:
 
         monkeypatch.setattr("preservationeval.core_functions.emc_table", MockTable())
 
-        with pytest.raises(HumidityError) as exc_info:
+        with pytest.raises(HumidityError, match="Mock humidity error"):
             emc(20.0, 50.0)
-        assert "RH out of bounds" in str(exc_info.value)
 
     def test_mold_index_range_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test mold handling of IndexRangeError."""
@@ -212,7 +236,7 @@ class TestSpecificErrorPaths:
         assert "Unexpected error calculating mold risk" in str(exc_info.value)
 
     def test_pi_temperature_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Test PI handling of TemperatureError."""
+        """Test PI propagates TemperatureError from table."""
 
         class MockTable:
             def __getitem__(self, key: Any) -> Any:
@@ -220,12 +244,11 @@ class TestSpecificErrorPaths:
 
         monkeypatch.setattr("preservationeval.core_functions.pi_table", MockTable())
 
-        with pytest.raises(TemperatureError) as exc_info:
+        with pytest.raises(TemperatureError, match="Mock temperature error"):
             pi(20.0, 50.0)
-        assert "Temperature out of bounds" in str(exc_info.value)
 
     def test_pi_humidity_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Test PI handling of HumidityError."""
+        """Test PI propagates HumidityError from table."""
 
         class MockTable:
             def __getitem__(self, key: Any) -> Any:
@@ -233,6 +256,5 @@ class TestSpecificErrorPaths:
 
         monkeypatch.setattr("preservationeval.core_functions.pi_table", MockTable())
 
-        with pytest.raises(HumidityError) as exc_info:
+        with pytest.raises(HumidityError, match="Mock humidity error"):
             pi(20.0, 50.0)
-        assert "RH out of bounds" in str(exc_info.value)

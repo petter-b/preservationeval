@@ -14,6 +14,8 @@ Functions:
     mold: Calculates the mold risk factor value.
 """
 
+import logging
+
 from .types import (
     HumidityError,
     IndexRangeError,
@@ -25,18 +27,20 @@ from .types import (
     Temperature,
     TemperatureError,
 )
-from .utils.logging import setup_logging
 
 try:
     from .tables import emc_table, mold_table, pi_table
-except ImportError:
-    ...
+except ImportError as _e:
+    raise ImportError(
+        "Lookup tables not found. Run the build step to generate tables. "
+        "See https://github.com/petter-b/preservationeval for details."
+    ) from _e
 
 
 from .util_functions import validate_rh, validate_temp
 
 # Initialize module logger
-logger = setup_logging(__name__)
+logger = logging.getLogger(__name__)
 
 
 def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
@@ -57,12 +61,8 @@ def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
     validate_temp(t)
     try:
         pi: int = pi_table[t, rh]
-    except TemperatureError as e:
-        logger.error(f"Temperature out of bounds: {e}")
-        raise TemperatureError(f"Temperature out of bounds {e}") from e
-    except HumidityError as e:
-        logger.error(f"RH out of bounds: {e}")
-        raise HumidityError(f"RH out of bounds {e}") from e
+    except (TemperatureError, HumidityError):
+        raise
     except Exception as e:
         logger.error(f"Unexpected error calculating PI: {e}")
         raise PreservationError("Unexpected error calculating PI") from e
@@ -86,7 +86,7 @@ def mold(t: Temperature, rh: RelativeHumidity) -> MoldRisk:
     try:
         mold: int = mold_table[t, rh]
     except IndexRangeError:
-        return 0.0
+        return 0
     except Exception as e:
         logger.error(f"Unexpected error calculating mold risk: {e}")
         raise PreservationError("Unexpected error calculating mold risk") from e
@@ -111,12 +111,8 @@ def emc(t: Temperature, rh: RelativeHumidity) -> MoistureContent:
     validate_temp(t)
     try:
         emc: float = emc_table[t, rh]
-    except TemperatureError as e:
-        logger.error(f"Temperature out of bounds: {e}")
-        raise TemperatureError(f"Temperature out of bounds {e}") from e
-    except HumidityError as e:
-        logger.error(f"RH out of bounds: {e}")
-        raise HumidityError(f"RH out of bounds {e}") from e
+    except (TemperatureError, HumidityError):
+        raise
     except Exception as e:
         logger.error(f"Unexpected error calculating EMC: {e}")
         raise PreservationError("Unexpected error calculating EMC") from e

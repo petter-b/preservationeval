@@ -122,11 +122,15 @@ jobs:
 
       - name: Determine release type
         id: release_type
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TYPE: ${{ github.event.inputs.release_type }}
+          LABEL_NAME: ${{ github.event.label.name }}
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            RELEASE_TYPE="${{ github.event.inputs.release_type }}"
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            RELEASE_TYPE="$INPUT_TYPE"
           else
-            RELEASE_TYPE="${{ github.event.label.name }}"
+            RELEASE_TYPE="$LABEL_NAME"
           fi
           echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
           echo "Detected release type: $RELEASE_TYPE"
@@ -173,6 +177,8 @@ jobs:
       - name: Build and (optionally) Publish Release Candidate
         id: build_rc
         if: steps.release_type.outputs.release_type == 'release-candidate'
+        env:
+          TEST_PYPI_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
         run: |
           # Get the base version from the latest tag and strip leading 'v'
           LATEST_TAG=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null || echo "")
@@ -208,8 +214,8 @@ jobs:
           # Validate sdist metadata before upload
           uv run twine check dist/*
 
-          if [[ -n "${{ secrets.TEST_PYPI_API_TOKEN }}" ]]; then
-            UV_PUBLISH_TOKEN=${{ secrets.TEST_PYPI_API_TOKEN }} uv publish dist/*.tar.gz --publish-url https://test.pypi.org/legacy/
+          if [[ -n "$TEST_PYPI_TOKEN" ]]; then
+            UV_PUBLISH_TOKEN="$TEST_PYPI_TOKEN" uv publish dist/*.tar.gz --publish-url https://test.pypi.org/legacy/
             echo "✅ RC ${RC_VERSION} uploaded to TestPyPI"
           else
             echo "TEST_PYPI_API_TOKEN not set; skipping TestPyPI upload"
@@ -223,6 +229,8 @@ jobs:
       - name: Build, Publish Production Release to PyPI, and Create GH Release
         id: build_prod
         if: steps.release_type.outputs.release_type == 'release-patch' || steps.release_type.outputs.release_type == 'release-minor' || steps.release_type.outputs.release_type == 'release-major'
+        env:
+          RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -274,8 +282,8 @@ jobs:
           git tag "v${NEW_VERSION}"
           
           # Use a Personal Access Token if provided to ensure downstream workflow triggers
-          if [[ -n "${{ secrets.RELEASE_PAT }}" ]]; then
-            git remote set-url origin "https://x-access-token:${{ secrets.RELEASE_PAT }}@github.com/${{ github.repository }}.git"
+          if [[ -n "$RELEASE_PAT" ]]; then
+            git remote set-url origin "https://x-access-token:${RELEASE_PAT}@github.com/${{ github.repository }}.git"
           fi
           git push origin "v${NEW_VERSION}"
 
@@ -329,15 +337,12 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.release_type.outputs.release_type == 'release-patch' || steps.release_type.outputs.release_type == 'release-minor' || steps.release_type.outputs.release_type == 'release-major'
-        uses: actions/create-release@0cb9c9b65d5d1901c1f53e5e66eaf4afd303e70e # v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        with:
-          tag_name: v${{ steps.build_prod.outputs.new_version }}
-          release_name: Release v${{ steps.build_prod.outputs.new_version }}
-          body: Automated release of preservationeval version ${{ steps.build_prod.outputs.new_version }}. See CHANGELOG.md for details.
-          draft: false
-          prerelease: false
+        run: |
+          gh release create "v${{ steps.build_prod.outputs.new_version }}" \
+            --title "Release v${{ steps.build_prod.outputs.new_version }}" \
+            --notes "Automated release of preservationeval version ${{ steps.build_prod.outputs.new_version }}. See CHANGELOG.md for details."
 
       - name: Summary
         run: |

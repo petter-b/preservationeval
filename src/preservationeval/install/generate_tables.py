@@ -21,7 +21,7 @@ from .const import (
 )
 from .export import generate_tables_module
 from .extract import fetch_and_extract_tables
-from .paths import PathError, find_package_root, get_module_path
+from .paths import find_package_root, get_module_path
 
 logger = setup_logging(__name__, env=Environment.INSTALL)
 
@@ -99,7 +99,7 @@ def generate_tables(package_path: Path | None = None) -> None:
 
         logger.debug("Tables generated successfully")
 
-    except (PathError, Exception) as e:
+    except Exception as e:
         error_msg = f"Table generation failed: {e}"
         logger.error(error_msg)
         raise TableGenerationError(error_msg, e) from e

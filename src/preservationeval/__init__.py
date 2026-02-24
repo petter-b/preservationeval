@@ -15,6 +15,8 @@ Main functions:
 
 """
 
+import logging
+
 from .core_functions import emc, mold, pi
 from .eval_functions import (
     EnvironmentalRating,
@@ -35,6 +37,8 @@ from .types import (
     TemperatureError,
 )
 from .util_functions import calculate_dew_point, to_celsius, validate_rh, validate_temp
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __all__ = [
     "EnvironmentalRating",

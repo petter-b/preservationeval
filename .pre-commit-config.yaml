@@ -44,7 +44,7 @@ exclude: |
         # Specific files
         ^version\.py|
         ^tests/.*/(__init__)\.py|
-        ^src/preservationeval/main/tables\.py$$
+        ^src/preservationeval/tables\.py$
     )
 
 repos:
