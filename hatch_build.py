@@ -49,10 +49,7 @@ class CustomBuildHook(BuildHookInterface):  # type: ignore[misc]
             )
             raise RuntimeError(msg) from exc
         finally:
-            try:
-                sys.path.remove(src_path)
-            except ValueError:
-                pass
+            sys.path.pop(0)
 
         # For editable installs, Hatchling picks up tables.py from the source
         # tree directly; no force_include needed.
