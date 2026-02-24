@@ -98,6 +98,16 @@ class TestToCelsius:
         with pytest.raises(TypeError, match="Temperature must be integer or float"):
             to_celsius("20", scale="c")  # type: ignore
 
+    def test_fahrenheit_between_thresholds_is_valid(self) -> None:
+        """Verify -300F (valid temp, above absolute zero) doesn't raise."""
+        result = to_celsius(-300, "f")
+        assert result == pytest.approx((-300 - 32) * 5 / 9)
+
+    def test_fahrenheit_below_absolute_zero_raises(self) -> None:
+        """Verify -460F (below absolute zero) raises ValueError."""
+        with pytest.raises(ValueError, match="Fahrenheit temperature must be"):
+            to_celsius(-460, "f")
+
     @pytest.mark.parametrize(
         "scale, value, error",
         [

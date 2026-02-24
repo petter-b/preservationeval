@@ -77,7 +77,7 @@ def to_celsius(x: Temperature, scale: str = "f") -> Temperature:
     if not isinstance(x, (int | float)):
         raise TypeError(f"Temperature must be integer or float, got {type(x)}")
     if scale == "f":
-        if x < (TEMP_MIN - 32) * 5 / 9:
+        if x < TEMP_MIN * 9 / 5 + 32:
             raise ValueError(f"Fahrenheit temperature must be > -459.67, got {x}")
         return float((x - 32) * 5 / 9)
     elif scale == "c":
