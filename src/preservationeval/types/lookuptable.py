@@ -35,19 +35,20 @@ class BoundaryBehavior(Flag):
 class LookupTable(Generic[T]):  # noqa: UP046
     """Array with shifted index ranges, backed by numpy.array.
 
-    rray
-    dat : 2D         temp_min: Minimum temperature
-        rh_min: Minimum relative humidity
-        boundary: How to handle out-of-bounds indices
-        rounding_func: Function used to round float indices to integers. Defaults
-            to round_half_up to get same behavior as math.round() in JS code.
-
-    Attributes:
+    Args:
         data: 2D numpy array
         temp_min: Minimum temperature
         rh_min: Minimum relative humidity
         boundary_behavior: How to handle out-of-bounds indices
-        rounding_func: Function used to round float indices to integers
+        rounding_func: Function used to round float indices to integers. Defaults
+            to round_half_up to get same behavior as math.round() in JS code.
+
+    Attributes:
+        data: 2D numpy array (immutable)
+        temp_min: Minimum temperature (immutable)
+        rh_min: Minimum relative humidity (immutable)
+        boundary_behavior: How to handle out-of-bounds indices (immutable)
+        rounding_func: Function used to round float indices to integers (immutable)
     """
 
     NDIMS_EXPECTED: Final[int] = 2
@@ -67,12 +68,18 @@ class LookupTable(Generic[T]):  # noqa: UP046
             raise TypeError("Data must be a numpy array")
         if data.ndim != self.NDIMS_EXPECTED:
             raise ValueError(f"Data must be 2D, got {data.ndim}D")
+        if not isinstance(boundary_behavior, BoundaryBehavior):
+            raise TypeError("Boundary behavior must be a BoundaryBehavior enum value")
+        if rounding_func is not None and not callable(rounding_func):
+            raise TypeError("Rounding function must be callable")
 
         self.data: Final[npt.NDArray[np.floating[Any] | np.integer[Any]]] = data
         self.temp_min: Final[int] = temp_min
         self.rh_min: Final[int] = rh_min
-        self.boundary_behavior = boundary_behavior
-        self.rounding_func = rounding_func or self._round_half_up
+        self.boundary_behavior: Final[BoundaryBehavior] = boundary_behavior
+        self.rounding_func: Final[Callable[[float], int]] = (
+            rounding_func or self._round_half_up
+        )
 
     @property
     def temp_max(self) -> int:
@@ -83,32 +90,6 @@ class LookupTable(Generic[T]):  # noqa: UP046
     def rh_max(self) -> int:
         """Maximum relative humidity value for the table, based on the data shape."""
         return int(self.rh_min + self.data.shape[1] - 1)
-
-    def set_rounding_func(self, rounding_func: Callable[[float], int] | None) -> None:
-        """Set rounding function for float indices.
-
-        Args:
-            rounding_func: Function used to round float indices to integers.
-                If None, defaults to round_half_up to get same behavior as
-                math.round() in JS code.
-        """
-        if rounding_func is None:
-            self.rounding_func = self._round_half_up
-        else:
-            if not callable(rounding_func):
-                raise TypeError("Rounding function must be callable")
-            self.rounding_func = rounding_func
-
-    def set_boundary_behavior(self, boundary_behavior: BoundaryBehavior) -> None:
-        """Set how to handle out-of-bounds indices.
-
-        Args:
-            boundary_behavior: How to handle out-of-bounds indices.
-                Must be a BoundaryBehavior enum value.
-        """
-        if not isinstance(boundary_behavior, BoundaryBehavior):
-            raise TypeError("Boundary behavior must be a BoundaryBehavior enum value")
-        self.boundary_behavior = boundary_behavior
 
     def __getitem__(
         self,
