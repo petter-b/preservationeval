@@ -69,8 +69,3 @@ __all__ = [
     "Temperature",
     "TemperatureError",
 ]
-
-try:
-    from preservationeval._version import version as __version__
-except ImportError:
-    __version__ = "unknown"

@@ -14,9 +14,4 @@ Note:
 
 from .generate_tables import generate_tables
 
-__all__ = ["__version__", "generate_tables"]
-
-try:
-    from preservationeval._version import version as __version__
-except ImportError:
-    __version__ = "unknown"
+__all__ = ["generate_tables"]
