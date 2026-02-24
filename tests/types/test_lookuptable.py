@@ -80,24 +80,6 @@ class TestLookupTableBasics:
         with pytest.raises(ValueError):
             LookupTable[int](np.array([1, 2, 3]), 0, 0)  # 1D array
 
-    def test_invalid_boundary_behavior_in_constructor(
-        self, int_test_data: NDArray[integer[Any]]
-    ) -> None:
-        """Constructor should reject invalid boundary_behavior."""
-        with pytest.raises(TypeError, match="BoundaryBehavior"):
-            LookupTable[int](
-                int_test_data, TEMP_MIN, RH_MIN, boundary_behavior="not valid"
-            )
-
-    def test_invalid_rounding_func_in_constructor(
-        self, int_test_data: NDArray[integer[Any]]
-    ) -> None:
-        """Constructor should reject non-callable rounding_func."""
-        with pytest.raises(TypeError, match="callable"):
-            LookupTable[int](
-                int_test_data, TEMP_MIN, RH_MIN, rounding_func="not callable"
-            )
-
     def test_str_representation(self, int_table: LookupTable[int]) -> None:
         """Test string representation."""
         str_rep = str(int_table)
@@ -198,21 +180,27 @@ class TestBoundaryBehavior:
     )
     def test_clamp_and_log_behavior(
         self,
-        clamp_table: LookupTable[int],
+        int_test_data: NDArray[integer[Any]],
         indices: TableIndex,
         expected_indices: TableIndex,
     ) -> None:
-        """Test CLAMP boundary behavior."""
-        clamp_table.set_boundary_behavior(BoundaryBehavior.CLAMP | BoundaryBehavior.LOG)
-        value = clamp_table[indices]
-        expected_value = clamp_table[expected_indices]
+        """Test CLAMP | LOG boundary behavior."""
+        table = LookupTable[int](
+            int_test_data,
+            TEMP_MIN,
+            RH_MIN,
+            boundary_behavior=BoundaryBehavior.CLAMP | BoundaryBehavior.LOG,
+        )
+        value = table[indices]
+        expected_value = table[expected_indices]
         assert value == expected_value
-        # TODO: Add check of log output
 
-    def test_faulty_bb_input(self, int_table: LookupTable[int]) -> None:
-        """Test faulty input to set_boundary_behavior."""
+    def test_faulty_bb_input(self, int_test_data: NDArray[integer[Any]]) -> None:
+        """Test faulty boundary_behavior in constructor."""
         with pytest.raises(TypeError):
-            int_table.set_boundary_behavior("this input is not ok")
+            LookupTable[int](
+                int_test_data, TEMP_MIN, RH_MIN, boundary_behavior="not ok"
+            )
 
 
 @pytest.mark.unit
@@ -220,7 +208,7 @@ class TestRounding:
     """Test rounding behavior."""
 
     @pytest.mark.parametrize(
-        "value,expected1,expected2",
+        "value,expected_half_up,expected_builtin_round",
         [
             (2.5, 3, 2),
             (1.4, 1, 1),  # Round down
@@ -232,22 +220,33 @@ class TestRounding:
         ],
     )
     def test_rounding_builtin(
-        self, int_table: LookupTable[int], value: float, expected1: int, expected2: int
+        self,
+        int_test_data: NDArray[integer[Any]],
+        value: float,
+        expected_half_up: int,
+        expected_builtin_round: int,
     ) -> None:
-        """Test rounding function."""
-        assert int_table.rounding_func(value) == expected1
-        int_table.set_rounding_func(round)
-        assert int_table.rounding_func(value) == expected2
-        int_table.set_rounding_func(None)
-        assert int_table.rounding_func(value) == expected1
+        """Test default (half-up) and builtin round rounding functions."""
+        default_table = LookupTable[int](int_test_data, TEMP_MIN, RH_MIN)
+        assert default_table.rounding_func(value) == expected_half_up
+
+        round_table = LookupTable[int](
+            int_test_data, TEMP_MIN, RH_MIN, rounding_func=round
+        )
+        assert round_table.rounding_func(value) == expected_builtin_round
 
     def test_truncation_rounding(self, int_test_data: NDArray[integer[Any]]) -> None:
-        """Test custom rounding function."""
-        table = LookupTable[int](int_test_data, TEMP_MIN, RH_MIN)
-        table.set_rounding_func(int)  # Simple truncation
+        """Test custom rounding function via constructor."""
+        table = LookupTable[int](
+            int_test_data, TEMP_MIN, RH_MIN, rounding_func=int
+        )
         assert table[(1.8, 50.0)] == table[(1.0, 50.0)]
 
-    def test_faulty_rounding_func_input(self, int_table: LookupTable[int]) -> None:
-        """Test faulty input to set_rounding_func."""
+    def test_faulty_rounding_func_input(
+        self, int_test_data: NDArray[integer[Any]]
+    ) -> None:
+        """Test faulty rounding_func in constructor."""
         with pytest.raises(TypeError):
-            int_table.set_rounding_func("this input is not ok")
+            LookupTable[int](
+                int_test_data, TEMP_MIN, RH_MIN, rounding_func="not ok"
+            )
