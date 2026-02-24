@@ -49,6 +49,7 @@ dmypy.json
 # Agent/tool-specific config
 .mcp.json
 .serena/
+.worktrees/
 docs/plans/
 
 # Local planning docs (agent artifacts)
