@@ -167,7 +167,7 @@ exclude_lines = [
     "if self.debug:",
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
-    "pass",
+    "^\\s*pass\\s*$",
     "raise ImportError",
     "if TYPE_CHECKING:",
     "class .*\\bProtocol\\):",
