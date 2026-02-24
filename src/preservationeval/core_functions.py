@@ -86,7 +86,7 @@ def mold(t: Temperature, rh: RelativeHumidity) -> MoldRisk:
     try:
         mold: int = mold_table[t, rh]
     except IndexRangeError:
-        return 0.0
+        return 0
     except Exception as e:
         logger.error(f"Unexpected error calculating mold risk: {e}")
         raise PreservationError("Unexpected error calculating mold risk") from e

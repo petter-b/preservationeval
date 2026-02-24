@@ -136,7 +136,7 @@ class LookupTable(Generic[T]):  # noqa: UP046
         temp_idx = self.rounding_func(temp) - self.temp_min
         rh_idx = self.rounding_func(rh) - self.rh_min
 
-        return cast(T, self.data[temp_idx, rh_idx])
+        return cast(T, self.data[temp_idx, rh_idx].item())
 
     def _validate_index_types(self, indices: TableIndex) -> tuple[float, float]:
         """Validate that indices are of correct type.
