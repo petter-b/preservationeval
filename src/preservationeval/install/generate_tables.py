@@ -97,7 +97,7 @@ def generate_tables(package_path: Path | None = None) -> None:
         module_path = f"{MODULE_NAME}.{TABLES_MODULE_NAME}"
         verify_tables(module_path)
 
-        logger.debug("\033[92mTables generated successfully\033[0m")
+        logger.debug("Tables generated successfully")
 
     except (PathError, Exception) as e:
         error_msg = f"Table generation failed: {e}"

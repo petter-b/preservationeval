@@ -59,10 +59,10 @@ def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
         pi: int = pi_table[t, rh]
     except TemperatureError as e:
         logger.error(f"Temperature out of bounds: {e}")
-        raise TemperatureError("Temperature out of bounds {e}") from e
+        raise TemperatureError(f"Temperature out of bounds {e}") from e
     except HumidityError as e:
         logger.error(f"RH out of bounds: {e}")
-        raise HumidityError("RH out of bounds") from e
+        raise HumidityError(f"RH out of bounds {e}") from e
     except Exception as e:
         logger.error(f"Unexpected error calculating PI: {e}")
         raise PreservationError("Unexpected error calculating PI") from e
@@ -113,10 +113,10 @@ def emc(t: Temperature, rh: RelativeHumidity) -> MoistureContent:
         emc: float = emc_table[t, rh]
     except TemperatureError as e:
         logger.error(f"Temperature out of bounds: {e}")
-        raise TemperatureError("Temperature out of bounds {e}") from e
+        raise TemperatureError(f"Temperature out of bounds {e}") from e
     except HumidityError as e:
         logger.error(f"RH out of bounds: {e}")
-        raise HumidityError("RH out of bounds {e}") from e
+        raise HumidityError(f"RH out of bounds {e}") from e
     except Exception as e:
         logger.error(f"Unexpected error calculating EMC: {e}")
         raise PreservationError("Unexpected error calculating EMC") from e

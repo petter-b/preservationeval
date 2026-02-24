@@ -122,7 +122,7 @@ def generate_tables_module(
     try:
         with output_file.open("w", encoding="utf-8") as f:
             f.write(code)
-        logger.info("Lookup tables for preservationevlal generated.")
+        logger.info("Lookup tables for preservationeval generated.")
         logger.info(f"Creating {output_file!s}")
     except OSError as e:
         raise OSError(f"Error writing to file {output_file!s}: {e.strerror}") from e
