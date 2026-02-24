@@ -18,7 +18,7 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICENSE"]
-dependencies = ["numpy>=2.4.0,<2.5.0", "requests>=2.31.0,<3.0.0"]
+dependencies = ["numpy>=2.4.0,<2.5.0"]
 readme = "README.md"
 
 [project.urls]
@@ -59,6 +59,7 @@ fallback-version = "0.0.0"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/preservationeval"]
+exclude = ["src/preservationeval/install"]
 
 [tool.hatch.build.targets.sdist]
 exclude = ["src/preservationeval/tables.py"]
@@ -72,7 +73,7 @@ version-file = "src/preservationeval/_version.py"
 requires = [
     "hatchling>=1.18.0",
     "hatch-vcs>=0.4.0",
-    "numpy>=1.26.0",
+    "numpy>=2.4.0,<2.5.0",
     "requests>=2.31.0",
     "mini-racer>=0.12.4",
 ]
