@@ -54,7 +54,8 @@ class CustomBuildHook(BuildHookInterface):  # type: ignore[misc]
             except ValueError:
                 pass
 
-        # For editable installs, tables.py is already in the source tree
+        # For editable installs, Hatchling picks up tables.py from the source
+        # tree directly; no force_include needed.
         if version == "editable":
             return
 

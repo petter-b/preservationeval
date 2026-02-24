@@ -283,6 +283,9 @@ jobs:
           rm -rf dist/
           uv build --sdist
 
+          # Verify the tag version made it into the sdist metadata
+          tar -xOf dist/*.tar.gz '*/PKG-INFO' | grep "^Version: ${NEW_VERSION}$"
+
           # IP protection: verify no tables.py in sdist, no wheel built
           ! tar -tvf dist/*.tar.gz | grep 'tables\.py'
           test $(ls dist/*.whl 2>/dev/null | wc -l) -eq 0
@@ -303,11 +306,22 @@ jobs:
           uv publish dist/*.tar.gz --token ${{ secrets.PYPI_API_TOKEN }}
 
           # Post-release verification: install from PyPI and smoke-test
-          sleep 30
+          # PyPI propagation is variable; retry with backoff instead of fixed sleep
           VERIFY_DIR=$(mktemp -d)
           uv venv "$VERIFY_DIR/.venv"
-          uv pip install --python "$VERIFY_DIR/.venv/bin/python" "preservationeval==${NEW_VERSION}"
-          "$VERIFY_DIR/.venv/bin/python" -c "from preservationeval import pi, emc, mold; print(f'pi={pi(20,50)} emc={emc(20,50)} mold={mold(20,50)}')"
+          for attempt in 1 2 3 4 5; do
+            sleep $((attempt * 15))
+            if uv pip install --python "$VERIFY_DIR/.venv/bin/python" "preservationeval==${NEW_VERSION}" 2>/dev/null; then
+              "$VERIFY_DIR/.venv/bin/python" -c "from preservationeval import pi, emc, mold; print(f'pi={pi(20,50)} emc={emc(20,50)} mold={mold(20,50)}')"
+              break
+            fi
+            echo "Attempt ${attempt}/5: package not yet available on PyPI, retrying..."
+            if [[ $attempt -eq 5 ]]; then
+              echo "::warning::Post-release verification failed after 5 attempts — package was published but PyPI propagation is slow"
+              rm -rf "$VERIFY_DIR"
+              exit 1
+            fi
+          done
           rm -rf "$VERIFY_DIR"
 
           echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
