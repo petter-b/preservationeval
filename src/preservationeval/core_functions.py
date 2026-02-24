@@ -14,6 +14,8 @@ Functions:
     mold: Calculates the mold risk factor value.
 """
 
+import logging
+
 from .types import (
     HumidityError,
     IndexRangeError,
@@ -25,7 +27,6 @@ from .types import (
     Temperature,
     TemperatureError,
 )
-from .utils.logging import setup_logging
 
 try:
     from .tables import emc_table, mold_table, pi_table
@@ -39,7 +40,7 @@ except ImportError as _e:
 from .util_functions import validate_rh, validate_temp
 
 # Initialize module logger
-logger = setup_logging(__name__)
+logger = logging.getLogger(__name__)
 
 
 def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:

@@ -4,6 +4,7 @@ This module provides the fundamental LookupTable class used for efficient
 lookup of preservation-related values based on temperature and humidity.
 """
 
+import logging
 from collections.abc import Callable
 from enum import Flag, auto
 from math import floor
@@ -11,8 +12,6 @@ from typing import Any, Final, Generic, TypeVar, cast
 
 import numpy as np
 import numpy.typing as npt
-
-from preservationeval.utils.logging import setup_logging
 
 from .exceptions import HumidityError, TemperatureError
 
@@ -62,7 +61,7 @@ class LookupTable(Generic[T]):  # noqa: UP046
         rounding_func: Callable[[float], int] | None = None,
     ) -> None:
         """Initialize LookupTable with 2D numpy array and shifted index ranges."""
-        self._logger = setup_logging(self.__class__.__name__)
+        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
         if not isinstance(data, np.ndarray):
             raise TypeError("Data must be a numpy array")
