@@ -92,16 +92,16 @@ uv sync --extra dev
 
 ```bash
 # Format code
-ruff format .
+uv run ruff format .
 
 # Run linter
-ruff check .
+uv run ruff check .
 
 # Type checking
-mypy .
+uv run mypy .
 
 # Run tests with coverage
-pytest --cov
+uv run pytest --cov
 ```
 
 ### Testing
@@ -134,19 +134,19 @@ You can manually trigger this setup:
 ```bash
 # Download JavaScript reference implementation
 # This happens automatically when running tests, or manually:
-python -m tests.validate_core
+uv run python -m tests.validate_core
 
 # Run all tests
-pytest
+uv run pytest
 
 # Run only validation tests
-pytest tests/test_validation.py
+uv run pytest tests/test_validation.py
 
 # Run with verbose output
-pytest -v tests/test_validation.py
+uv run pytest -v tests/test_validation.py
 
 # Generate new test cases (ignore cached)
-pytest tests/test_validation.py --force-update
+uv run pytest tests/test_validation.py --force-update
 ```
 
 ### Code Quality
