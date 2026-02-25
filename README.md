@@ -40,6 +40,23 @@ mold_risk = mold(20, 50)
 print(f"Mold Risk: {mold_risk}")
 ```
 
+### Evaluating Conditions
+
+The package also provides functions to rate environmental conditions:
+
+```python
+from preservationeval import (
+    pi, mold, rate_natural_aging, rate_mold_growth, EnvironmentalRating
+)
+
+# Rate preservation conditions (returns GOOD, OK, or RISK)
+aging_risk = rate_natural_aging(pi(20, 50))
+print(f"Natural aging: {aging_risk}")  # EnvironmentalRating.GOOD
+
+mold_risk = rate_mold_growth(mold(20, 50))
+print(f"Mold risk: {mold_risk}")  # EnvironmentalRating.GOOD
+```
+
 ### Interpreting Results
 
 For details of how to use, see:
@@ -143,6 +160,7 @@ pytest tests/test_validation.py --force-update
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?style=flat&logo=pre-commit&logoColor=white)](https://github.com/petter-b/preservationeval/blob/main/.pre-commit-config.yaml)
 [![Pre-commit CI](https://img.shields.io/badge/pre--commit%20ci-passing-brightgreen?style=flat&logo=pre-commit&logoColor=white)](https://results.pre-commit.ci/latest/github/petter-b/preservationeval/main)
 [![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen?style=flat&logo=renovatebot&logoColor=white)](https://renovatebot.com)
+[![dp.js Monitor](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/dpjs-monitor.yml?style=flat&label=dp.js%20monitor&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/dpjs-monitor.yml)
 
 ## Development Notes
 
