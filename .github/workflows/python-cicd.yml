@@ -36,7 +36,7 @@ jobs:
     - name: Set up uv
       uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
       with:
-        version: "0.6.x"
+        version: "0.10.x"
         enable-cache: true
 
     - name: Set up Python ${{ matrix.python-version }}
@@ -106,7 +106,7 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
         with:
-          version: "0.6.x"
+          version: "0.10.x"
           enable-cache: true
 
       - name: Set up Python

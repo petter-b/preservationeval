@@ -55,14 +55,23 @@
       "automerge": false
     },
     {
-      "description": "Group other dependenencies",
+      "description": "Group CI/build tooling (GitHub Actions, pep621 dev deps)",
       "matchManagers": [
         "pep621",
-        "github-actions",
-        "devcontainer"
+        "github-actions"
       ],
-      "groupName": "Update other dependencies",
+      "groupName": "Update CI/build dependencies",
       "automerge": true,
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin"
+      ]
+    },
+    {
+      "description": "Devcontainer updates (Python version, features) — separate PR",
+      "matchManagers": ["devcontainer"],
+      "automerge": false,
       "matchUpdateTypes": [
         "minor",
         "patch",
