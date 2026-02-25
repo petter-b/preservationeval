@@ -1,3 +1,5 @@
+# Prerequisite: the "dp.js-monitor" label must exist on the repo.
+# HTTP is intentional — dpcalc.org does not support HTTPS.
 name: Monitor dp.js for upstream changes
 
 on:
@@ -36,6 +38,11 @@ jobs:
           OBSERVED=$(sha256sum dp.js | awk '{print $1}')
           PINNED=$(grep -oP '(?<=")([a-f0-9]{64})(?=")' src/preservationeval/install/const.py)
 
+          if [ -z "$PINNED" ]; then
+            echo "::error::Could not extract pinned hash from const.py"
+            exit 1
+          fi
+
           echo "observed=$OBSERVED" >> "$GITHUB_OUTPUT"
           echo "pinned=$PINNED" >> "$GITHUB_OUTPUT"
 
@@ -60,28 +67,30 @@ jobs:
         if: steps.hash-check.outputs.match == 'false' && steps.existing-issue.outputs.count == '0'
         env:
           GH_TOKEN: ${{ github.token }}
+          PINNED_HASH: ${{ steps.hash-check.outputs.pinned }}
+          OBSERVED_HASH: ${{ steps.hash-check.outputs.observed }}
         run: |
           gh issue create \
             --title "dp.js upstream change detected" \
             --label "dp.js-monitor" \
-            --body "$(cat <<'EOF'
+            --body "$(cat <<EOF
           ## dp.js hash mismatch detected
 
-          The weekly upstream monitor has detected that `dp.js` has changed.
+          The weekly upstream monitor has detected that \`dp.js\` has changed.
 
           | | Hash |
           |---|---|
-          | **Pinned** | `${{ steps.hash-check.outputs.pinned }}` |
-          | **Observed** | `${{ steps.hash-check.outputs.observed }}` |
+          | **Pinned** | \`${PINNED_HASH}\` |
+          | **Observed** | \`${OBSERVED_HASH}\` |
 
           **Source:** http://www.dpcalc.org/dp.js
 
           ### Next steps
 
-          1. Download and review the new `dp.js` for unexpected changes
-          2. Update `DP_JS_SHA256` in `src/preservationeval/install/const.py`
-          3. Regenerate tables and verify output: `uv run generate-tables`
-          4. Run the test suite: `uv run pytest`
+          1. Download and review the new \`dp.js\` for unexpected changes
+          2. Update \`DP_JS_SHA256\` in \`src/preservationeval/install/const.py\`
+          3. Regenerate tables and verify output: \`uv run generate-tables\`
+          4. Run the test suite: \`uv run pytest\`
           5. Release a new version
           EOF
           )"
