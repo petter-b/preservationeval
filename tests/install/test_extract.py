@@ -1,18 +1,27 @@
 """Tests for preservationeval.install.extract."""
 
-from typing import Final
+from typing import Any, Final
+from unittest.mock import patch
 
 import numpy as np
 import pytest
 import requests
 import requests_mock
 
+from preservationeval.install.const import MAX_DOWNLOAD_RETRIES
 from preservationeval.install.extract import (
     ExtractionError,
+    _validate_table_values,
     extract_tables_from_js,
     fetch_and_extract_tables,
 )
-from preservationeval.types import BoundaryBehavior, LookupTable
+from preservationeval.types import (
+    BoundaryBehavior,
+    EMCTable,
+    LookupTable,
+    MoldTable,
+    PITable,
+)
 
 # Expected table dimensions (from dp.js structure)
 PI_TEMP_MIN: Final[int] = -23
@@ -242,12 +251,15 @@ class TestFetchAndExtract:
         assert isinstance(mold, LookupTable)
 
     def test_fetch_network_error(self, requests_mock: requests_mock.Mocker) -> None:
-        """Network error should raise requests exception."""
+        """Network error should raise requests exception after retries."""
         requests_mock.get(
             "http://www.dpcalc.org/dp.js",
-            exc=ConnectionError("Network unreachable"),
+            exc=requests.ConnectionError("Network unreachable"),
         )
-        with pytest.raises(ConnectionError):
+        with (
+            patch("preservationeval.install.extract.time.sleep"),
+            pytest.raises(requests.ConnectionError),
+        ):
             fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
 
     def test_fetch_http_error(self, requests_mock: requests_mock.Mocker) -> None:
@@ -288,3 +300,235 @@ class TestRealDpJs:
         assert mold.temp_max < pi.temp_max
         assert emc.rh_min == EMC_RH_MIN
         assert emc.rh_max == EMC_RH_MAX
+
+
+@pytest.mark.unit
+class TestJSExecutionTimeout:
+    """Test that JS execution has a timeout."""
+
+    def test_timeout_passed_to_eval(self, mock_js_content: str) -> None:
+        """MiniRacer.eval() should be called with timeout_sec."""
+        with patch("preservationeval.install.extract.MiniRacer") as mock_mr:
+            mock_ctx = mock_mr.return_value
+            # eval returns different things depending on the call
+            mock_ctx.eval.side_effect = [
+                None,  # browser stubs
+                None,  # js_content
+                None,  # dp_init
+                list(range(PI_ARRAY_SIZE)),  # pitable
+                [5.5] * EMC_ARRAY_SIZE,  # emctable
+            ]
+            extract_tables_from_js(mock_js_content)
+
+            # All eval calls should include timeout_sec
+            for call in mock_ctx.eval.call_args_list:
+                assert "timeout_sec" in call.kwargs, (
+                    f"eval() called without timeout_sec: {call}"
+                )
+
+
+@pytest.mark.unit
+class TestValueRangeValidation:
+    """Test that extracted table values are validated against physical ranges."""
+
+    def test_valid_values_pass(self, mock_js_content: str) -> None:
+        """Mock data with valid values should pass validation."""
+        # mock_js_content uses PI=45, EMC=5.5, Mold=7 — all valid
+        pi, _emc, _mold = extract_tables_from_js(mock_js_content)
+        assert pi is not None  # no ExtractionError raised
+
+    def test_pi_over_max_rejected(self) -> None:
+        """PI values above 9999 should raise ExtractionError."""
+        pi_data = np.array([[10000]], dtype=np.int16)
+        pi_table: PITable = LookupTable(pi_data, -23, 6, BoundaryBehavior.CLAMP)
+        emc_data = np.array([[5.5]], dtype=np.float16)
+        emc_table: EMCTable = LookupTable(emc_data, -20, 0, BoundaryBehavior.CLAMP)
+        mold_data = np.array([[7]], dtype=np.int16)
+        mold_table: MoldTable = LookupTable(mold_data, 2, 65, BoundaryBehavior.RAISE)
+
+        with pytest.raises(ExtractionError, match="PI values out of range"):
+            _validate_table_values(pi_table, emc_table, mold_table)
+
+    def test_emc_over_max_rejected(self) -> None:
+        """EMC values above 30.0 should raise ExtractionError."""
+        pi_data = np.array([[45]], dtype=np.int16)
+        pi_table: PITable = LookupTable(pi_data, -23, 6, BoundaryBehavior.CLAMP)
+        emc_data = np.array([[31.0]], dtype=np.float16)
+        emc_table: EMCTable = LookupTable(emc_data, -20, 0, BoundaryBehavior.CLAMP)
+        mold_data = np.array([[7]], dtype=np.int16)
+        mold_table: MoldTable = LookupTable(mold_data, 2, 65, BoundaryBehavior.RAISE)
+
+        with pytest.raises(ExtractionError, match="EMC values out of range"):
+            _validate_table_values(pi_table, emc_table, mold_table)
+
+    def test_mold_negative_rejected(self) -> None:
+        """Mold values below 0 should raise ExtractionError."""
+        pi_data = np.array([[45]], dtype=np.int16)
+        pi_table: PITable = LookupTable(pi_data, -23, 6, BoundaryBehavior.CLAMP)
+        emc_data = np.array([[5.5]], dtype=np.float16)
+        emc_table: EMCTable = LookupTable(emc_data, -20, 0, BoundaryBehavior.CLAMP)
+        mold_data = np.array([[-1]], dtype=np.int16)
+        mold_table: MoldTable = LookupTable(mold_data, 2, 65, BoundaryBehavior.RAISE)
+
+        with pytest.raises(ExtractionError, match="Mold values contain negatives"):
+            _validate_table_values(pi_table, emc_table, mold_table)
+
+    def test_pi_negative_rejected(self) -> None:
+        """PI values below 0 should raise ExtractionError."""
+        pi_data = np.array([[-1]], dtype=np.int16)
+        pi_table: PITable = LookupTable(pi_data, -23, 6, BoundaryBehavior.CLAMP)
+        emc_data = np.array([[5.5]], dtype=np.float16)
+        emc_table: EMCTable = LookupTable(emc_data, -20, 0, BoundaryBehavior.CLAMP)
+        mold_data = np.array([[7]], dtype=np.int16)
+        mold_table: MoldTable = LookupTable(mold_data, 2, 65, BoundaryBehavior.RAISE)
+
+        with pytest.raises(ExtractionError, match="PI values out of range"):
+            _validate_table_values(pi_table, emc_table, mold_table)
+
+    def test_emc_negative_rejected(self) -> None:
+        """EMC values below 0 should raise ExtractionError."""
+        pi_data = np.array([[45]], dtype=np.int16)
+        pi_table: PITable = LookupTable(pi_data, -23, 6, BoundaryBehavior.CLAMP)
+        emc_data = np.array([[-1.0]], dtype=np.float16)
+        emc_table: EMCTable = LookupTable(emc_data, -20, 0, BoundaryBehavior.CLAMP)
+        mold_data = np.array([[7]], dtype=np.int16)
+        mold_table: MoldTable = LookupTable(mold_data, 2, 65, BoundaryBehavior.RAISE)
+
+        with pytest.raises(ExtractionError, match="EMC values out of range"):
+            _validate_table_values(pi_table, emc_table, mold_table)
+
+
+@pytest.mark.unit
+class TestRetryLogic:
+    """Test network retry behavior in fetch_and_extract_tables."""
+
+    def test_retries_on_connection_error(
+        self,
+        requests_mock: requests_mock.Mocker,
+        mock_js_content: str,
+    ) -> None:
+        """Should retry on ConnectionError and succeed on last attempt."""
+        responses = [
+            {"exc": requests.ConnectionError("Network unreachable")},
+            {"exc": requests.ConnectionError("Network unreachable")},
+            {"text": mock_js_content, "status_code": 200},
+        ]
+        requests_mock.get("http://www.dpcalc.org/dp.js", responses)
+
+        with patch("preservationeval.install.extract.time.sleep"):
+            pi, _emc, _mold = fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+        assert isinstance(pi, LookupTable)
+
+    def test_retries_on_timeout(
+        self,
+        requests_mock: requests_mock.Mocker,
+        mock_js_content: str,
+    ) -> None:
+        """Should retry on Timeout and succeed on last attempt."""
+        responses = [
+            {"exc": requests.Timeout("Request timed out")},
+            {"text": mock_js_content, "status_code": 200},
+        ]
+        requests_mock.get("http://www.dpcalc.org/dp.js", responses)
+
+        with patch("preservationeval.install.extract.time.sleep"):
+            pi, _emc, _mold = fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+        assert isinstance(pi, LookupTable)
+
+    @pytest.mark.parametrize("status_code", [500, 502, 503])
+    def test_retries_on_server_error(
+        self,
+        requests_mock: requests_mock.Mocker,
+        mock_js_content: str,
+        status_code: int,
+    ) -> None:
+        """Should retry on HTTP 5xx and succeed on subsequent attempt."""
+        responses: list[dict[str, Any]] = [
+            {"status_code": status_code},
+            {"text": mock_js_content, "status_code": 200},
+        ]
+        requests_mock.get("http://www.dpcalc.org/dp.js", responses)
+
+        with patch("preservationeval.install.extract.time.sleep"):
+            pi, _emc, _mold = fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+        assert isinstance(pi, LookupTable)
+
+    def test_no_retry_on_http_error_without_response(
+        self, requests_mock: requests_mock.Mocker
+    ) -> None:
+        """Should NOT retry when HTTPError has response=None."""
+        requests_mock.get(
+            "http://www.dpcalc.org/dp.js",
+            exc=requests.HTTPError("No response"),
+        )
+
+        with pytest.raises(requests.HTTPError, match="No response"):
+            fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+
+        assert requests_mock.call_count == 1  # No retries
+
+    def test_no_retry_on_client_error(
+        self, requests_mock: requests_mock.Mocker
+    ) -> None:
+        """Should NOT retry on HTTP 404 (client error)."""
+        requests_mock.get("http://www.dpcalc.org/dp.js", status_code=404)
+
+        with pytest.raises(requests.HTTPError):
+            fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+
+        assert requests_mock.call_count == 1  # No retries
+
+    def test_raises_after_max_retries(
+        self, requests_mock: requests_mock.Mocker
+    ) -> None:
+        """Should re-raise original error after exhausting all retry attempts."""
+        requests_mock.get(
+            "http://www.dpcalc.org/dp.js",
+            exc=requests.ConnectionError("Network unreachable"),
+        )
+
+        with (
+            patch("preservationeval.install.extract.time.sleep"),
+            pytest.raises(requests.ConnectionError, match="Network unreachable"),
+        ):
+            fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+
+        assert requests_mock.call_count == MAX_DOWNLOAD_RETRIES
+
+    def test_raises_http_error_after_5xx_exhaustion(
+        self, requests_mock: requests_mock.Mocker
+    ) -> None:
+        """Should raise HTTPError (not ConnectionError) when 5xx retries exhausted."""
+        requests_mock.get("http://www.dpcalc.org/dp.js", status_code=503)
+
+        with (
+            patch("preservationeval.install.extract.time.sleep"),
+            pytest.raises(requests.HTTPError),
+        ):
+            fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+
+        assert requests_mock.call_count == MAX_DOWNLOAD_RETRIES
+
+    def test_exponential_backoff_timing(
+        self, requests_mock: requests_mock.Mocker
+    ) -> None:
+        """Backoff delays should double each retry: 1s, 2s."""
+        requests_mock.get(
+            "http://www.dpcalc.org/dp.js",
+            exc=requests.ConnectionError("Network unreachable"),
+        )
+        sleep_calls: list[float] = []
+
+        with (
+            patch(
+                "preservationeval.install.extract.time.sleep",
+                side_effect=sleep_calls.append,
+            ),
+            pytest.raises(requests.ConnectionError),
+        ):
+            fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+
+        # 3 attempts = 2 sleeps (no sleep after final failure)
+        assert len(sleep_calls) == MAX_DOWNLOAD_RETRIES - 1
+        assert sleep_calls[0] == pytest.approx(1.0)
+        assert sleep_calls[1] == pytest.approx(2.0)

@@ -24,3 +24,11 @@ TABLES_MODULE_NAME: Final[str] = "tables"  # Generated module name
 PACKAGE_ROOT_MARKERS: Final[tuple[str, ...]] = (
     "pyproject.toml",
 )  # Files that indicate package root
+
+# Network retry configuration
+MAX_DOWNLOAD_RETRIES: Final[int] = 3
+RETRY_BACKOFF_BASE: Final[float] = 1.0  # seconds; doubles each retry
+DOWNLOAD_TIMEOUT: Final[int] = 30  # seconds
+
+# JavaScript execution timeout
+JS_EXECUTION_TIMEOUT_SEC: Final[float] = 30.0  # seconds per eval call
