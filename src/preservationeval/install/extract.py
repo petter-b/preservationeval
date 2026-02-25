@@ -6,6 +6,7 @@ the populated global arrays directly.
 """
 
 import logging
+import time
 
 import numpy as np
 import requests
@@ -19,7 +20,12 @@ from preservationeval.types import (
     PITable,
 )
 
-from .const import JS_EXECUTION_TIMEOUT_SEC
+from .const import (
+    DOWNLOAD_TIMEOUT,
+    JS_EXECUTION_TIMEOUT_SEC,
+    MAX_DOWNLOAD_RETRIES,
+    RETRY_BACKOFF_BASE,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +89,9 @@ class ExtractionError(Exception):
 _PI_VALUE_MIN, _PI_VALUE_MAX = 0, 9999
 _EMC_VALUE_MIN, _EMC_VALUE_MAX = 0.0, 30.0
 _MOLD_VALUE_MIN = 0
+
+# HTTP status code threshold for server errors (retryable)
+_HTTP_SERVER_ERROR = 500
 
 
 def _validate_table_values(
@@ -199,6 +208,9 @@ def fetch_and_extract_tables(
 ) -> tuple[PITable, EMCTable, MoldTable]:
     """Download dp.js and extract lookup tables.
 
+    Retries on transient network errors (ConnectionError, Timeout, HTTP 5xx)
+    with exponential backoff. Does not retry on client errors (HTTP 4xx).
+
     Args:
         url: URL to download dp.js from.
 
@@ -206,10 +218,45 @@ def fetch_and_extract_tables(
         Tuple of (PITable, EMCTable, MoldTable).
 
     Raises:
-        requests.RequestException: If download fails.
-        ExtractionError: If extraction fails.
+        requests.ConnectionError: If all retry attempts fail.
+        requests.HTTPError: If a non-retryable HTTP error occurs.
+        ExtractionError: If extraction fails after successful download.
     """
-    response = requests.get(url, timeout=30)
-    response.raise_for_status()
-    logger.debug("Downloaded dp.js (%d bytes)", len(response.text))
-    return extract_tables_from_js(response.text)
+    last_error: Exception | None = None
+    for attempt in range(1, MAX_DOWNLOAD_RETRIES + 1):
+        try:
+            response = requests.get(url, timeout=DOWNLOAD_TIMEOUT)
+            response.raise_for_status()
+            logger.debug("Downloaded dp.js (%d bytes)", len(response.text))
+            return extract_tables_from_js(response.text)
+        except (requests.ConnectionError, requests.Timeout) as e:
+            last_error = e
+            if attempt < MAX_DOWNLOAD_RETRIES:
+                delay = RETRY_BACKOFF_BASE * (2 ** (attempt - 1))
+                logger.warning(
+                    "Download attempt %d/%d failed: %s. Retrying in %.1fs...",
+                    attempt,
+                    MAX_DOWNLOAD_RETRIES,
+                    e,
+                    delay,
+                )
+                time.sleep(delay)
+        except requests.HTTPError as e:
+            if e.response is not None and e.response.status_code >= _HTTP_SERVER_ERROR:
+                last_error = e
+                if attempt < MAX_DOWNLOAD_RETRIES:
+                    delay = RETRY_BACKOFF_BASE * (2 ** (attempt - 1))
+                    logger.warning(
+                        "Server error %d on attempt %d/%d. Retrying in %.1fs...",
+                        e.response.status_code,
+                        attempt,
+                        MAX_DOWNLOAD_RETRIES,
+                        delay,
+                    )
+                    time.sleep(delay)
+            else:
+                raise  # 4xx — don't retry
+
+    raise requests.ConnectionError(
+        f"Failed after {MAX_DOWNLOAD_RETRIES} attempts: {last_error}"
+    ) from last_error

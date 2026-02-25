@@ -8,6 +8,7 @@ import pytest
 import requests
 import requests_mock
 
+from preservationeval.install.const import MAX_DOWNLOAD_RETRIES
 from preservationeval.install.extract import (
     ExtractionError,
     _validate_table_values,
@@ -250,12 +251,15 @@ class TestFetchAndExtract:
         assert isinstance(mold, LookupTable)
 
     def test_fetch_network_error(self, requests_mock: requests_mock.Mocker) -> None:
-        """Network error should raise requests exception."""
+        """Network error should raise requests exception after retries."""
         requests_mock.get(
             "http://www.dpcalc.org/dp.js",
-            exc=ConnectionError("Network unreachable"),
+            exc=requests.ConnectionError("Network unreachable"),
         )
-        with pytest.raises(ConnectionError):
+        with (
+            patch("preservationeval.install.extract.time.sleep"),
+            pytest.raises(requests.ConnectionError),
+        ):
             fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
 
     def test_fetch_http_error(self, requests_mock: requests_mock.Mocker) -> None:
@@ -392,3 +396,109 @@ class TestValueRangeValidation:
 
         with pytest.raises(ExtractionError, match="EMC values out of range"):
             _validate_table_values(pi_table, emc_table, mold_table)
+
+
+@pytest.mark.unit
+class TestRetryLogic:
+    """Test network retry behavior in fetch_and_extract_tables."""
+
+    def test_retries_on_connection_error(
+        self,
+        requests_mock: requests_mock.Mocker,
+        mock_js_content: str,
+    ) -> None:
+        """Should retry on ConnectionError and succeed on last attempt."""
+        responses = [
+            {"exc": requests.ConnectionError("Network unreachable")},
+            {"exc": requests.ConnectionError("Network unreachable")},
+            {"text": mock_js_content, "status_code": 200},
+        ]
+        requests_mock.get("http://www.dpcalc.org/dp.js", responses)
+
+        with patch("preservationeval.install.extract.time.sleep"):
+            pi, _emc, _mold = fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+        assert isinstance(pi, LookupTable)
+
+    def test_retries_on_timeout(
+        self,
+        requests_mock: requests_mock.Mocker,
+        mock_js_content: str,
+    ) -> None:
+        """Should retry on Timeout and succeed on last attempt."""
+        responses = [
+            {"exc": requests.Timeout("Request timed out")},
+            {"text": mock_js_content, "status_code": 200},
+        ]
+        requests_mock.get("http://www.dpcalc.org/dp.js", responses)
+
+        with patch("preservationeval.install.extract.time.sleep"):
+            pi, _emc, _mold = fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+        assert isinstance(pi, LookupTable)
+
+    def test_retries_on_server_error(
+        self,
+        requests_mock: requests_mock.Mocker,
+        mock_js_content: str,
+    ) -> None:
+        """Should retry on HTTP 500 and succeed on subsequent attempt."""
+        responses = [
+            {"status_code": 500},
+            {"text": mock_js_content, "status_code": 200},
+        ]
+        requests_mock.get("http://www.dpcalc.org/dp.js", responses)
+
+        with patch("preservationeval.install.extract.time.sleep"):
+            pi, _emc, _mold = fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+        assert isinstance(pi, LookupTable)
+
+    def test_no_retry_on_client_error(
+        self, requests_mock: requests_mock.Mocker
+    ) -> None:
+        """Should NOT retry on HTTP 404 (client error)."""
+        requests_mock.get("http://www.dpcalc.org/dp.js", status_code=404)
+
+        with pytest.raises(requests.HTTPError):
+            fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+
+        assert requests_mock.call_count == 1  # No retries
+
+    def test_raises_after_max_retries(
+        self, requests_mock: requests_mock.Mocker
+    ) -> None:
+        """Should raise after exhausting all retry attempts."""
+        requests_mock.get(
+            "http://www.dpcalc.org/dp.js",
+            exc=requests.ConnectionError("Network unreachable"),
+        )
+
+        with (
+            patch("preservationeval.install.extract.time.sleep"),
+            pytest.raises(requests.ConnectionError, match="Failed after"),
+        ):
+            fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+
+        assert requests_mock.call_count == MAX_DOWNLOAD_RETRIES
+
+    def test_exponential_backoff_timing(
+        self, requests_mock: requests_mock.Mocker
+    ) -> None:
+        """Backoff delays should double each retry: 1s, 2s."""
+        requests_mock.get(
+            "http://www.dpcalc.org/dp.js",
+            exc=requests.ConnectionError("Network unreachable"),
+        )
+        sleep_calls: list[float] = []
+
+        with (
+            patch(
+                "preservationeval.install.extract.time.sleep",
+                side_effect=sleep_calls.append,
+            ),
+            pytest.raises(requests.ConnectionError),
+        ):
+            fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+
+        # 3 attempts = 2 sleeps (no sleep after final failure)
+        assert len(sleep_calls) == MAX_DOWNLOAD_RETRIES - 1
+        assert sleep_calls[0] == pytest.approx(1.0)
+        assert sleep_calls[1] == pytest.approx(2.0)
