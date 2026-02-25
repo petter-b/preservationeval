@@ -1,5 +1,7 @@
 """Unit test cases for util_functions module."""
 
+import logging
+
 import pytest
 
 from preservationeval.const import RH_MAX, RH_MIN, TEMP_MAX, TEMP_MIN
@@ -173,3 +175,44 @@ class TestBoolRejection:
         """isinstance(True, int) is True; validate_temp must explicitly reject bools."""
         with pytest.raises(TypeError, match="must be a number"):
             validate_temp(True)
+
+
+# --- DEBUG logging tests ---
+
+
+@pytest.mark.unit
+class TestToCelsiusLogging:
+    """Tests that to_celsius emits DEBUG log with input and result."""
+
+    def test_fahrenheit_logs_debug(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Fahrenheit conversion logs input scale and converted result."""
+        with caplog.at_level(logging.DEBUG, logger="preservationeval.util_functions"):
+            result = to_celsius(32, scale="f")
+        assert result == pytest.approx(0.0)
+        assert "to_celsius: x=32, scale=f -> 0.0" in caplog.text
+
+    def test_celsius_logs_debug(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Celsius passthrough logs input scale and result."""
+        with caplog.at_level(logging.DEBUG, logger="preservationeval.util_functions"):
+            result = to_celsius(20, scale="c")
+        assert result == pytest.approx(20.0)
+        assert "to_celsius: x=20, scale=c -> 20.0" in caplog.text
+
+    def test_kelvin_logs_debug(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Kelvin conversion logs input scale and converted result."""
+        with caplog.at_level(logging.DEBUG, logger="preservationeval.util_functions"):
+            result = to_celsius(273.15, scale="k")
+        assert result == pytest.approx(0.0)
+        assert "to_celsius: x=273.15, scale=k -> 0.0" in caplog.text
+
+
+@pytest.mark.unit
+class TestCalculateDewPointLogging:
+    """Tests that calculate_dew_point emits DEBUG log with inputs and result."""
+
+    def test_logs_debug(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Dew point calculation logs temperature, humidity, and result."""
+        with caplog.at_level(logging.DEBUG, logger="preservationeval.util_functions"):
+            result = calculate_dew_point(20, 50)
+        assert result == pytest.approx(9.3, abs=0.1)
+        assert "calculate_dew_point: temp=20, rh=50 -> 9.3" in caplog.text

@@ -8,6 +8,7 @@ The functions in this module return an `EnvironmentalRating` enum value,
 indicating the level of risk associated with the given conditions.
 """
 
+import logging
 from enum import Enum
 from typing import Final
 
@@ -16,6 +17,8 @@ from .types import (
     MoldRisk,
     PreservationIndex,
 )
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "EnvironmentalRating",
@@ -62,11 +65,13 @@ def rate_natural_aging(pi: PreservationIndex) -> EnvironmentalRating:
     if pi < 0:  # Preserve Index must be non-negative
         raise ValueError(f"Preservation Index must be non-negative, got {pi}")
     if pi >= good_min:
-        return EnvironmentalRating.GOOD
+        rating = EnvironmentalRating.GOOD
     elif pi < risk_min:
-        return EnvironmentalRating.RISK
+        rating = EnvironmentalRating.RISK
     else:
-        return EnvironmentalRating.OK
+        rating = EnvironmentalRating.OK
+    logger.debug("rate_natural_aging: pi=%s -> %s", pi, rating.value)
+    return rating
 
 
 def rate_mechanical_damage(emc: MoistureContent) -> EnvironmentalRating:
@@ -87,9 +92,11 @@ def rate_mechanical_damage(emc: MoistureContent) -> EnvironmentalRating:
     if emc < 0:
         raise ValueError(f"Moisture Content must be non-negative, got {emc}")
     if ok_min <= emc <= ok_max:
-        return EnvironmentalRating.OK
+        rating = EnvironmentalRating.OK
     else:
-        return EnvironmentalRating.RISK
+        rating = EnvironmentalRating.RISK
+    logger.debug("rate_mechanical_damage: emc=%s -> %s", emc, rating.value)
+    return rating
 
 
 def rate_mold_growth(mrf: MoldRisk) -> EnvironmentalRating:
@@ -108,9 +115,11 @@ def rate_mold_growth(mrf: MoldRisk) -> EnvironmentalRating:
     if mrf < 0:
         raise ValueError(f"Mold Risk Factor must be non-negative, got {mrf}")
     if mrf == 0:
-        return EnvironmentalRating.GOOD
+        rating = EnvironmentalRating.GOOD
     else:
-        return EnvironmentalRating.RISK
+        rating = EnvironmentalRating.RISK
+    logger.debug("rate_mold_growth: mrf=%s -> %s", mrf, rating.value)
+    return rating
 
 
 def rate_metal_corrosion(emc: MoistureContent) -> EnvironmentalRating:
@@ -132,8 +141,10 @@ def rate_metal_corrosion(emc: MoistureContent) -> EnvironmentalRating:
     if emc < 0:
         raise ValueError(f"Moisture Content must be non-negative, got {emc}")
     if emc < good_max:
-        return EnvironmentalRating.GOOD
+        rating = EnvironmentalRating.GOOD
     elif emc < ok_max:
-        return EnvironmentalRating.OK
+        rating = EnvironmentalRating.OK
     else:
-        return EnvironmentalRating.RISK
+        rating = EnvironmentalRating.RISK
+    logger.debug("rate_metal_corrosion: emc=%s -> %s", emc, rating.value)
+    return rating

@@ -14,6 +14,7 @@ import pytest
 # the entire test file will fail to collect rather than individual tests being
 # skipped — this is acceptable since generate_tables is a core dependency.
 import preservationeval.install.generate_tables  # noqa: F401
+import preservationeval.utils.logging as _logging_utils
 
 _gt_mod = sys.modules["preservationeval.install.generate_tables"]
 
@@ -139,3 +140,30 @@ class TestCustomBuildHook:
             hook.initialize("standard", build_data)
 
         assert sys.path.count(src_path) == path_count_before
+
+    def test_uses_setup_logging(self) -> None:
+        """Build hook should configure logging via setup_logging with INSTALL env."""
+        mod = _import_hook_module()
+        hook = mod.CustomBuildHook.__new__(mod.CustomBuildHook)
+
+        build_data: dict[str, dict[str, str]] = {"force_include": {}}
+
+        with (
+            patch.object(
+                type(hook),
+                "target_name",
+                new_callable=lambda: property(lambda self: "wheel"),
+            ),
+            patch.object(
+                type(hook),
+                "root",
+                new_callable=lambda: property(lambda self: str(PROJECT_ROOT)),
+            ),
+            patch.object(_gt_mod, "generate_tables"),
+            patch.object(_logging_utils, "setup_logging") as mock_setup,
+        ):
+            hook.initialize("standard", build_data)
+
+        mock_setup.assert_called_once_with(
+            "hatch_build", env=_logging_utils.Environment.INSTALL
+        )

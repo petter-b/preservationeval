@@ -4,7 +4,6 @@ This module provides the fundamental LookupTable class used for efficient
 lookup of preservation-related values based on temperature and humidity.
 """
 
-import logging
 from collections.abc import Callable
 from enum import Flag, auto
 from math import floor
@@ -29,7 +28,6 @@ class BoundaryBehavior(Flag):
     CLAMP_X = auto()  # Clamp x values to min/max, raise for y
     CLAMP_Y = auto()  # Clamp y values to min/max, raise for x
     CLAMP = CLAMP_X | CLAMP_Y  # Clamp both x and y values
-    LOG = auto()
 
 
 class LookupTable(Generic[T]):  # noqa: UP046
@@ -62,8 +60,6 @@ class LookupTable(Generic[T]):  # noqa: UP046
         rounding_func: Callable[[float], int] | None = None,
     ) -> None:
         """Initialize LookupTable with 2D numpy array and shifted index ranges."""
-        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-
         if not isinstance(data, np.ndarray):
             raise TypeError("Data must be a numpy array")
         if data.ndim != self.NDIMS_EXPECTED:
@@ -141,6 +137,10 @@ class LookupTable(Generic[T]):  # noqa: UP046
     def _handle_temperature_bounds(self, temp: float) -> float:
         """Handle temperature boundary conditions.
 
+        Clamping is correct domain behavior for preservation metrics: extreme
+        temperatures beyond the lookup table range carry no additional
+        preservation risk compared to the boundary values.
+
         Args:
             temp: Temperature value.
 
@@ -152,19 +152,11 @@ class LookupTable(Generic[T]):  # noqa: UP046
         """
         if temp < self.temp_min:
             if BoundaryBehavior.CLAMP_X in self.boundary_behavior:
-                if BoundaryBehavior.LOG in self.boundary_behavior:
-                    self._logger.warning(
-                        f"Clamping temperature from {temp} to minimum {self.temp_min}"
-                    )
                 return self.temp_min
             raise TemperatureError(f"Temperature {temp} below minimum {self.temp_min}")
 
         if temp > self.temp_max:
             if BoundaryBehavior.CLAMP_X in self.boundary_behavior:
-                if BoundaryBehavior.LOG in self.boundary_behavior:
-                    self._logger.warning(
-                        f"Clamping temperature from {temp} to maximum {self.temp_max}"
-                    )
                 return self.temp_max
             raise TemperatureError(f"Temperature {temp} above maximum {self.temp_max}")
 
@@ -172,6 +164,10 @@ class LookupTable(Generic[T]):  # noqa: UP046
 
     def _handle_humidity_bounds(self, rh: float) -> float:
         """Handle humidity boundary conditions.
+
+        Clamping is correct domain behavior for preservation metrics: extreme
+        humidity values beyond the lookup table range carry no additional
+        preservation risk compared to the boundary values.
 
         Args:
             rh: Relative humidity value.
@@ -184,19 +180,11 @@ class LookupTable(Generic[T]):  # noqa: UP046
         """
         if rh < self.rh_min:
             if BoundaryBehavior.CLAMP_Y in self.boundary_behavior:
-                if BoundaryBehavior.LOG in self.boundary_behavior:
-                    self._logger.warning(
-                        f"Clamping relative humidity from {rh} to minimum {self.rh_min}"
-                    )
                 return self.rh_min
             raise HumidityError(f"RH {rh} below minimum {self.rh_min}")
 
         if rh > self.rh_max:
             if BoundaryBehavior.CLAMP_Y in self.boundary_behavior:
-                if BoundaryBehavior.LOG in self.boundary_behavior:
-                    self._logger.warning(
-                        f"Clamping relative humidity from {rh} to maximum {self.rh_max}"
-                    )
                 return self.rh_max
             raise HumidityError(f"RH {rh} above maximum {self.rh_max}")
 

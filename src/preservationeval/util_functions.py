@@ -5,10 +5,13 @@ temperature, relative humidity, and dew point values, as well as calculating
 derived quantities such as equilibrium moisture content.
 """
 
+import logging
 import math
 
 from .const import RH_MAX, RH_MIN, TEMP_MAX, TEMP_MIN
 from .types import RelativeHumidity, Temperature
+
+logger = logging.getLogger(__name__)
 
 # Limits for Magnus formula (see calculate_dew_point)
 MAGNUS_MIN_TEMP = -40
@@ -79,17 +82,19 @@ def to_celsius(x: Temperature, scale: str = "f") -> Temperature:
     if scale == "f":
         if x < TEMP_MIN * 9 / 5 + 32:
             raise ValueError(f"Fahrenheit temperature must be > -459.67, got {x}")
-        return float((x - 32) * 5 / 9)
+        result = float((x - 32) * 5 / 9)
     elif scale == "c":
         if x < TEMP_MIN:
             raise ValueError(f"Celsius temperature must be > -273.15, got {x}")
-        return float(x)
+        result = float(x)
     elif scale == "k":
         if x < 0:
             raise ValueError(f"Kelvin temperature must be >= 0, got {x}")
-        return float(x - 273.15)
+        result = float(x - 273.15)
     else:
         raise ValueError(f"Unsupported scale '{scale}', must be 'f', 'c' or 'k'")
+    logger.debug("to_celsius: x=%s, scale=%s -> %s", x, scale, result)
+    return result
 
 
 def calculate_dew_point(
@@ -140,12 +145,19 @@ def calculate_dew_point(
     b = 243.04
 
     # Convert relative humidity to decimal
-    rel_humidity = rel_humidity / 100
+    rh_fraction = rel_humidity / 100
 
     # Calculate alpha using Magnus formula
-    alpha = ((a * temp_celsius) / (b + temp_celsius)) + math.log(rel_humidity)
+    alpha = ((a * temp_celsius) / (b + temp_celsius)) + math.log(rh_fraction)
 
     # Calculate dew point
     dew_point = (b * alpha) / (a - alpha)
 
-    return round(dew_point, 1)
+    result = round(dew_point, 1)
+    logger.debug(
+        "calculate_dew_point: temp=%s, rh=%s -> %s",
+        temp_celsius,
+        rel_humidity,
+        result,
+    )
+    return result
