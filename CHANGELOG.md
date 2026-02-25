@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Weekly GitHub Actions monitor for upstream dp.js changes
 - SHA-256 integrity verification for dp.js downloads
 - dp.js hash provenance embedded in generated `tables.py`
 - Hatch custom build hook (`hatch_build.py`) for wheel-time table generation
