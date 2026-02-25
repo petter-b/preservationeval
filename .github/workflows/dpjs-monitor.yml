@@ -1,5 +1,6 @@
 # Prerequisite: the "dp.js-monitor" label must exist on the repo.
 # HTTP is intentional — dpcalc.org does not support HTTPS.
+# Integrity is enforced by SHA-256 comparison against the pinned hash in const.py.
 name: Monitor dp.js for upstream changes
 
 on:
