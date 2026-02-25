@@ -271,8 +271,13 @@ def fetch_and_extract_tables(
                     )
                     time.sleep(delay)
             else:
-                raise  # 4xx — don't retry
+                raise  # Non-retryable: client error (4xx) or missing response
 
     # last_error is always set — the loop only exits without returning
     # when at least one exception was caught.
-    raise last_error  # type: ignore[misc]
+    if last_error is None:  # pragma: no cover — defensive; can't happen
+        raise RuntimeError("Bug: retry loop exited without setting last_error")
+    logger.error(
+        "All %d download attempts failed: %s", MAX_DOWNLOAD_RETRIES, last_error
+    )
+    raise last_error

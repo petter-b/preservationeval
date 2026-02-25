@@ -453,6 +453,20 @@ class TestRetryLogic:
             pi, _emc, _mold = fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
         assert isinstance(pi, LookupTable)
 
+    def test_no_retry_on_http_error_without_response(
+        self, requests_mock: requests_mock.Mocker
+    ) -> None:
+        """Should NOT retry when HTTPError has response=None."""
+        requests_mock.get(
+            "http://www.dpcalc.org/dp.js",
+            exc=requests.HTTPError("No response"),
+        )
+
+        with pytest.raises(requests.HTTPError, match="No response"):
+            fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+
+        assert requests_mock.call_count == 1  # No retries
+
     def test_no_retry_on_client_error(
         self, requests_mock: requests_mock.Mocker
     ) -> None:
