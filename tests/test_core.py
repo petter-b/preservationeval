@@ -141,10 +141,11 @@ class TestMissingTables:
         original = sys.modules.get(tables_key)
         sys.modules[tables_key] = None  # type: ignore[assignment]
         try:
+            mod = importlib.reload(
+                importlib.import_module("preservationeval.core_functions")
+            )
             with pytest.raises(ImportError, match="Lookup tables not found"):
-                importlib.reload(
-                    importlib.import_module("preservationeval.core_functions")
-                )
+                mod.pi(20, 50)
         finally:
             if original is not None:
                 sys.modules[tables_key] = original
