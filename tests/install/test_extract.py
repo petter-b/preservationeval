@@ -1,5 +1,6 @@
 """Tests for preservationeval.install.extract."""
 
+import hashlib
 from typing import Any, Final
 from unittest.mock import patch
 
@@ -103,6 +104,12 @@ def mock_js_content() -> str:
         f"emctable = [{emc_data}];",
     ]
     return "\n".join(lines)
+
+
+@pytest.fixture
+def mock_js_hash(mock_js_content: str) -> str:
+    """SHA-256 hash of mock_js_content, for patching DP_JS_SHA256."""
+    return hashlib.sha256(mock_js_content.encode()).hexdigest()
 
 
 @pytest.mark.unit
@@ -241,11 +248,15 @@ class TestFetchAndExtract:
     """Test the full fetch + extract pipeline."""
 
     def test_fetch_success(
-        self, requests_mock: requests_mock.Mocker, mock_js_content: str
+        self,
+        requests_mock: requests_mock.Mocker,
+        mock_js_content: str,
+        mock_js_hash: str,
     ) -> None:
         """Successful fetch should return three LookupTables."""
         requests_mock.get("http://www.dpcalc.org/dp.js", text=mock_js_content)
-        pi, emc, mold = fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+        with patch("preservationeval.install.extract.DP_JS_SHA256", mock_js_hash):
+            pi, emc, mold = fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
         assert isinstance(pi, LookupTable)
         assert isinstance(emc, LookupTable)
         assert isinstance(mold, LookupTable)
@@ -267,6 +278,60 @@ class TestFetchAndExtract:
         requests_mock.get("http://www.dpcalc.org/dp.js", status_code=404)
         with pytest.raises(requests.HTTPError):
             fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+
+
+@pytest.mark.unit
+class TestHashVerification:
+    """Test SHA-256 integrity verification of downloaded dp.js."""
+
+    def test_matching_hash_succeeds(
+        self,
+        requests_mock: requests_mock.Mocker,
+        mock_js_content: str,
+    ) -> None:
+        """Download should succeed when content hash matches expected."""
+        content_hash = hashlib.sha256(mock_js_content.encode()).hexdigest()
+        requests_mock.get("http://test.example/dp.js", text=mock_js_content)
+
+        with patch("preservationeval.install.extract.DP_JS_SHA256", content_hash):
+            pi, _emc, _mold = fetch_and_extract_tables("http://test.example/dp.js")
+        assert isinstance(pi, LookupTable)
+
+    def test_mismatched_hash_raises(
+        self,
+        requests_mock: requests_mock.Mocker,
+        mock_js_content: str,
+    ) -> None:
+        """Download should fail with ExtractionError when hash doesn't match."""
+        requests_mock.get("http://test.example/dp.js", text=mock_js_content)
+
+        with (
+            patch(
+                "preservationeval.install.extract.DP_JS_SHA256",
+                "0" * 64,
+            ),
+            pytest.raises(ExtractionError, match="integrity check failed"),
+        ):
+            fetch_and_extract_tables("http://test.example/dp.js")
+
+    def test_hash_mismatch_not_retried(
+        self,
+        requests_mock: requests_mock.Mocker,
+        mock_js_content: str,
+    ) -> None:
+        """Hash mismatch should fail immediately without retrying."""
+        requests_mock.get("http://test.example/dp.js", text=mock_js_content)
+
+        with (
+            patch(
+                "preservationeval.install.extract.DP_JS_SHA256",
+                "0" * 64,
+            ),
+            pytest.raises(ExtractionError),
+        ):
+            fetch_and_extract_tables("http://test.example/dp.js")
+
+        assert requests_mock.call_count == 1
 
 
 @pytest.mark.integration
@@ -406,6 +471,7 @@ class TestRetryLogic:
         self,
         requests_mock: requests_mock.Mocker,
         mock_js_content: str,
+        mock_js_hash: str,
     ) -> None:
         """Should retry on ConnectionError and succeed on last attempt."""
         responses = [
@@ -415,7 +481,10 @@ class TestRetryLogic:
         ]
         requests_mock.get("http://www.dpcalc.org/dp.js", responses)
 
-        with patch("preservationeval.install.extract.time.sleep"):
+        with (
+            patch("preservationeval.install.extract.time.sleep"),
+            patch("preservationeval.install.extract.DP_JS_SHA256", mock_js_hash),
+        ):
             pi, _emc, _mold = fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
         assert isinstance(pi, LookupTable)
 
@@ -423,6 +492,7 @@ class TestRetryLogic:
         self,
         requests_mock: requests_mock.Mocker,
         mock_js_content: str,
+        mock_js_hash: str,
     ) -> None:
         """Should retry on Timeout and succeed on last attempt."""
         responses = [
@@ -431,7 +501,10 @@ class TestRetryLogic:
         ]
         requests_mock.get("http://www.dpcalc.org/dp.js", responses)
 
-        with patch("preservationeval.install.extract.time.sleep"):
+        with (
+            patch("preservationeval.install.extract.time.sleep"),
+            patch("preservationeval.install.extract.DP_JS_SHA256", mock_js_hash),
+        ):
             pi, _emc, _mold = fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
         assert isinstance(pi, LookupTable)
 
@@ -440,6 +513,7 @@ class TestRetryLogic:
         self,
         requests_mock: requests_mock.Mocker,
         mock_js_content: str,
+        mock_js_hash: str,
         status_code: int,
     ) -> None:
         """Should retry on HTTP 5xx and succeed on subsequent attempt."""
@@ -449,7 +523,10 @@ class TestRetryLogic:
         ]
         requests_mock.get("http://www.dpcalc.org/dp.js", responses)
 
-        with patch("preservationeval.install.extract.time.sleep"):
+        with (
+            patch("preservationeval.install.extract.time.sleep"),
+            patch("preservationeval.install.extract.DP_JS_SHA256", mock_js_hash),
+        ):
             pi, _emc, _mold = fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
         assert isinstance(pi, LookupTable)
 
