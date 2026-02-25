@@ -1,0 +1,92 @@
+name: Monitor dp.js for upstream changes
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Every Monday at 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check-dpjs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          sparse-checkout: src/preservationeval/install/const.py
+          sparse-checkout-cone-mode: false
+
+      - name: Download dp.js
+        run: |
+          curl -fsSL --retry 3 --retry-delay 5 -o dp.js "http://www.dpcalc.org/dp.js"
+
+      - name: Verify download is non-empty
+        run: |
+          if [ ! -s dp.js ]; then
+            echo "::error::Downloaded dp.js is empty"
+            exit 1
+          fi
+
+      - name: Compare hashes
+        id: hash-check
+        run: |
+          OBSERVED=$(sha256sum dp.js | awk '{print $1}')
+          PINNED=$(grep -oP '(?<=")([a-f0-9]{64})(?=")' src/preservationeval/install/const.py)
+
+          echo "observed=$OBSERVED" >> "$GITHUB_OUTPUT"
+          echo "pinned=$PINNED" >> "$GITHUB_OUTPUT"
+
+          if [ "$OBSERVED" = "$PINNED" ]; then
+            echo "match=true" >> "$GITHUB_OUTPUT"
+            echo "Hash match: $OBSERVED"
+          else
+            echo "match=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Hash mismatch! Pinned: $PINNED Observed: $OBSERVED"
+          fi
+
+      - name: Check for existing issue
+        if: steps.hash-check.outputs.match == 'false'
+        id: existing-issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          OPEN_ISSUES=$(gh issue list --label "dp.js-monitor" --state open --json number --jq 'length')
+          echo "count=$OPEN_ISSUES" >> "$GITHUB_OUTPUT"
+
+      - name: Open issue
+        if: steps.hash-check.outputs.match == 'false' && steps.existing-issue.outputs.count == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "dp.js upstream change detected" \
+            --label "dp.js-monitor" \
+            --body "$(cat <<'EOF'
+          ## dp.js hash mismatch detected
+
+          The weekly upstream monitor has detected that `dp.js` has changed.
+
+          | | Hash |
+          |---|---|
+          | **Pinned** | `${{ steps.hash-check.outputs.pinned }}` |
+          | **Observed** | `${{ steps.hash-check.outputs.observed }}` |
+
+          **Source:** http://www.dpcalc.org/dp.js
+
+          ### Next steps
+
+          1. Download and review the new `dp.js` for unexpected changes
+          2. Update `DP_JS_SHA256` in `src/preservationeval/install/const.py`
+          3. Regenerate tables and verify output: `uv run generate-tables`
+          4. Run the test suite: `uv run pytest`
+          5. Release a new version
+          EOF
+          )"
+
+      - name: Log skip (issue already open)
+        if: steps.hash-check.outputs.match == 'false' && steps.existing-issue.outputs.count != '0'
+        run: |
+          echo "Skipping issue creation — an open dp.js-monitor issue already exists."
