@@ -30,7 +30,7 @@ from .const import DP_JS_URL, NUM_EMC_DECIMALS
 logger = setup_logging(__name__, env=Environment.INSTALL)
 
 
-def generate_tables_module(  # noqa: PLR0913
+def generate_tables_module(
     pi_table: PITable,
     emc_table: EMCTable,
     mold_table: MoldTable,
