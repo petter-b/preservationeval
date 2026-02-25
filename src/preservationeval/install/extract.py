@@ -19,6 +19,8 @@ from preservationeval.types import (
     PITable,
 )
 
+from .const import JS_EXECUTION_TIMEOUT_SEC
+
 logger = logging.getLogger(__name__)
 
 # Browser global stubs - dp.js references jQuery and DOM APIs at load time.
@@ -93,15 +95,15 @@ def extract_tables_from_js(
     """
     try:
         ctx = MiniRacer()
-        ctx.eval(_JS_BROWSER_STUBS)
-        ctx.eval(js_content)
-        ctx.eval(_JS_INIT_TABLES)
+        ctx.eval(_JS_BROWSER_STUBS, timeout_sec=JS_EXECUTION_TIMEOUT_SEC)
+        ctx.eval(js_content, timeout_sec=JS_EXECUTION_TIMEOUT_SEC)
+        ctx.eval(_JS_INIT_TABLES, timeout_sec=JS_EXECUTION_TIMEOUT_SEC)
     except Exception as e:
         raise ExtractionError(f"Failed to execute JavaScript: {e}") from e
 
     try:
-        pi_raw = list(ctx.eval("pitable"))
-        emc_raw = list(ctx.eval("emctable"))
+        pi_raw = list(ctx.eval("pitable", timeout_sec=JS_EXECUTION_TIMEOUT_SEC))
+        emc_raw = list(ctx.eval("emctable", timeout_sec=JS_EXECUTION_TIMEOUT_SEC))
     except Exception as e:
         raise ExtractionError(f"Failed to read JS globals: {e}") from e
 

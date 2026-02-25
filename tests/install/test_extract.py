@@ -1,6 +1,7 @@
 """Tests for preservationeval.install.extract."""
 
 from typing import Final
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -288,3 +289,28 @@ class TestRealDpJs:
         assert mold.temp_max < pi.temp_max
         assert emc.rh_min == EMC_RH_MIN
         assert emc.rh_max == EMC_RH_MAX
+
+
+@pytest.mark.unit
+class TestJSExecutionTimeout:
+    """Test that JS execution has a timeout."""
+
+    def test_timeout_passed_to_eval(self, mock_js_content: str) -> None:
+        """MiniRacer.eval() should be called with timeout_sec."""
+        with patch("preservationeval.install.extract.MiniRacer") as mock_mr:
+            mock_ctx = mock_mr.return_value
+            # eval returns different things depending on the call
+            mock_ctx.eval.side_effect = [
+                None,  # browser stubs
+                None,  # js_content
+                None,  # dp_init
+                list(range(PI_ARRAY_SIZE)),  # pitable
+                [5.5] * EMC_ARRAY_SIZE,  # emctable
+            ]
+            extract_tables_from_js(mock_js_content)
+
+            # All eval calls should include timeout_sec
+            for call in mock_ctx.eval.call_args_list:
+                assert "timeout_sec" in call.kwargs, (
+                    f"eval() called without timeout_sec: {call}"
+                )
