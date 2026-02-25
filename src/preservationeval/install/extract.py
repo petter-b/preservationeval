@@ -5,7 +5,6 @@ with regex patterns, it executes dp.js in an embedded V8 engine and reads
 the populated global arrays directly.
 """
 
-import logging
 import time
 
 import numpy as np
@@ -19,6 +18,7 @@ from preservationeval.types import (
     MoldTable,
     PITable,
 )
+from preservationeval.utils.logging import Environment, setup_logging
 
 from .const import (
     DOWNLOAD_TIMEOUT,
@@ -27,7 +27,7 @@ from .const import (
     RETRY_BACKOFF_BASE,
 )
 
-logger = logging.getLogger(__name__)
+logger = setup_logging(__name__, env=Environment.INSTALL)
 
 # Browser global stubs - dp.js references jQuery and DOM APIs at load time.
 # We stub enough to let it parse without errors, then call dp_init()
