@@ -79,6 +79,44 @@ class ExtractionError(Exception):
     """Raised when table extraction from JavaScript fails."""
 
 
+# Physical value ranges from IPI specification
+_PI_VALUE_MIN, _PI_VALUE_MAX = 0, 9999
+_EMC_VALUE_MIN, _EMC_VALUE_MAX = 0.0, 30.0
+_MOLD_VALUE_MIN = 0
+
+
+def _validate_table_values(
+    pi_table: PITable, emc_table: EMCTable, mold_table: MoldTable
+) -> None:
+    """Validate extracted table values fall within expected physical ranges.
+
+    Args:
+        pi_table: Preservation Index lookup table.
+        emc_table: Equilibrium Moisture Content lookup table.
+        mold_table: Mold Risk lookup table.
+
+    Raises:
+        ExtractionError: If any table values are outside expected ranges.
+    """
+    pi_data = pi_table.data
+    if pi_data.min() < _PI_VALUE_MIN or pi_data.max() > _PI_VALUE_MAX:
+        raise ExtractionError(
+            f"PI values out of range [{_PI_VALUE_MIN}, {_PI_VALUE_MAX}]: "
+            f"min={pi_data.min()}, max={pi_data.max()}"
+        )
+
+    emc_data = emc_table.data
+    if emc_data.min() < _EMC_VALUE_MIN or emc_data.max() > _EMC_VALUE_MAX:
+        raise ExtractionError(
+            f"EMC values out of range [{_EMC_VALUE_MIN}, {_EMC_VALUE_MAX}]: "
+            f"min={float(emc_data.min())}, max={float(emc_data.max())}"
+        )
+
+    mold_data = mold_table.data
+    if mold_data.min() < _MOLD_VALUE_MIN:
+        raise ExtractionError(f"Mold values contain negatives: min={mold_data.min()}")
+
+
 def extract_tables_from_js(
     js_content: str,
 ) -> tuple[PITable, EMCTable, MoldTable]:
@@ -152,6 +190,7 @@ def extract_tables_from_js(
         emc_table.data.shape,
         mold_table.data.shape,
     )
+    _validate_table_values(pi_table, emc_table, mold_table)
     return pi_table, emc_table, mold_table
 
 

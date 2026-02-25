@@ -10,10 +10,17 @@ import requests_mock
 
 from preservationeval.install.extract import (
     ExtractionError,
+    _validate_table_values,
     extract_tables_from_js,
     fetch_and_extract_tables,
 )
-from preservationeval.types import BoundaryBehavior, LookupTable
+from preservationeval.types import (
+    BoundaryBehavior,
+    EMCTable,
+    LookupTable,
+    MoldTable,
+    PITable,
+)
 
 # Expected table dimensions (from dp.js structure)
 PI_TEMP_MIN: Final[int] = -23
@@ -314,3 +321,74 @@ class TestJSExecutionTimeout:
                 assert "timeout_sec" in call.kwargs, (
                     f"eval() called without timeout_sec: {call}"
                 )
+
+
+@pytest.mark.unit
+class TestValueRangeValidation:
+    """Test that extracted table values are validated against physical ranges."""
+
+    def test_valid_values_pass(self, mock_js_content: str) -> None:
+        """Mock data with valid values should pass validation."""
+        # mock_js_content uses PI=45, EMC=5.5, Mold=7 — all valid
+        pi, _emc, _mold = extract_tables_from_js(mock_js_content)
+        assert pi is not None  # no ExtractionError raised
+
+    def test_pi_over_max_rejected(self) -> None:
+        """PI values above 9999 should raise ExtractionError."""
+        pi_data = np.array([[10000]], dtype=np.int16)
+        pi_table: PITable = LookupTable(pi_data, -23, 6, BoundaryBehavior.CLAMP)
+        emc_data = np.array([[5.5]], dtype=np.float16)
+        emc_table: EMCTable = LookupTable(emc_data, -20, 0, BoundaryBehavior.CLAMP)
+        mold_data = np.array([[7]], dtype=np.int16)
+        mold_table: MoldTable = LookupTable(mold_data, 2, 65, BoundaryBehavior.RAISE)
+
+        with pytest.raises(ExtractionError, match="PI values out of range"):
+            _validate_table_values(pi_table, emc_table, mold_table)
+
+    def test_emc_over_max_rejected(self) -> None:
+        """EMC values above 30.0 should raise ExtractionError."""
+        pi_data = np.array([[45]], dtype=np.int16)
+        pi_table: PITable = LookupTable(pi_data, -23, 6, BoundaryBehavior.CLAMP)
+        emc_data = np.array([[31.0]], dtype=np.float16)
+        emc_table: EMCTable = LookupTable(emc_data, -20, 0, BoundaryBehavior.CLAMP)
+        mold_data = np.array([[7]], dtype=np.int16)
+        mold_table: MoldTable = LookupTable(mold_data, 2, 65, BoundaryBehavior.RAISE)
+
+        with pytest.raises(ExtractionError, match="EMC values out of range"):
+            _validate_table_values(pi_table, emc_table, mold_table)
+
+    def test_mold_negative_rejected(self) -> None:
+        """Mold values below 0 should raise ExtractionError."""
+        pi_data = np.array([[45]], dtype=np.int16)
+        pi_table: PITable = LookupTable(pi_data, -23, 6, BoundaryBehavior.CLAMP)
+        emc_data = np.array([[5.5]], dtype=np.float16)
+        emc_table: EMCTable = LookupTable(emc_data, -20, 0, BoundaryBehavior.CLAMP)
+        mold_data = np.array([[-1]], dtype=np.int16)
+        mold_table: MoldTable = LookupTable(mold_data, 2, 65, BoundaryBehavior.RAISE)
+
+        with pytest.raises(ExtractionError, match="Mold values contain negatives"):
+            _validate_table_values(pi_table, emc_table, mold_table)
+
+    def test_pi_negative_rejected(self) -> None:
+        """PI values below 0 should raise ExtractionError."""
+        pi_data = np.array([[-1]], dtype=np.int16)
+        pi_table: PITable = LookupTable(pi_data, -23, 6, BoundaryBehavior.CLAMP)
+        emc_data = np.array([[5.5]], dtype=np.float16)
+        emc_table: EMCTable = LookupTable(emc_data, -20, 0, BoundaryBehavior.CLAMP)
+        mold_data = np.array([[7]], dtype=np.int16)
+        mold_table: MoldTable = LookupTable(mold_data, 2, 65, BoundaryBehavior.RAISE)
+
+        with pytest.raises(ExtractionError, match="PI values out of range"):
+            _validate_table_values(pi_table, emc_table, mold_table)
+
+    def test_emc_negative_rejected(self) -> None:
+        """EMC values below 0 should raise ExtractionError."""
+        pi_data = np.array([[45]], dtype=np.int16)
+        pi_table: PITable = LookupTable(pi_data, -23, 6, BoundaryBehavior.CLAMP)
+        emc_data = np.array([[-1.0]], dtype=np.float16)
+        emc_table: EMCTable = LookupTable(emc_data, -20, 0, BoundaryBehavior.CLAMP)
+        mold_data = np.array([[7]], dtype=np.int16)
+        mold_table: MoldTable = LookupTable(mold_data, 2, 65, BoundaryBehavior.RAISE)
+
+        with pytest.raises(ExtractionError, match="EMC values out of range"):
+            _validate_table_values(pi_table, emc_table, mold_table)
