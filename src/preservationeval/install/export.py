@@ -16,6 +16,9 @@ modules with the following variables:
 - `MOLD_RH_MIN`: Minimum relative humidity value for the Mold table.
 """
 
+import contextlib
+import os
+import tempfile
 from pathlib import Path
 from textwrap import dedent
 
@@ -114,15 +117,25 @@ def generate_tables_module(
         '''
     )
 
-    # Write to file
+    # Write atomically: temp file + os.replace()
     if output_path is None:
         output_path = Path.cwd()
     output_path.mkdir(parents=True, exist_ok=True)
     output_file = output_path / f"{module_name}.py"
     try:
-        with output_file.open("w", encoding="utf-8") as f:
-            f.write(code)
+        fd, tmp_path_str = tempfile.mkstemp(
+            dir=output_path, suffix=".tmp", prefix=f".{module_name}_"
+        )
+        tmp_path = Path(tmp_path_str)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(code)
+            tmp_path.replace(output_file)
+        except BaseException:
+            with contextlib.suppress(OSError):
+                tmp_path.unlink()
+            raise
         logger.info("Lookup tables for preservationeval generated.")
-        logger.info(f"Creating {output_file!s}")
+        logger.info("Created %s", output_file)
     except OSError as e:
         raise OSError(f"Error writing to file {output_file!s}: {e.strerror}") from e

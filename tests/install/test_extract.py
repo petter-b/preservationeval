@@ -1,6 +1,6 @@
 """Tests for preservationeval.install.extract."""
 
-from typing import Final
+from typing import Any, Final
 from unittest.mock import patch
 
 import numpy as np
@@ -441,7 +441,7 @@ class TestRetryLogic:
         mock_js_content: str,
     ) -> None:
         """Should retry on HTTP 500 and succeed on subsequent attempt."""
-        responses = [
+        responses: list[dict[str, Any]] = [
             {"status_code": 500},
             {"text": mock_js_content, "status_code": 200},
         ]
