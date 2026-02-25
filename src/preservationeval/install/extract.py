@@ -5,6 +5,7 @@ with regex patterns, it executes dp.js in an embedded V8 engine and reads
 the populated global arrays directly.
 """
 
+import hashlib
 import time
 
 import numpy as np
@@ -22,6 +23,7 @@ from preservationeval.utils.logging import Environment, setup_logging
 
 from .const import (
     DOWNLOAD_TIMEOUT,
+    DP_JS_SHA256,
     JS_EXECUTION_TIMEOUT_SEC,
     MAX_DOWNLOAD_RETRIES,
     RETRY_BACKOFF_BASE,
@@ -244,6 +246,14 @@ def fetch_and_extract_tables(
             response = requests.get(url, timeout=DOWNLOAD_TIMEOUT)
             response.raise_for_status()
             logger.debug("Downloaded dp.js (%d bytes)", len(response.text))
+            actual_hash = hashlib.sha256(response.content).hexdigest()
+            if actual_hash != DP_JS_SHA256:
+                raise ExtractionError(
+                    f"dp.js integrity check failed. "
+                    f"Expected SHA-256: {DP_JS_SHA256}, "
+                    f"got: {actual_hash}. "
+                    f"Upstream may have changed — verify and update the hash."
+                )
             return extract_tables_from_js(response.text)
         except (requests.ConnectionError, requests.Timeout) as e:
             last_error = e

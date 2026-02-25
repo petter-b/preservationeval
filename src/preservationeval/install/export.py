@@ -36,6 +36,7 @@ def generate_tables_module(
     mold_table: MoldTable,
     module_name: str = "lookup_tables",
     output_path: Path | None = None,
+    dp_js_sha256: str = "",
 ) -> None:
     """Generate a Python module for the lookup tables.
 
@@ -58,6 +59,7 @@ def generate_tables_module(
         mold_table: LookupTable for Mold Risk
         module_name: Name of the module to generate
         output_path: Directory to write the module to (default: current working dir.)
+        dp_js_sha256: SHA-256 hash of dp.js source used to generate tables
     """
     # Round EMC data to 2 decimal places (keeping as floats)
     emc_data_rounded = [
@@ -88,6 +90,7 @@ def generate_tables_module(
         )
 
         DP_JS_URL: Final[str] = "{DP_JS_URL}"
+        DP_JS_SHA256: Final[str] = "{dp_js_sha256}"
 
         # PI table data ({pi_table.data.shape})
         pi_table: Final[PITable] = LookupTable(

@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- SHA-256 integrity verification for dp.js downloads
+- dp.js hash provenance embedded in generated `tables.py`
 - Hatch custom build hook (`hatch_build.py`) for wheel-time table generation
 - Pre-upload metadata validation with `twine check`
 - Post-release PyPI install verification with retry and backoff
@@ -20,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `setup.py` (replaced by hatchling build backend)
 
 ### Fixed
+- Security: dp.js content is now verified against a pinned SHA-256 hash before V8 execution
 - Strengthened array size validation from `<` to `!=` for exact match in table extraction
 - Updated outdated docstring in `generate_tables.py`
 - Added tests for pitable/emctable size mismatch error paths (100% coverage)

@@ -204,6 +204,9 @@ select = [
 ignore = ["D203", "D213"]
 explicit-preview-rules = true
 
+[tool.ruff.lint.pylint]
+max-args = 6
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
