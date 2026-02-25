@@ -7,6 +7,10 @@ on:
     - cron: "0 6 * * 1" # Every Monday at 06:00 UTC
   workflow_dispatch:
 
+concurrency:
+  group: dpjs-monitor
+  cancel-in-progress: false
+
 jobs:
   check-dpjs:
     runs-on: ubuntu-latest
@@ -36,7 +40,7 @@ jobs:
         id: hash-check
         run: |
           OBSERVED=$(sha256sum dp.js | awk '{print $1}')
-          PINNED=$(grep -oP '(?<=")([a-f0-9]{64})(?=")' src/preservationeval/install/const.py)
+          PINNED=$(grep 'DP_JS_SHA256' src/preservationeval/install/const.py | grep -oP '[a-f0-9]{64}')
 
           if [ -z "$PINNED" ]; then
             echo "::error::Could not extract pinned hash from const.py"
@@ -60,7 +64,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          OPEN_ISSUES=$(gh issue list --label "dp.js-monitor" --state open --json number --jq 'length')
+          OPEN_ISSUES=$(gh issue list --label "dp.js-monitor" --state open --json number --jq 'length' --limit 1)
           echo "count=$OPEN_ISSUES" >> "$GITHUB_OUTPUT"
 
       - name: Open issue
