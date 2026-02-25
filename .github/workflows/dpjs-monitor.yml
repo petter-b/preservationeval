@@ -1,0 +1,112 @@
+# Prerequisite: the "dp.js-monitor" label must exist on the repo.
+# HTTP is intentional — dpcalc.org does not support HTTPS.
+# Integrity is enforced by SHA-256 comparison against the pinned hash in const.py.
+name: Monitor dp.js for upstream changes
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Every Monday at 06:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: dpjs-monitor
+  cancel-in-progress: false
+
+jobs:
+  check-dpjs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          sparse-checkout: src/preservationeval/install/const.py
+          sparse-checkout-cone-mode: false
+
+      - name: Download dp.js
+        run: |
+          curl -fsSL --retry 3 --retry-delay 5 --retry-connrefused --connect-timeout 10 --max-time 60 -o dp.js "http://www.dpcalc.org/dp.js"
+
+      - name: Verify download is non-empty
+        run: |
+          if [ ! -s dp.js ]; then
+            echo "::error::Downloaded dp.js is empty"
+            exit 1
+          fi
+
+      - name: Compare hashes
+        id: hash-check
+        run: |
+          OBSERVED=$(sha256sum dp.js | awk '{print $1}')
+          PINNED=$(python3 -c "
+          import re
+          text = open('src/preservationeval/install/const.py').read()
+          m = re.search(r'DP_JS_SHA256.*?([a-f0-9]{64})', text, re.DOTALL)
+          print(m.group(1) if m else '')
+          ")
+
+          if [ -z "$PINNED" ]; then
+            echo "::error::Could not extract pinned hash from const.py"
+            exit 1
+          fi
+
+          echo "observed=$OBSERVED" >> "$GITHUB_OUTPUT"
+          echo "pinned=$PINNED" >> "$GITHUB_OUTPUT"
+
+          if [ "$OBSERVED" = "$PINNED" ]; then
+            echo "match=true" >> "$GITHUB_OUTPUT"
+            echo "Hash match: $OBSERVED"
+          else
+            echo "match=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Hash mismatch! Pinned: $PINNED Observed: $OBSERVED"
+          fi
+
+      - name: Check for existing issue
+        if: steps.hash-check.outputs.match == 'false'
+        id: existing-issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          OPEN_ISSUES=$(gh issue list --label "dp.js-monitor" --state open --json number --jq 'length' --limit 1)
+          echo "count=$OPEN_ISSUES" >> "$GITHUB_OUTPUT"
+
+      - name: Open issue
+        if: steps.hash-check.outputs.match == 'false' && steps.existing-issue.outputs.count == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PINNED_HASH: ${{ steps.hash-check.outputs.pinned }}
+          OBSERVED_HASH: ${{ steps.hash-check.outputs.observed }}
+        run: |
+          gh issue create \
+            --title "dp.js upstream change detected" \
+            --label "dp.js-monitor" \
+            --body "$(cat <<EOF
+          ## dp.js hash mismatch detected
+
+          The weekly upstream monitor has detected that \`dp.js\` has changed.
+
+          | | Hash |
+          |---|---|
+          | **Pinned** | \`${PINNED_HASH}\` |
+          | **Observed** | \`${OBSERVED_HASH}\` |
+
+          **Source:** http://www.dpcalc.org/dp.js
+
+          ### Next steps
+
+          1. Download and review the new \`dp.js\` for unexpected changes
+          2. Update \`DP_JS_SHA256\` in \`src/preservationeval/install/const.py\`
+          3. Regenerate tables and verify output: \`uv run generate-tables\`
+          4. Run the test suite: \`uv run pytest\`
+          5. Release a new version
+          EOF
+          )"
+
+      - name: Log skip (issue already open)
+        if: steps.hash-check.outputs.match == 'false' && steps.existing-issue.outputs.count != '0'
+        run: |
+          echo "Skipping issue creation — an open dp.js-monitor issue already exists."
