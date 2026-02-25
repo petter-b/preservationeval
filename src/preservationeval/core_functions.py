@@ -33,6 +33,8 @@ try:
 
     _TABLES_AVAILABLE = True
 except ImportError:
+    # emc_table, mold_table, pi_table are intentionally unbound;
+    # _require_tables() guards all access.
     _TABLES_AVAILABLE = False
 
 
