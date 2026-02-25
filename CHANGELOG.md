@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Post-release PyPI install verification with retry and backoff
 - DEBUG logging in `eval_functions.py` and `util_functions.py` for tracing rating/conversion results
 - `NullHandler` at package root (library best practice, already present)
+- Evaluation functions usage example in README
+- dp.js monitor badge in README Automation section
 
 ### Changed
 - Migrated build backend from setuptools to hatchling + hatch-vcs
@@ -31,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Strengthened array size validation from `<` to `!=` for exact match in table extraction
 - Updated outdated docstring in `generate_tables.py`
 - Added tests for pitable/emctable size mismatch error paths (100% coverage)
+- Corrected CI badge URLs in README (`ci.yml` → `python-cicd.yml`)
+- Updated dev setup commands in README from pip to uv
+- Fixed "Restults" typo in README
+- Removed dead eClimateNotebook link from README
+- Updated README Details section to describe current build pipeline (PyMiniRacer, SHA-256 verification)
 
 ## [1.1.0] - 2026-02-23
 
