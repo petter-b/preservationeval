@@ -13,6 +13,7 @@ from pathlib import Path
 from preservationeval.utils.logging import Environment, setup_logging
 
 from .const import (
+    DP_JS_SHA256,
     DP_JS_URL,
     MODULE_NAME,
     PACKAGE_ROOT_MARKERS,
@@ -91,6 +92,7 @@ def generate_tables(package_path: Path | None = None) -> None:
             mold_table=mold_table,
             module_name=TABLES_MODULE_NAME,
             output_path=package_path,
+            dp_js_sha256=DP_JS_SHA256,
         )
 
         # Verify installation
