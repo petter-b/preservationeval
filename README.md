@@ -162,6 +162,23 @@ uv run pytest tests/test_validation.py --force-update
 [![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen?style=flat&logo=renovatebot&logoColor=white)](https://renovatebot.com)
 [![dp.js Monitor](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/dpjs-monitor.yml?style=flat&label=dp.js%20monitor&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/dpjs-monitor.yml)
 
+### Releasing
+
+Releases are triggered through the `python-cicd.yml` workflow. There are two methods:
+
+1. **PR label** — add one of these labels to a pull request: `release-candidate`, `release-patch`, `release-minor`, `release-major`
+2. **Manual dispatch** — trigger from the [Actions tab](https://github.com/petter-b/preservationeval/actions/workflows/python-cicd.yml) and select a release type
+
+| Release type | Version bump | Target |
+|---|---|---|
+| `release-candidate` | `X.Y.ZrcN` | TestPyPI |
+| `release-patch` | `X.Y.Z+1` | PyPI |
+| `release-minor` | `X.Y+1.0` | PyPI |
+| `release-major` | `X+1.0.0` | PyPI |
+
+Production releases (`patch`/`minor`/`major`) require the `[Unreleased]` section in `CHANGELOG.md` to have entries.
+The workflow creates a git tag, publishes the sdist to PyPI, and creates a GitHub Release.
+
 ## Development Notes
 
 This project was developed with assistance from Claude AI (Anthropic) and to some extent Codeium and GitHub Copilot. All code has been validated and tested for accuracy.
