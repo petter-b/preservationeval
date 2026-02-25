@@ -75,7 +75,7 @@ class TestLookupTableBasics:
     def test_invalid_data(self) -> None:
         """Test table creation with invalid data."""
         with pytest.raises(TypeError):
-            LookupTable[int]([1, 2, 3], 0, 0)
+            LookupTable[int]([1, 2, 3], 0, 0)  # type: ignore[arg-type]
 
         with pytest.raises(ValueError):
             LookupTable[int](np.array([1, 2, 3]), 0, 0)  # 1D array
@@ -202,7 +202,7 @@ class TestBoundaryBehavior:
                 int_test_data,
                 TEMP_MIN,
                 RH_MIN,
-                boundary_behavior="not ok",
+                boundary_behavior="not ok",  # type: ignore[arg-type]
             )
 
 
@@ -252,5 +252,5 @@ class TestRounding:
                 int_test_data,
                 TEMP_MIN,
                 RH_MIN,
-                rounding_func="not ok",
+                rounding_func="not ok",  # type: ignore[arg-type]
             )

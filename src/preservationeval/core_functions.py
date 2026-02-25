@@ -30,17 +30,25 @@ from .types import (
 
 try:
     from .tables import emc_table, mold_table, pi_table
-except ImportError as _e:
-    raise ImportError(
-        "Lookup tables not found. Run the build step to generate tables. "
-        "See https://github.com/petter-b/preservationeval for details."
-    ) from _e
+
+    _TABLES_AVAILABLE = True
+except ImportError:
+    _TABLES_AVAILABLE = False
 
 
 from .util_functions import validate_rh, validate_temp
 
 # Initialize module logger
 logger = logging.getLogger(__name__)
+
+
+def _require_tables() -> None:
+    """Raise if lookup tables are not available."""
+    if not _TABLES_AVAILABLE:
+        raise ImportError(
+            "Lookup tables not found. Run the build step to generate tables. "
+            "See https://github.com/petter-b/preservationeval for details."
+        )
 
 
 def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
@@ -57,6 +65,7 @@ def pi(t: Temperature, rh: RelativeHumidity) -> PreservationIndex:
         PI value [years].
         Use rate_natural_aging() to convert PI to Environmental Rating.
     """
+    _require_tables()
     validate_rh(rh)
     validate_temp(t)
     try:
@@ -81,6 +90,7 @@ def mold(t: Temperature, rh: RelativeHumidity) -> MoldRisk:
         otherwise returns risk value from lookup table where
         higher values indicate greater mold risk
     """
+    _require_tables()
     validate_rh(rh)
     validate_temp(t)
     try:
@@ -107,6 +117,7 @@ def emc(t: Temperature, rh: RelativeHumidity) -> MoistureContent:
         - 7.0% ≤ EMC < 10.5%: OK for metal corrosion
         - EMC ≥ 10.5%: Risk for metal corrosion
     """
+    _require_tables()
     validate_rh(rh)
     validate_temp(t)
     try:
