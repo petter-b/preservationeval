@@ -127,3 +127,20 @@ class TestAtomicWrite:
 
         assert len(replace_calls) == 1
         assert replace_calls[0] == tmp_path / "tables.py"
+
+    def test_output_contains_dpjs_hash(
+        self, tmp_path: Path, dummy_tables: tuple[PITable, EMCTable, MoldTable]
+    ) -> None:
+        """Generated module should contain the dp.js SHA-256 hash."""
+        pi, emc, mold = dummy_tables
+        test_hash = "abc123" * 10 + "abcd"  # 64 chars
+        generate_tables_module(
+            pi,
+            emc,
+            mold,
+            module_name="tables",
+            output_path=tmp_path,
+            dp_js_sha256=test_hash,
+        )
+        content = (tmp_path / "tables.py").read_text()
+        assert f'DP_JS_SHA256: Final[str] = "{test_hash}"' in content
