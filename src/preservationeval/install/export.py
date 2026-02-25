@@ -132,10 +132,13 @@ def generate_tables_module(
                 f.write(code)
             tmp_path.replace(output_file)
         except BaseException:
+            # Close fd if os.fdopen didn't take ownership (suppresses
+            # EBADF if the context manager already closed it).
+            with contextlib.suppress(OSError):
+                os.close(fd)
             with contextlib.suppress(OSError):
                 tmp_path.unlink()
             raise
-        logger.info("Lookup tables for preservationeval generated.")
-        logger.info("Created %s", output_file)
+        logger.info("Generated %s", output_file)
     except OSError as e:
         raise OSError(f"Error writing to file {output_file!s}: {e.strerror}") from e

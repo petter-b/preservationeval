@@ -435,14 +435,16 @@ class TestRetryLogic:
             pi, _emc, _mold = fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
         assert isinstance(pi, LookupTable)
 
+    @pytest.mark.parametrize("status_code", [500, 502, 503])
     def test_retries_on_server_error(
         self,
         requests_mock: requests_mock.Mocker,
         mock_js_content: str,
+        status_code: int,
     ) -> None:
-        """Should retry on HTTP 500 and succeed on subsequent attempt."""
+        """Should retry on HTTP 5xx and succeed on subsequent attempt."""
         responses: list[dict[str, Any]] = [
-            {"status_code": 500},
+            {"status_code": status_code},
             {"text": mock_js_content, "status_code": 200},
         ]
         requests_mock.get("http://www.dpcalc.org/dp.js", responses)
@@ -465,7 +467,7 @@ class TestRetryLogic:
     def test_raises_after_max_retries(
         self, requests_mock: requests_mock.Mocker
     ) -> None:
-        """Should raise after exhausting all retry attempts."""
+        """Should re-raise original error after exhausting all retry attempts."""
         requests_mock.get(
             "http://www.dpcalc.org/dp.js",
             exc=requests.ConnectionError("Network unreachable"),
@@ -473,7 +475,21 @@ class TestRetryLogic:
 
         with (
             patch("preservationeval.install.extract.time.sleep"),
-            pytest.raises(requests.ConnectionError, match="Failed after"),
+            pytest.raises(requests.ConnectionError, match="Network unreachable"),
+        ):
+            fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
+
+        assert requests_mock.call_count == MAX_DOWNLOAD_RETRIES
+
+    def test_raises_http_error_after_5xx_exhaustion(
+        self, requests_mock: requests_mock.Mocker
+    ) -> None:
+        """Should raise HTTPError (not ConnectionError) when 5xx retries exhausted."""
+        requests_mock.get("http://www.dpcalc.org/dp.js", status_code=503)
+
+        with (
+            patch("preservationeval.install.extract.time.sleep"),
+            pytest.raises(requests.HTTPError),
         ):
             fetch_and_extract_tables("http://www.dpcalc.org/dp.js")
 
