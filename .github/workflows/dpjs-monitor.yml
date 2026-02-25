@@ -28,7 +28,7 @@ jobs:
 
       - name: Download dp.js
         run: |
-          curl -fsSL --retry 3 --retry-delay 5 -o dp.js "http://www.dpcalc.org/dp.js"
+          curl -fsSL --retry 3 --retry-delay 5 --connect-timeout 10 --max-time 60 -o dp.js "http://www.dpcalc.org/dp.js"
 
       - name: Verify download is non-empty
         run: |
@@ -41,7 +41,12 @@ jobs:
         id: hash-check
         run: |
           OBSERVED=$(sha256sum dp.js | awk '{print $1}')
-          PINNED=$(grep -A 1 'DP_JS_SHA256' src/preservationeval/install/const.py | grep -oP '[a-f0-9]{64}')
+          PINNED=$(python3 -c "
+          import re
+          text = open('src/preservationeval/install/const.py').read()
+          m = re.search(r'DP_JS_SHA256.*?([a-f0-9]{64})', text, re.DOTALL)
+          print(m.group(1) if m else '')
+          ")
 
           if [ -z "$PINNED" ]; then
             echo "::error::Could not extract pinned hash from const.py"
