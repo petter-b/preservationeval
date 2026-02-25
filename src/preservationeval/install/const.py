@@ -13,6 +13,9 @@ from typing import Final
 # Note: URL and decimals were previously configurable via [tool.preservationeval]
 # in pyproject.toml. Now hardcoded here as the single source of truth.
 DP_JS_URL: Final[str] = "http://www.dpcalc.org/dp.js"
+DP_JS_SHA256: Final[str] = (
+    "e47db658c389b1eb3e1b93f9cb94aad47c255b30a837b034068ea724a8eda79b"
+)
 NUM_EMC_DECIMALS: Final[int] = 1  # Number of decimal places for EMC values (0.0-30.0)
 
 # Package structure configuration
