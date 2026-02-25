@@ -3,13 +3,14 @@
 ## High Priority
 
 - [ ] Consistent use of logging
-- [ ] Install pipeline robustness: retry logic, JS execution timeout,
+- [x] Install pipeline robustness: retry logic, JS execution timeout,
       value-range validation, atomic file writes
-- [ ] Security review of PyMiniRacer JS execution
+- [x] Security review of PyMiniRacer JS execution
+      (HTTPS unavailable; SHA-256 hash pin mitigates MITM)
 
 ## Features
 
-- [ ] Add hash verification to tables.py
+- [x] Add hash verification to tables.py
 - [ ] Cache dp.js for offline builds
 - [ ] Consider merging const and config modules
 
