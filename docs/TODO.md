@@ -2,7 +2,7 @@
 
 ## High Priority
 
-- [ ] Consistent use of logging
+- [x] Consistent use of logging
 - [x] Install pipeline robustness: retry logic, JS execution timeout,
       value-range validation, atomic file writes
 - [x] Security review of PyMiniRacer JS execution
