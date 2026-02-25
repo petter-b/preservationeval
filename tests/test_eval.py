@@ -6,6 +6,8 @@ preservationeval.eval module, covering various scenarios and edge cases.
 
 # pylint: disable=missing-docstring
 
+import logging
+
 import pytest
 
 from preservationeval.eval_functions import (
@@ -131,3 +133,38 @@ def test_rate_metal_corrosion_non_numeric_input() -> None:
 def test_rate_metal_corrosion_negative_input() -> None:
     with pytest.raises(ValueError):
         rate_metal_corrosion(-1.0)
+
+
+# --- DEBUG logging tests ---
+
+
+@pytest.mark.unit
+def test_rate_natural_aging_logs_debug(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.DEBUG, logger="preservationeval.eval_functions"):
+        result = rate_natural_aging(75)
+    assert result == EnvironmentalRating.GOOD
+    assert "rate_natural_aging: pi=75 -> GOOD" in caplog.text
+
+
+@pytest.mark.unit
+def test_rate_mechanical_damage_logs_debug(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.DEBUG, logger="preservationeval.eval_functions"):
+        result = rate_mechanical_damage(10)
+    assert result == EnvironmentalRating.OK
+    assert "rate_mechanical_damage: emc=10 -> OK" in caplog.text
+
+
+@pytest.mark.unit
+def test_rate_mold_growth_logs_debug(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.DEBUG, logger="preservationeval.eval_functions"):
+        result = rate_mold_growth(0)
+    assert result == EnvironmentalRating.GOOD
+    assert "rate_mold_growth: mrf=0 -> GOOD" in caplog.text
+
+
+@pytest.mark.unit
+def test_rate_metal_corrosion_logs_debug(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.DEBUG, logger="preservationeval.eval_functions"):
+        result = rate_metal_corrosion(6)
+    assert result == EnvironmentalRating.GOOD
+    assert "rate_metal_corrosion: emc=6 -> GOOD" in caplog.text

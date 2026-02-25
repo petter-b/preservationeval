@@ -32,10 +32,18 @@ class CustomBuildHook(BuildHookInterface):  # type: ignore[misc]
         if self.target_name != "wheel":
             return
 
-        logger.info("Generating preservationeval lookup tables...")
         src_path = str(Path(self.root) / "src")
         sys.path.insert(0, src_path)
         try:
+            from preservationeval.utils.logging import (  # noqa: PLC0415
+                Environment,
+                setup_logging,
+            )
+
+            setup_logging(__name__, env=Environment.INSTALL)
+
+            logger.info("Generating preservationeval lookup tables...")
+
             from preservationeval.install.generate_tables import (  # noqa: PLC0415
                 generate_tables,
             )
