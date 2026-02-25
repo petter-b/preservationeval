@@ -13,13 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hatch custom build hook (`hatch_build.py`) for wheel-time table generation
 - Pre-upload metadata validation with `twine check`
 - Post-release PyPI install verification with retry and backoff
+- DEBUG logging in `eval_functions.py` and `util_functions.py` for tracing rating/conversion results
+- `NullHandler` at package root (library best practice, already present)
 
 ### Changed
 - Migrated build backend from setuptools to hatchling + hatch-vcs
 - Migrated all CI/CD from pip to uv (`astral-sh/setup-uv`, `uv sync`, `uv build`, `uv publish`)
+- Standardized logging conventions: library modules use `logging.getLogger(__name__)`, build scripts use `setup_logging` with `Environment.INSTALL`
 
 ### Removed
 - Removed `setup.py` (replaced by hatchling build backend)
+- Removed `BoundaryBehavior.LOG` flag from `LookupTable` (dead code; clamping is normal domain behavior, not a warning)
 
 ### Fixed
 - Security: dp.js content is now verified against a pinned SHA-256 hash before V8 execution

@@ -169,31 +169,9 @@ class TestBoundaryBehavior:
         expected_value = clamp_table[expected_indices]
         assert value == expected_value
 
-    @pytest.mark.parametrize(
-        "indices,expected_indices",
-        [
-            ((TEMP_MIN - 1, 50), (TEMP_MIN, 50)),  # Clamp temp below
-            ((TEMP_MAX + 1, 50), (TEMP_MAX, 50)),  # Clamp temp above
-            ((20, RH_MIN - 1), (20, RH_MIN)),  # Clamp RH below
-            ((20, RH_MAX + 1), (20, RH_MAX)),  # Clamp RH above
-        ],
-    )
-    def test_clamp_and_log_behavior(
-        self,
-        int_test_data: NDArray[integer[Any]],
-        indices: TableIndex,
-        expected_indices: TableIndex,
-    ) -> None:
-        """Test CLAMP | LOG boundary behavior."""
-        table = LookupTable[int](
-            int_test_data,
-            TEMP_MIN,
-            RH_MIN,
-            boundary_behavior=BoundaryBehavior.CLAMP | BoundaryBehavior.LOG,
-        )
-        value = table[indices]
-        expected_value = table[expected_indices]
-        assert value == expected_value
+    def test_boundary_behavior_has_no_log(self) -> None:
+        """BoundaryBehavior.LOG was removed; ensure it no longer exists."""
+        assert not hasattr(BoundaryBehavior, "LOG")
 
     def test_faulty_bb_input(self, int_test_data: NDArray[integer[Any]]) -> None:
         """Test faulty boundary_behavior in constructor."""
