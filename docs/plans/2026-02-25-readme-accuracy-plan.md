@@ -1,7 +1,5 @@
 # README Accuracy Pass — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Update README.md to reflect the current state of the project after uv migration and pipeline hardening.
 
 **Architecture:** Nine targeted edits to a single file (`README.md`), grouped into three commits by theme: fixes, content updates, new content.

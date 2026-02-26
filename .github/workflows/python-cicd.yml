@@ -264,16 +264,22 @@ jobs:
 
           echo "Version: ${CURRENT_VERSION} → ${NEW_VERSION}"
 
+          # Stamp CHANGELOG: [Unreleased] → [X.Y.Z] - date, keeping an empty [Unreleased] section
+          stamp_changelog() {
+            local version=$1
+            local release_date
+            release_date=$(date -u +%Y-%m-%d)
+            sed -i "s/^## \[Unreleased\]$/## [Unreleased]\n\n## [${version}] - ${release_date}/" CHANGELOG.md
+            if ! grep -q "^## \[${version}\] - ${release_date}$" CHANGELOG.md; then
+              echo "::error::CHANGELOG.md transform failed"
+              return 1
+            fi
+            echo "📝 CHANGELOG.md: [Unreleased] → [${version}] - ${release_date}"
+          }
+
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             git checkout ${{ github.head_ref }}
-            # Stamp CHANGELOG: [Unreleased] → [X.Y.Z] - date
-            RELEASE_DATE=$(date -u +%Y-%m-%d)
-            sed -i "s/^## \[Unreleased\]$/## [Unreleased]\n\n## [${NEW_VERSION}] - ${RELEASE_DATE}/" CHANGELOG.md
-            if ! grep -q "^## \[${NEW_VERSION}\] - ${RELEASE_DATE}$" CHANGELOG.md; then
-              echo "::error::CHANGELOG.md transform failed"
-              exit 1
-            fi
-            echo "📝 CHANGELOG.md: [Unreleased] → [${NEW_VERSION}] - ${RELEASE_DATE}"
+            stamp_changelog "${NEW_VERSION}"
             git add .
             git commit -m "chore: Prepare for release ${NEW_VERSION}" || echo "No changes to commit"
             git push origin ${{ github.head_ref }}
@@ -286,13 +292,7 @@ jobs:
             git pull origin main
           else
             # Dispatch flow: stamp CHANGELOG and commit to main
-            RELEASE_DATE=$(date -u +%Y-%m-%d)
-            sed -i "s/^## \[Unreleased\]$/## [Unreleased]\n\n## [${NEW_VERSION}] - ${RELEASE_DATE}/" CHANGELOG.md
-            if ! grep -q "^## \[${NEW_VERSION}\] - ${RELEASE_DATE}$" CHANGELOG.md; then
-              echo "::error::CHANGELOG.md transform failed"
-              exit 1
-            fi
-            echo "📝 CHANGELOG.md: [Unreleased] → [${NEW_VERSION}] - ${RELEASE_DATE}"
+            stamp_changelog "${NEW_VERSION}"
             git add CHANGELOG.md
             git commit -m "chore: prepare changelog for release ${NEW_VERSION}"
             # Use RELEASE_PAT if available (branch protection may block github.token)
