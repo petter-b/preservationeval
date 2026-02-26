@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `BoundaryBehavior.LOG` flag from `LookupTable` (dead code; clamping is normal domain behavior, not a warning)
 
 ### Fixed
+- CI: add `--wildcards` to `tar` PKG-INFO extraction (required by GNU tar on Ubuntu runners)
 - Security: dp.js content is now verified against a pinned SHA-256 hash before V8 execution
 - Strengthened array size validation from `<` to `!=` for exact match in table extraction
 - Updated outdated docstring in `generate_tables.py`
