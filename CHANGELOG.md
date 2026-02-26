@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-02-26
+
 ### Added
 - Weekly GitHub Actions monitor for upstream dp.js changes
 - SHA-256 integrity verification for dp.js downloads
