@@ -67,7 +67,7 @@ For details of how to use, see:
 ## Development
 
 [![Project Status](https://img.shields.io/pypi/status/preservationeval?style=flat&color=blue&label=status&logo=pypi)](https://pypi.org/project/preservationeval/)
-[![Downloads](https://img.shields.io/pepy/dt/preservationeval?style=flat&color=blue&logo=python&logoColor=white)](https://pepy.tech/project/preservationeval)
+[![Downloads](https://img.shields.io/pypi/dm/preservationeval?style=flat&color=blue&label=downloads&logo=pypi)](https://pypi.org/project/preservationeval/)
 [![Issues](https://img.shields.io/github/issues/petter-b/preservationeval?style=flat&color=yellow&logo=github)](https://github.com/petter-b/preservationeval/issues/)
 
 ### Setup
