@@ -266,6 +266,14 @@ jobs:
 
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             git checkout ${{ github.head_ref }}
+            # Stamp CHANGELOG: [Unreleased] → [X.Y.Z] - date
+            RELEASE_DATE=$(date -u +%Y-%m-%d)
+            sed -i "s/^## \[Unreleased\]$/## [Unreleased]\n\n## [${NEW_VERSION}] - ${RELEASE_DATE}/" CHANGELOG.md
+            if ! grep -q "^## \[${NEW_VERSION}\] - ${RELEASE_DATE}$" CHANGELOG.md; then
+              echo "::error::CHANGELOG.md transform failed"
+              exit 1
+            fi
+            echo "📝 CHANGELOG.md: [Unreleased] → [${NEW_VERSION}] - ${RELEASE_DATE}"
             git add .
             git commit -m "chore: Prepare for release ${NEW_VERSION}" || echo "No changes to commit"
             git push origin ${{ github.head_ref }}
@@ -276,6 +284,22 @@ jobs:
             fi
             git checkout main
             git pull origin main
+          else
+            # Dispatch flow: stamp CHANGELOG and commit to main
+            RELEASE_DATE=$(date -u +%Y-%m-%d)
+            sed -i "s/^## \[Unreleased\]$/## [Unreleased]\n\n## [${NEW_VERSION}] - ${RELEASE_DATE}/" CHANGELOG.md
+            if ! grep -q "^## \[${NEW_VERSION}\] - ${RELEASE_DATE}$" CHANGELOG.md; then
+              echo "::error::CHANGELOG.md transform failed"
+              exit 1
+            fi
+            echo "📝 CHANGELOG.md: [Unreleased] → [${NEW_VERSION}] - ${RELEASE_DATE}"
+            git add CHANGELOG.md
+            git commit -m "chore: prepare changelog for release ${NEW_VERSION}"
+            # Use RELEASE_PAT if available (branch protection may block github.token)
+            if [[ -n "$RELEASE_PAT" ]]; then
+              git remote set-url origin "https://x-access-token:${RELEASE_PAT}@github.com/${{ github.repository }}.git"
+            fi
+            git push origin main
           fi
 
           # Create and push tag (used by hatch-vcs for version)

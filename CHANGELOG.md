@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - dp.js monitor badge in README Automation section
 
 ### Changed
+- CI: automate CHANGELOG `[Unreleased]` stamping during production releases
 - Migrated build backend from setuptools to hatchling + hatch-vcs
 - Migrated all CI/CD from pip to uv (`astral-sh/setup-uv`, `uv sync`, `uv build`, `uv publish`)
 - Standardized logging conventions: library modules use `logging.getLogger(__name__)`, build scripts use `setup_logging` with `Environment.INSTALL`
