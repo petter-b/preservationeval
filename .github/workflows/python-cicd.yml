@@ -205,7 +205,7 @@ jobs:
           SETUPTOOLS_SCM_PRETEND_VERSION="${RC_VERSION}" uv build --sdist
 
           # Verify the pretend version actually made it into the sdist metadata
-          tar -xOf dist/*.tar.gz '*/PKG-INFO' | grep "^Version: ${RC_VERSION}$"
+          tar --wildcards -xOf dist/*.tar.gz '*/PKG-INFO' | grep "^Version: ${RC_VERSION}$"
 
           # IP protection: verify no tables.py in sdist, no wheel built
           ! tar -tvf dist/*.tar.gz | grep '/tables\.py$'
@@ -316,7 +316,7 @@ jobs:
           uv build --sdist
 
           # Verify the tag version made it into the sdist metadata
-          tar -xOf dist/*.tar.gz '*/PKG-INFO' | grep "^Version: ${NEW_VERSION}$"
+          tar --wildcards -xOf dist/*.tar.gz '*/PKG-INFO' | grep "^Version: ${NEW_VERSION}$"
 
           # IP protection: verify no tables.py in sdist, no wheel built
           ! tar -tvf dist/*.tar.gz | grep '/tables\.py$'
