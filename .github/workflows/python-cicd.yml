@@ -264,8 +264,22 @@ jobs:
 
           echo "Version: ${CURRENT_VERSION} → ${NEW_VERSION}"
 
+          # Stamp CHANGELOG: [Unreleased] → [X.Y.Z] - date, keeping an empty [Unreleased] section
+          stamp_changelog() {
+            local version=$1
+            local release_date
+            release_date=$(date -u +%Y-%m-%d)
+            sed -i "s/^## \[Unreleased\]$/## [Unreleased]\n\n## [${version}] - ${release_date}/" CHANGELOG.md
+            if ! grep -q "^## \[${version}\] - ${release_date}$" CHANGELOG.md; then
+              echo "::error::CHANGELOG.md transform failed"
+              return 1
+            fi
+            echo "📝 CHANGELOG.md: [Unreleased] → [${version}] - ${release_date}"
+          }
+
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             git checkout ${{ github.head_ref }}
+            stamp_changelog "${NEW_VERSION}"
             git add .
             git commit -m "chore: Prepare for release ${NEW_VERSION}" || echo "No changes to commit"
             git push origin ${{ github.head_ref }}
@@ -276,6 +290,16 @@ jobs:
             fi
             git checkout main
             git pull origin main
+          else
+            # Dispatch flow: stamp CHANGELOG and commit to main
+            stamp_changelog "${NEW_VERSION}"
+            git add CHANGELOG.md
+            git commit -m "chore: prepare changelog for release ${NEW_VERSION}"
+            # Use RELEASE_PAT if available (branch protection may block github.token)
+            if [[ -n "$RELEASE_PAT" ]]; then
+              git remote set-url origin "https://x-access-token:${RELEASE_PAT}@github.com/${{ github.repository }}.git"
+            fi
+            git push origin main
           fi
 
           # Create and push tag (used by hatch-vcs for version)

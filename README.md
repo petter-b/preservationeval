@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/preservationeval?style=flat&color=blue&label=pypi&logo=pypi)](https://pypi.org/project/preservationeval/)
 [![Python](https://img.shields.io/pypi/pyversions/preservationeval?style=flat&color=blue&logo=python)](https://pypi.org/project/preservationeval/)
-[![CI](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/ci.yml?style=flat&label=CI&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/python-cicd.yml?style=flat&label=CI&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/python-cicd.yml)
 [![Coverage](https://img.shields.io/codecov/c/github/petter-b/preservationeval?style=flat&color=brightgreen&label=coverage&logo=codecov)](https://codecov.io/gh/petter-b/preservationeval)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat&logo=opensourceinitiative&logoColor=white)](https://opensource.org/licenses/MIT)
 
@@ -10,7 +10,9 @@ A Python implementation of the calculations and evaluations done by the Dew Poin
 
 ## Details
 
-The preservation evaluation is inspired by the [Dew point calulator](http://www.dpcalc.org) created by the Image Permanence Institute. They are publishing their code http://www.dpcalc.org/dp.js and most of the work in this project has been spent on figuring out how to install this package without redistributing the lookup tables from the original Javascript code. These tables are downloaded from the Internet and converted into a python module during installation of the package.
+This project is a Python implementation of the [Dew Point Calculator](http://www.dpcalc.org) created by the Image Permanence Institute.
+The original lookup tables from their [published JavaScript](http://www.dpcalc.org/dp.js) are not redistributed.
+Instead, during installation, `dp.js` is downloaded, its integrity is verified via a pinned SHA-256 hash, and the table data is extracted by executing the JavaScript in an embedded V8 engine ([PyMiniRacer](https://github.com/nicolo-ribaudo/pymi-racer)) and converted into a Python module.
 
 ## Installation
 
@@ -38,12 +40,28 @@ mold_risk = mold(20, 50)
 print(f"Mold Risk: {mold_risk}")
 ```
 
-### Interpreting Restults
+### Evaluating Conditions
+
+The package also provides functions to rate environmental conditions:
+
+```python
+from preservationeval import (
+    pi, mold, rate_natural_aging, rate_mold_growth, EnvironmentalRating
+)
+
+# Rate preservation conditions (returns GOOD, OK, or RISK)
+aging_risk = rate_natural_aging(pi(20, 50))
+print(f"Natural aging: {aging_risk}")  # EnvironmentalRating.GOOD
+
+mold_risk = rate_mold_growth(mold(20, 50))
+print(f"Mold risk: {mold_risk}")  # EnvironmentalRating.GOOD
+```
+
+### Interpreting Results
 
 For details of how to use, see:
 
 - http://www.dpcalc.org/howtouse_step2.php
-- https://www.eclimatenotebook.com/fundamentals_nl.php
 - https://s3.cad.rit.edu/ipi-assets/publications/understanding_preservation_metrics.pdf
 
 ## Development
@@ -60,7 +78,7 @@ git clone https://github.com/petter-b/preservationeval
 cd preservationeval
 
 # Install development dependencies
-pip install -e ".[dev]"
+uv sync --extra dev
 ```
 
 ### Development Tools
@@ -74,21 +92,21 @@ pip install -e ".[dev]"
 
 ```bash
 # Format code
-ruff format .
+uv run ruff format .
 
 # Run linter
-ruff check .
+uv run ruff check .
 
 # Type checking
-mypy .
+uv run mypy .
 
 # Run tests with coverage
-pytest --cov
+uv run pytest --cov
 ```
 
 ### Testing
 
-[![CI](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/ci.yml?style=flat&label=ci&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/python-cicd.yml?style=flat&label=ci&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/python-cicd.yml)
 [![Coverage](https://img.shields.io/codecov/c/github/petter-b/preservationeval?style=flat&color=brightgreen&label=coverage&logo=codecov)](https://codecov.io/gh/petter-b/preservationeval)
 [![CodeQL](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/codeql.yml?style=flat&label=codeql&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/codeql.yml)
 
@@ -100,7 +118,7 @@ against the original JavaScript implementation from dpcalc.org.
 ##### Requirements
 
 - Node.js and npm must be installed ([download](https://nodejs.org/))
-- Python test dependencies: `pip install -e ".[test]"`
+- Python test dependencies: `uv sync --extra test`
 
 ##### Test Data Setup
 
@@ -116,19 +134,19 @@ You can manually trigger this setup:
 ```bash
 # Download JavaScript reference implementation
 # This happens automatically when running tests, or manually:
-python -m tests.validate_core
+uv run python -m tests.validate_core
 
 # Run all tests
-pytest
+uv run pytest
 
 # Run only validation tests
-pytest tests/test_validation.py
+uv run pytest tests/test_validation.py
 
 # Run with verbose output
-pytest -v tests/test_validation.py
+uv run pytest -v tests/test_validation.py
 
 # Generate new test cases (ignore cached)
-pytest tests/test_validation.py --force-update
+uv run pytest tests/test_validation.py --force-update
 ```
 
 ### Code Quality
@@ -142,6 +160,24 @@ pytest tests/test_validation.py --force-update
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?style=flat&logo=pre-commit&logoColor=white)](https://github.com/petter-b/preservationeval/blob/main/.pre-commit-config.yaml)
 [![Pre-commit CI](https://img.shields.io/badge/pre--commit%20ci-passing-brightgreen?style=flat&logo=pre-commit&logoColor=white)](https://results.pre-commit.ci/latest/github/petter-b/preservationeval/main)
 [![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen?style=flat&logo=renovatebot&logoColor=white)](https://renovatebot.com)
+[![dp.js Monitor](https://img.shields.io/github/actions/workflow/status/petter-b/preservationeval/dpjs-monitor.yml?style=flat&label=dp.js%20monitor&logo=github-actions&logoColor=white)](https://github.com/petter-b/preservationeval/actions/workflows/dpjs-monitor.yml)
+
+### Releasing
+
+Releases are triggered through the `python-cicd.yml` workflow. There are two methods:
+
+1. **PR label** — add one of these labels to a pull request: `release-candidate`, `release-patch`, `release-minor`, `release-major`
+2. **Manual dispatch** — trigger from the [Actions tab](https://github.com/petter-b/preservationeval/actions/workflows/python-cicd.yml) and select a release type
+
+| Release type | Version bump | Target |
+|---|---|---|
+| `release-candidate` | `X.Y.ZrcN` | TestPyPI |
+| `release-patch` | `X.Y.Z+1` | PyPI |
+| `release-minor` | `X.Y+1.0` | PyPI |
+| `release-major` | `X+1.0.0` | PyPI |
+
+Production releases (`patch`/`minor`/`major`) require the `[Unreleased]` section in `CHANGELOG.md` to have entries.
+The workflow creates a git tag, publishes the sdist to PyPI, and creates a GitHub Release.
 
 ## Development Notes
 
