@@ -19,8 +19,6 @@ import pytest
 from _pytest.config import Config, Notset
 from _pytest.config.argparsing import Parser
 
-from tests.validate_core import ValidationTest
-
 
 def pytest_addoption(parser: Parser) -> None:
     """Add custom command line options to pytest.
@@ -37,8 +35,12 @@ def pytest_addoption(parser: Parser) -> None:
 
 
 @pytest.fixture
-def validation(request: pytest.FixtureRequest) -> ValidationTest:
+def validation(request: pytest.FixtureRequest) -> Any:
     """Provide configured ValidationTest instance.
+
+    Import is deferred because validate_core depends on preservationeval.install,
+    which is not available when running against an installed package (e.g. CI
+    smoke tests from sdist).
 
     Args:
         request: pytest request object containing command line options
@@ -46,6 +48,8 @@ def validation(request: pytest.FixtureRequest) -> ValidationTest:
     Returns:
         ValidationTest: Configured instance for JavaScript validation
     """
+    from tests.validate_core import ValidationTest  # noqa: PLC0415
+
     option: bool | Any | Notset = request.config.getoption("--force-update")
     force_update: bool = bool(option) if option is not Notset else False
     return ValidationTest(force_update=force_update)
