@@ -290,7 +290,8 @@ jobs:
             git pull origin main
           fi
 
-          # Both flows: stamp CHANGELOG on main
+          # Both flows: ensure main is current, then stamp CHANGELOG
+          git pull origin main
           stamp_changelog "${NEW_VERSION}"
           git add CHANGELOG.md
           git commit -m "chore: prepare changelog for release ${NEW_VERSION}"
