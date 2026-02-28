@@ -75,8 +75,7 @@ if ! grep -q '^## \[Unreleased\]' CHANGELOG.md; then
   exit 1
 fi
 
-ENTRY_COUNT=$(sed -n '/^## \[Unreleased\]/,/^## \[/{/^## \[/!p}' CHANGELOG.md \
-  | grep -c '^\s*- ' || true)
+ENTRY_COUNT=$(awk '/^## \[Unreleased\]/{found=1; next} /^## \[/{found=0} found && /^[[:space:]]*- /{count++} END{print count+0}' CHANGELOG.md)
 if [[ "$ENTRY_COUNT" -eq 0 ]]; then
   echo "Error: [Unreleased] section has no entries. Document your changes first."
   exit 1
