@@ -278,28 +278,30 @@ jobs:
           }
 
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            git checkout ${{ github.head_ref }}
-            stamp_changelog "${NEW_VERSION}"
-            git add .
-            git commit -m "chore: Prepare for release ${NEW_VERSION}" || echo "No changes to commit"
-            git push origin ${{ github.head_ref }}
-            echo "Attempting to merge PR..."
+            # Merge PR first, then stamp CHANGELOG on main.
+            # Pushing a stamp commit to the PR branch before merge creates a race:
+            # the new commit invalidates status checks and the merge state.
+            echo "Merging PR #${{ github.event.pull_request.number }}..."
             if ! gh pr merge ${{ github.event.pull_request.number }} --squash --delete-branch; then
               echo "❌ Auto-merge failed. Please merge manually and re-run."
               exit 1
             fi
             git checkout main
-            git pull origin main
-          else
-            # Dispatch flow: stamp CHANGELOG and commit to main
-            stamp_changelog "${NEW_VERSION}"
-            git add CHANGELOG.md
-            git commit -m "chore: prepare changelog for release ${NEW_VERSION}"
-            # Use RELEASE_PAT if available (branch protection may block github.token)
-            if [[ -n "$RELEASE_PAT" ]]; then
-              git remote set-url origin "https://x-access-token:${RELEASE_PAT}@github.com/${{ github.repository }}.git"
-            fi
-            git push origin main
+          fi
+
+          # Both flows: ensure main is current, then stamp CHANGELOG.
+          # The stamp is a direct push to main, so RELEASE_PAT is required
+          # when branch protection blocks pushes from github.token.
+          git pull origin main
+          stamp_changelog "${NEW_VERSION}"
+          git add CHANGELOG.md
+          git commit -m "chore: prepare changelog for release ${NEW_VERSION}"
+          if [[ -n "$RELEASE_PAT" ]]; then
+            git remote set-url origin "https://x-access-token:${RELEASE_PAT}@github.com/${{ github.repository }}.git"
+          fi
+          if ! git push origin main; then
+            echo "❌ Failed to push CHANGELOG stamp to main"
+            exit 1
           fi
 
           # Create and push tag (used by hatch-vcs for version)
