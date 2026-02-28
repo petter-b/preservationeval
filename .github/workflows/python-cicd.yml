@@ -112,11 +112,6 @@ jobs:
       - name: Set up Python
         run: uv python install 3.13
 
-      - name: Set up Node.js  # for semver
-        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
-        with:
-          node-version: '22'
-
       - name: Install build dependencies
         run: uv sync --frozen --extra test --extra release
 
@@ -137,10 +132,6 @@ jobs:
 
       - name: Validate before release
         run: |
-          if ! command -v npx &> /dev/null; then
-            echo "Error: npx command not found"
-            exit 1
-          fi
           # Get the latest tag (vX.Y.Z), strip 'v' for numeric semver checks
           LATEST_TAG=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null || echo "")
           if [[ -n "$LATEST_TAG" ]]; then
@@ -157,19 +148,30 @@ jobs:
           echo "Validation passed. Current version: $CURRENT_VERSION"
 
       - name: Validate CHANGELOG.md
+        id: changelog_check
         if: steps.release_type.outputs.release_type == 'release-patch' || steps.release_type.outputs.release_type == 'release-minor' || steps.release_type.outputs.release_type == 'release-major'
         run: |
-          if ! grep -q '## \[Unreleased\]' CHANGELOG.md; then
-            echo "::error::CHANGELOG.md is missing an [Unreleased] section"
+          # Compute expected version (same logic as prep-release.sh)
+          LATEST_TAG=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null || echo "v0.0.0")
+          VERSION="${LATEST_TAG#v}"
+          IFS='.' read -r v_major v_minor v_patch <<< "$VERSION"
+
+          RELEASE_TYPE="${{ steps.release_type.outputs.release_type }}"
+          case "$RELEASE_TYPE" in
+            release-patch) v_patch=$((v_patch + 1)) ;;
+            release-minor) v_minor=$((v_minor + 1)); v_patch=0 ;;
+            release-major) v_major=$((v_major + 1)); v_minor=0; v_patch=0 ;;
+          esac
+          EXPECTED="${v_major}.${v_minor}.${v_patch}"
+
+          if ! grep -q "^## \[${EXPECTED}\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md is missing a stamped [${EXPECTED}] section."
+            echo "::error::Run: scripts/prep-release.sh ${RELEASE_TYPE#release-}"
             exit 1
           fi
-          # Extract lines between [Unreleased] and the next ## heading
-          CONTENT=$(sed -n '/^## \[Unreleased\]/,/^## \[/{/^## \[/!p}' CHANGELOG.md | grep -c '^\s*- ' || true)
-          if [[ "$CONTENT" -eq 0 ]]; then
-            echo "::error::CHANGELOG.md [Unreleased] section has no entries. Document your changes before releasing."
-            exit 1
-          fi
-          echo "✅ CHANGELOG.md has $CONTENT unreleased entries"
+
+          echo "expected_version=${EXPECTED}" >> "$GITHUB_OUTPUT"
+          echo "Validated CHANGELOG.md contains [${EXPECTED}]"
 
       # =========================
       # Release Candidate (TestPyPI)
@@ -232,55 +234,13 @@ jobs:
         env:
           RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
         run: |
+          NEW_VERSION="${{ steps.changelog_check.outputs.expected_version }}"
+          echo "Releasing version: ${NEW_VERSION}"
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          LATEST_TAG=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null || echo "")
-          if [[ -n "$LATEST_TAG" ]]; then
-            CURRENT_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
-          else
-            CURRENT_VERSION="0.0.0"
-          fi
-
-          if [[ -z "$LATEST_TAG" ]]; then
-            echo "🎉 First release detected"
-            if [[ "${{ steps.release_type.outputs.release_type }}" == "release-minor" ]]; then
-              NEW_VERSION="0.1.0"
-            elif [[ "${{ steps.release_type.outputs.release_type }}" == "release-major" ]]; then
-              NEW_VERSION="1.0.0"
-            else
-              NEW_VERSION="0.0.1"
-            fi
-          else
-            echo "📈 Bumping existing version: $CURRENT_VERSION"
-            if [[ "${{ steps.release_type.outputs.release_type }}" == "release-patch" ]]; then
-              NEW_VERSION=$(npx semver -i patch $CURRENT_VERSION)
-            elif [[ "${{ steps.release_type.outputs.release_type }}" == "release-minor" ]]; then
-              NEW_VERSION=$(npx semver -i minor $CURRENT_VERSION)
-            elif [[ "${{ steps.release_type.outputs.release_type }}" == "release-major" ]]; then
-              NEW_VERSION=$(npx semver -i major $CURRENT_VERSION)
-            fi
-          fi
-
-          echo "Version: ${CURRENT_VERSION} → ${NEW_VERSION}"
-
-          # Stamp CHANGELOG: [Unreleased] → [X.Y.Z] - date, keeping an empty [Unreleased] section
-          stamp_changelog() {
-            local version=$1
-            local release_date
-            release_date=$(date -u +%Y-%m-%d)
-            sed -i "s/^## \[Unreleased\]$/## [Unreleased]\n\n## [${version}] - ${release_date}/" CHANGELOG.md
-            if ! grep -q "^## \[${version}\] - ${release_date}$" CHANGELOG.md; then
-              echo "::error::CHANGELOG.md transform failed"
-              return 1
-            fi
-            echo "📝 CHANGELOG.md: [Unreleased] → [${version}] - ${release_date}"
-          }
-
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # Merge PR first, then stamp CHANGELOG on main.
-            # Pushing a stamp commit to the PR branch before merge creates a race:
-            # the new commit invalidates status checks and the merge state.
             echo "Merging PR #${{ github.event.pull_request.number }}..."
             if ! gh pr merge ${{ github.event.pull_request.number }} --squash --delete-branch; then
               echo "❌ Auto-merge failed. Please merge manually and re-run."
@@ -289,26 +249,13 @@ jobs:
             git checkout main
           fi
 
-          # Both flows: ensure main is current, then stamp CHANGELOG.
-          # The stamp is a direct push to main, so RELEASE_PAT is required
-          # when branch protection blocks pushes from github.token.
           git pull origin main
-          stamp_changelog "${NEW_VERSION}"
-          git add CHANGELOG.md
-          git commit -m "chore: prepare changelog for release ${NEW_VERSION}"
-          if [[ -n "$RELEASE_PAT" ]]; then
-            git remote set-url origin "https://x-access-token:${RELEASE_PAT}@github.com/${{ github.repository }}.git"
-          fi
-          if ! git push origin main; then
-            echo "❌ Failed to push CHANGELOG stamp to main"
-            exit 1
-          fi
 
           # Create and push tag (used by hatch-vcs for version)
           git tag "v${NEW_VERSION}"
-          
+
           # Use a Personal Access Token if provided to ensure downstream workflow triggers
-          if [[ -n "$RELEASE_PAT" ]]; then
+          if [[ -n "${RELEASE_PAT:-}" ]]; then
             git remote set-url origin "https://x-access-token:${RELEASE_PAT}@github.com/${{ github.repository }}.git"
           fi
           git push origin "v${NEW_VERSION}"
@@ -359,7 +306,7 @@ jobs:
           rm -rf "$VERIFY_DIR"
 
           echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
-          echo "🚀 Production release ${NEW_VERSION} published to PyPI successfully"
+          echo "Production release ${NEW_VERSION} published to PyPI successfully"
 
       - name: Create GitHub Release
         if: steps.release_type.outputs.release_type == 'release-patch' || steps.release_type.outputs.release_type == 'release-minor' || steps.release_type.outputs.release_type == 'release-major'
