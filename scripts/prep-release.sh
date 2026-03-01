@@ -40,6 +40,9 @@ if ! command -v gh &>/dev/null; then
   exit 1
 fi
 
+# Ensure local tags are up to date so version computation is correct
+git fetch --tags --quiet
+
 # --- Version computation (pure bash) ---
 LATEST_TAG=$(git describe --tags --abbrev=0 --match="v*" 2>/dev/null || echo "v0.0.0")
 VERSION="${LATEST_TAG#v}"
