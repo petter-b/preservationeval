@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- CI: ignore `tests/install` and `tests/test_validation.py` in sdist smoke tests (modules require source-only `preservationeval.install`)
+
 ## [1.2.1] - 2026-02-28
 
 ### Fixed
