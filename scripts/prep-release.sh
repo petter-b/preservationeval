@@ -63,9 +63,21 @@ esac
 NEW_VERSION="${v_major}.${v_minor}.${v_patch}"
 echo "Version: ${VERSION} → ${NEW_VERSION}"
 
+# --- Label PR (best-effort) ---
+label_pr() {
+  if gh pr view "$CURRENT_BRANCH" &>/dev/null; then
+    gh pr edit --add-label "release-${BUMP_TYPE}"
+    echo "Labeled PR with release-${BUMP_TYPE}."
+  else
+    echo "Warning: no open PR found for ${CURRENT_BRANCH}. Label manually if needed."
+  fi
+}
+
 # --- Idempotency: skip if already stamped ---
 if grep -q "^## \[${NEW_VERSION}\]" CHANGELOG.md; then
   echo "Warning: CHANGELOG.md already contains [${NEW_VERSION}]. Skipping stamp."
+  label_pr
+  echo "Done. Release ${NEW_VERSION} is ready for CI."
   exit 0
 fi
 
@@ -112,12 +124,5 @@ git commit -m "chore: prepare changelog for release ${NEW_VERSION}"
 git push origin "$CURRENT_BRANCH"
 echo "Pushed to ${CURRENT_BRANCH}."
 
-# --- Label PR (best-effort) ---
-if gh pr view "$CURRENT_BRANCH" &>/dev/null; then
-  gh pr edit --add-label "release-${BUMP_TYPE}"
-  echo "Labeled PR with release-${BUMP_TYPE}."
-else
-  echo "Warning: no open PR found for ${CURRENT_BRANCH}. Label manually if needed."
-fi
-
+label_pr
 echo "Done. Release ${NEW_VERSION} is ready for CI."
