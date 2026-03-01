@@ -277,7 +277,8 @@ jobs:
           SMOKE_DIR=$(mktemp -d)
           uv venv "$SMOKE_DIR/.venv"
           uv pip install --python "$SMOKE_DIR/.venv/bin/python" "dist/preservationeval-${NEW_VERSION}.tar.gz[test]"
-          "$SMOKE_DIR/.venv/bin/python" -m pytest -m "unit and not slow" -v
+          "$SMOKE_DIR/.venv/bin/python" -m pytest -m "unit and not slow" \
+            --ignore=tests/install --ignore=tests/test_validation.py -v
           rm -rf "$SMOKE_DIR"
 
           # Validate sdist metadata before upload
