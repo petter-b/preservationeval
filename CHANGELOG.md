@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-03-01
+
+### Changed
+- Updated Node.js dependency to v24
+- Updated `astral-sh/setup-uv` action to v6
+
 ### Fixed
 - CI: ignore `tests/install` and `tests/test_validation.py` in sdist smoke tests (modules require source-only `preservationeval.install`)
 
